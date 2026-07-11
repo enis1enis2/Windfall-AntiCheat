@@ -103,585 +103,26 @@
     }
   },
   "TruthfulAC": {
-    "new_checks": [
-      {
-        "name": "ground spoof b",
-        "raw_name": "GroundSpoofB",
-        "category": "movement",
-        "stable_key": "windfall.movement.ground spoof b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/spoof/GroundSpoofB.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "ground spoof g",
-        "raw_name": "GroundSpoofG",
-        "category": "movement",
-        "stable_key": "windfall.movement.ground spoof g",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/spoof/GroundSpoofG.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "ground spoof d",
-        "raw_name": "GroundSpoofD",
-        "category": "movement",
-        "stable_key": "windfall.movement.ground spoof d",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/spoof/GroundSpoofD.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove"
-        ]
-      },
-      {
-        "name": "ground spoof c",
-        "raw_name": "GroundSpoofC",
-        "category": "movement",
-        "stable_key": "windfall.movement.ground spoof c",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/spoof/GroundSpoofC.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "ground spoof e",
-        "raw_name": "GroundSpoofE",
-        "category": "movement",
-        "stable_key": "windfall.movement.ground spoof e",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/spoof/GroundSpoofE.java",
-        "constants": {
-          "serverFallDistance": "0"
-        },
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "ground spoof f",
-        "raw_name": "GroundSpoofF",
-        "category": "movement",
-        "stable_key": "windfall.movement.ground spoof f",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/spoof/GroundSpoofF.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "velocity d",
-        "raw_name": "VelocityD",
-        "category": "movement",
-        "stable_key": "windfall.movement.velocity d",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/velocity/VelocityD.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "velocity c",
-        "raw_name": "VelocityC",
-        "category": "movement",
-        "stable_key": "windfall.movement.velocity c",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/velocity/VelocityC.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "isNearWall",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "velocity b",
-        "raw_name": "VelocityB",
-        "category": "movement",
-        "stable_key": "windfall.movement.velocity b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/velocity/VelocityB.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "baritone b",
-        "raw_name": "BaritoneB",
-        "category": "movement",
-        "stable_key": "windfall.movement.baritone b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/baritone/BaritoneB.java",
-        "constants": {
-          "dyaw": "Math.abs(data.getDeltaYaw())",
-          "dpitch": "Math.abs(data.getDeltaPitch())"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "baritone c",
-        "raw_name": "BaritoneC",
-        "category": "movement",
-        "stable_key": "windfall.movement.baritone c",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/baritone/BaritoneC.java",
-        "constants": {
-          "now": "System.currentTimeMillis()"
-        },
-        "methods": [
-          "onBlockBreak",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "simulation c",
-        "raw_name": "SimulationC",
-        "category": "movement",
-        "stable_key": "windfall.movement.simulation c",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/simulation/SimulationC.java",
-        "constants": {
-          "LIQUID_GRAVITY": "0.04D",
-          "LIQUID_Y_DRAG": "0.8D",
-          "LIQUID_XZ_DRAG": "0.8D",
-          "MAX_ASCENT_SPEED": "0.25D",
-          "MAX_DESCENT_SPEED": "-0.4D",
-          "BUBBLE_UP_MAX": "0.72D",
-          "BUBBLE_DOWN_MAX": "-0.51D",
-          "MAX_WATER_XZ_BASE": "0.20D",
-          "DEPTH_STRIDER_BONUS": "0.133D",
-          "MAX_LAVA_XZ": "0.18D",
-          "NOISE_FLOOR": "0.012D",
-          "LIQUID_ENTRY_GRACE_TICKS": "4",
-          "SURFACE_Y_THRESHOLD": "0.08D",
-          "WALL_ASCENT_MAX": "0.36D",
-          "WALL_ASCENT_CAP": "0.12D",
-          "FLAG_BUFFER_THRESHOLD": "8.0f",
-          "FLAG_BUFFER_RESET": "3.0f",
-          "ticksNow": "data.getTicksTracked()",
-          "deltaXZ": "data.getDeltaXZ()",
-          "lastDeltaXZ": "data.getLastDeltaXZ()",
-          "deltaY": "data.getDeltaY()",
-          "lastDeltaY": "data.getLastDeltaY()",
-          "airTicks": "data.getAirTicks()",
-          "depthStriderLevel": "data.getEnchantLevel(\"depth_strider\")",
-          "x": "data.getX()",
-          "y": "data.getY()",
-          "z": "data.getZ()",
-          "radius": "0.36D"
-        },
-        "methods": [
-          "handleRelMove",
-          "isNearHorizontalCollision",
-          "hasSolid",
-          "isInLava",
-          "isLavaState",
-          "floor",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "simulation d",
-        "raw_name": "SimulationD",
-        "category": "movement",
-        "stable_key": "windfall.movement.simulation d",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/simulation/SimulationD.java",
-        "constants": {
-          "BOAT_MAX_XZ": "1.25D",
-          "BOAT_ICE_MAX_XZ": "5.0D",
-          "BOAT_BLUE_ICE_MAX_XZ": "9.5D",
-          "BOAT_MAX_Y": "0.7D",
-          "HORSE_MAX_XZ": "1.15D",
-          "HORSE_MAX_Y": "1.05D",
-          "CAMEL_MAX_XZ": "1.40D",
-          "CAMEL_MAX_Y": "1.05D",
-          "LLAMA_MAX_XZ": "0.60D",
-          "LLAMA_MAX_Y": "0.65D",
-          "PIG_MAX_XZ": "0.50D",
-          "PIG_MAX_Y": "0.52D",
-          "STRIDER_MAX_XZ": "0.65D",
-          "STRIDER_MAX_Y": "0.50D",
-          "MINECART_MAX_XZ": "8.50D",
-          "MINECART_MAX_Y": "1.00D",
-          "UNKNOWN_MAX_XZ": "1.50D",
-          "UNKNOWN_MAX_Y": "1.05D",
-          "ENTITY_PUSH_MAX_XZ": "1.5D",
-          "ENTITY_PUSH_MAX_Y": "0.95D",
-          "MOUNT_GRACE_TICKS": "15",
-          "DISMOUNT_GRACE_TICKS": "20",
-          "BUFFER_FLAG_THRESHOLD": "6.0D",
-          "BUFFER_RESET_VALUE": "3.0D",
-          "ticksNow": "data.getTicksTracked()"
-        },
-        "methods": [
-          "handleRelMove",
-          "onVehicleMove",
-          "applyFlag",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "simulation b",
-        "raw_name": "SimulationB",
-        "category": "movement",
-        "stable_key": "windfall.movement.simulation b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/movement/simulation/SimulationB.java",
-        "constants": {
-          "ELYTRA_DRAG_XZ": "0.99D",
-          "ELYTRA_DRAG_Y": "0.98D",
-          "GRAVITY": "0.08D",
-          "LIFT_FACTOR": "0.1D",
-          "THRUST_FACTOR": "0.04D",
-          "THRUST_Y_MULT": "3.2D",
-          "STEER_FACTOR": "0.1D",
-          "FIREWORK_IMPULSE": "0.1D",
-          "FIREWORK_TARGET": "1.5D",
-          "FIREWORK_CORRECTION": "0.5D",
-          "H_TOLERANCE": "0.065D",
-          "V_TOLERANCE": "0.055D",
-          "DIR_TOLERANCE": "0.12D",
-          "SHARP_TURN_H_GRACE": "0.12D",
-          "SHARP_TURN_DIR_GRACE": "0.18D",
-          "PITCH_SNAP_V_GRACE": "0.12D",
-          "PITCH_SNAP_DIR_GRACE": "0.10D",
-          "SLOW_FALL_V_GRACE": "0.15D",
-          "VL_DECAY_MULT": "0.990D",
-          "VL_DECAY_CONST": "0.012D",
-          "VL_FLAG_THRESHOLD": "50.0D",
-          "DRIFT_FLAG_THRESHOLD": "0.50D",
-          "DRIFT_DECAY": "0.002D",
-          "MAX_NATURAL_XZ_SPEED": "3.8D",
-          "MAX_BOOST_XZ_SPEED": "6.0D",
-          "MAX_NATURAL_GAIN": "0.20D",
-          "SHARP_TURN_YAW_THOLD": "25.0D",
-          "TURN_GAIN_GRACE": "0.30D",
-          "STALL_PITCH": "-25.0D",
-          "STALL_SPEED_THOLD": "1.8D",
-          "ENERGY_WINDOW": "20",
-          "MAX_ENERGY_RATE": "0.85D",
-          "BOOST_GRACE_TICKS": "36",
-          "VELOCITY_GRACE_TICKS": "8",
-          "deltaXZ": "data.getDeltaXZ()",
-          "lastDeltaXZ": "data.getLastDeltaXZ()",
-          "deltaY": "data.getDeltaY()",
-          "lastDeltaY": "data.getLastDeltaY()",
-          "pitch": "data.getPitch()",
-          "yaw": "data.getYaw()",
-          "glideTicks": "data.getMovementState().getGlideTicks()",
-          "ticksNow": "data.getTicksTracked()",
-          "deltaYaw": "data.getPositionTracker().getDeltaYaw()",
-          "deltaPitch": "data.getPositionTracker().getDeltaPitch()",
-          "ticksSinceFirework": "ticksNow - data.getLastFireworkTick()",
-          "ticksSinceVelocity": "ticksNow - data.getLastVelocityTick()",
-          "x": "data.getX(), y = data.getY(), z = data.getZ(), r = 0.36D"
-        },
-        "methods": [
-          "handleRelMove",
-          "addViolation",
-          "canStrictlyPredict",
-          "resetTransientCounters",
-          "isNearHorizontalCollision",
-          "hasSolid",
-          "floor",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "aim k",
-        "raw_name": "AimK",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim k",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimK.java",
-        "constants": {
-          "MIN_DELTA": "0.35",
-          "EXPANDER": "16777216.0",
-          "MIN_VALID_STEP": "0.001",
-          "MAX_STEP_DRIFT": "0.002"
-        },
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "aim e",
-        "raw_name": "AimE",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim e",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimE.java",
-        "constants": {
-          "WINDOW_SIZE": "30"
-        },
-        "methods": [
-          "handleRelMove",
-          "checkEntropy",
-          "checkOutliers",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "aim j",
-        "raw_name": "AimJ",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim j",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimJ.java",
-        "constants": {
-          "SAMPLE_SIZE": "20",
-          "MIN_ROTATION": "0.5"
-        },
-        "methods": [
-          "handleRelMove",
-          "wrapAngle",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "aim i",
-        "raw_name": "AimI",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim i",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimI.java",
-        "constants": {
-          "SAMPLE_SIZE": "25",
-          "SUSPICION_THRESHOLD": "0.75"
-        },
-        "methods": [
-          "handleRelMove",
-          "calculateGcdScore",
-          "calculateAccelScore",
-          "calculateEfficiencyScore",
-          "calculateTimingScore",
-          "normalizeAngle",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "aim b",
-        "raw_name": "AimB",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimB.java",
-        "constants": {
-          "HEAD_SNAP_THRESHOLD": "50.0F",
-          "SMOOTH_ACCEL_THRESHOLD": "0.001F",
-          "SNAP_PATTERN_THRESHOLD": "5"
-        },
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "hitbox a",
-        "raw_name": "HitboxA",
-        "category": "combat",
-        "stable_key": "windfall.combat.hitbox a",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/hitbox/HitboxA.java",
-        "constants": {
-          "MAX_BACKTRACK": "8",
-          "PLAYER_EXPANSION": "0.08",
-          "NON_PLAYER_EXPANSION": "0.25",
-          "startTick": "Math.max(0, tickDelay - MAX_BACKTRACK)",
-          "currentTick": "org.bukkit.Bukkit.getCurrentTick()",
-          "eyeHeightCurrent": "data.getEyeHeight(false, data.isSneaking(), data.isSwimming())",
-          "lastX": "data.getX() - data.getDeltaX()",
-          "lastY": "data.getY() - data.getDeltaY()",
-          "lastZ": "data.getZ() - data.getDeltaZ()",
-          "eyeHeightLast": "data.getEyeHeight(false, data.isSneaking(), data.isSwimming())",
-          "ry": "Math.toRadians(yaw)",
-          "rp": "Math.toRadians(pitch)",
-          "cosP": "Math.cos(rp)",
-          "invX": "1.0 / dir.getX()",
-          "invY": "1.0 / dir.getY()",
-          "invZ": "1.0 / dir.getZ()",
-          "tyMin": "Math.min((box.minY - origin.getY()) * invY, (box.maxY - origin.getY()) * invY)",
-          "tyMax": "Math.max((box.minY - origin.getY()) * invY, (box.maxY - origin.getY()) * invY)",
-          "tzMin": "Math.min((box.minZ - origin.getZ()) * invZ, (box.maxZ - origin.getZ()) * invZ)",
-          "tzMax": "Math.max((box.minZ - origin.getZ()) * invZ, (box.maxZ - origin.getZ()) * invZ)"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "handleRelMove",
-          "rayEntryDistance",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "kill aura g",
-        "raw_name": "KillAuraG",
-        "category": "combat",
-        "stable_key": "windfall.combat.kill aura g",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/killaura/KillAuraG.java",
-        "constants": {
-          "MAX_TARGETS_WINDOW": "10",
-          "TIME_WINDOW_MS": "500L",
-          "SUSPICIOUS_TARGET_COUNT": "3"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "kill aura c",
-        "raw_name": "KillAuraC",
-        "category": "combat",
-        "stable_key": "windfall.combat.kill aura c",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/killaura/KillAuraC.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "kill aura h",
-        "raw_name": "KillAuraH",
-        "category": "combat",
-        "stable_key": "windfall.combat.kill aura h",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/killaura/KillAuraH.java",
-        "constants": {
-          "SAMPLE_SIZE": "15",
-          "VARIANCE_THRESHOLD": "25.0",
-          "QUANTIZATION_THRESHOLD": "0.85"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "kill aura d",
-        "raw_name": "KillAuraD",
-        "category": "combat",
-        "stable_key": "windfall.combat.kill aura d",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/killaura/KillAuraD.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "kill aura f",
-        "raw_name": "KillAuraF",
-        "category": "combat",
-        "stable_key": "windfall.combat.kill aura f",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/killaura/KillAuraF.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit",
-          "isNearStairOrSlab"
-        ]
-      },
-      {
-        "name": "kill aura e",
-        "raw_name": "KillAuraE",
-        "category": "combat",
-        "stable_key": "windfall.combat.kill aura e",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/killaura/KillAuraE.java",
-        "constants": {
-          "STEP": "0.2",
-          "MAX_RAY_LENGTH": "6.0",
-          "currentTick": "Bukkit.getCurrentTick()",
-          "eyeHeight": "data.getEyeHeight(false, data.isSneaking(), data.isSwimming())",
-          "originX": "data.getX()",
-          "originY": "data.getY() + eyeHeight",
-          "originZ": "data.getZ()",
-          "dirX": "direction[0]",
-          "dirY": "direction[1]",
-          "dirZ": "direction[2]",
-          "distance": "distanceToBox(originX, originY, originZ, hitbox)",
-          "yawRad": "Math.toRadians(yaw)",
-          "pitchRad": "Math.toRadians(pitch)",
-          "cosPitch": "Math.cos(pitchRad)",
-          "bx": "floor(ox + (dx * d))",
-          "by": "floor(oy + (dy * d))",
-          "bz": "floor(oz + (dz * d))"
-        },
-        "methods": [
-          "handlePacketPlayerReceive"
-        ]
-      },
-      {
-        "name": "kill aura b",
-        "raw_name": "KillAuraB",
-        "category": "combat",
-        "stable_key": "windfall.combat.kill aura b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/killaura/KillAuraB.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit",
-          "isNearIce"
-        ]
-      },
-      {
-        "name": "auto clicker b",
-        "raw_name": "AutoClickerB",
-        "category": "combat",
-        "stable_key": "windfall.combat.auto clicker b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/autoclicker/AutoClickerB.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "auto clicker c",
-        "raw_name": "AutoClickerC",
-        "category": "combat",
-        "stable_key": "windfall.combat.auto clicker c",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/autoclicker/AutoClickerC.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "auto clicker e",
-        "raw_name": "AutoClickerE",
-        "category": "combat",
-        "stable_key": "windfall.combat.auto clicker e",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/autoclicker/AutoClickerE.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "checkGCD",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "auto clicker d",
-        "raw_name": "AutoClickerD",
-        "category": "combat",
-        "stable_key": "windfall.combat.auto clicker d",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/autoclicker/AutoClickerD.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      }
-    ],
+    "new_checks": [],
     "existing_matches": {
       "MovementCheckSupport": "Phase A",
+      "GroundSpoofB": "Ground Spoof A",
+      "GroundSpoofG": "Ground Spoof A",
+      "GroundSpoofD": "Ground Spoof A",
+      "GroundSpoofC": "Ground Spoof A",
+      "GroundSpoofE": "Ground Spoof A",
+      "GroundSpoofF": "Ground Spoof A",
+      "VelocityD": "Velocity A",
+      "VelocityC": "Velocity A",
       "VelocityA": "Velocity A",
+      "VelocityB": "Velocity A",
+      "BaritoneB": "Baritone A",
       "BaritoneA": "Baritone A",
+      "BaritoneC": "Baritone A",
       "InventoryA": "Inventory A",
+      "SimulationC": "Simulation A",
+      "SimulationD": "Simulation A",
+      "SimulationB": "Simulation A",
       "SimulationA": "Simulation A",
       "ScaffoldA": "Scaffold A",
       "FastBreakA": "Fast Break A",
@@ -697,8 +138,25 @@
       "AimF": "Aim A",
       "AimD": "Aim A",
       "AimG": "Aim A",
+      "AimK": "Aim A",
+      "AimE": "Aim A",
+      "AimJ": "Aim A",
+      "AimI": "Aim A",
+      "AimB": "Aim A",
       "AimA": "Aim A",
       "ReachA": "Reach A",
+      "HitboxA": "Hitboxes A",
+      "KillAuraG": "Kill Aura A",
+      "KillAuraC": "Kill Aura A",
+      "KillAuraH": "Kill Aura A",
+      "KillAuraD": "Kill Aura A",
+      "KillAuraF": "Kill Aura A",
+      "KillAuraE": "Kill Aura A",
+      "KillAuraB": "Kill Aura A",
+      "AutoClickerB": "Autoclicker A",
+      "AutoClickerC": "Autoclicker A",
+      "AutoClickerE": "Autoclicker A",
+      "AutoClickerD": "Autoclicker A",
       "AutoClickerA": "Autoclicker A",
       "CrasherA": "Crash A",
       "SprintA": "Sprint A",
@@ -741,445 +199,57 @@
     "existing_matches": {}
   },
   "Arrow": {
-    "new_checks": [
-      {
-        "name": "motion b",
-        "raw_name": "MotionB",
-        "category": "movement",
-        "stable_key": "windfall.movement.motion b",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/motion/MotionB.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "motion f",
-        "raw_name": "MotionF",
-        "category": "movement",
-        "stable_key": "windfall.movement.motion f",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/motion/MotionF.java",
-        "constants": {
-          "deltaY": "md.getDeltaY()",
-          "lastDeltaY": "md.getLastDeltaY()"
-        },
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "motion d",
-        "raw_name": "MotionD",
-        "category": "movement",
-        "stable_key": "windfall.movement.motion d",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/motion/MotionD.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "motion e",
-        "raw_name": "MotionE",
-        "category": "movement",
-        "stable_key": "windfall.movement.motion e",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/motion/MotionE.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle",
-          "WaterWalking"
-        ]
-      },
-      {
-        "name": "speed c",
-        "raw_name": "SpeedC",
-        "category": "movement",
-        "stable_key": "windfall.movement.speed c",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/speed/SpeedC.java",
-        "constants": {
-          "maxBuffer1": "13",
-          "resetRate1": "0.4"
-        },
-        "methods": [
-          "handle",
-          "handle",
-          "getLimitFrictionMultiplier"
-        ]
-      },
-      {
-        "name": "speed b",
-        "raw_name": "SpeedB",
-        "category": "movement",
-        "stable_key": "windfall.movement.speed b",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/speed/SpeedB.java",
-        "constants": {
-          "AIR_ICE_INCREMENT_PER_TICK": "0.1525",
-          "AIR_ICE_INCREMENT_PER_TICK_SMALLER": "0.06",
-          "AIR_MAX_ICE_SPEED_BOOST": "3.75"
-        },
-        "methods": [
-          "handle",
-          "handle",
-          "calculateAcceleration",
-          "calculateDeceleration",
-          "checkValid",
-          "getBest"
-        ]
-      },
-      {
-        "name": "fly b",
-        "raw_name": "FlyB",
-        "category": "movement",
-        "stable_key": "windfall.movement.fly b",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/fly/FlyB.java",
-        "constants": {
-          "deviation": "getDevation(this.samples)",
-          "average": "getAverage(this.underBlockSamples)"
-        },
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "fly c",
-        "raw_name": "FlyC",
-        "category": "movement",
-        "stable_key": "windfall.movement.fly c",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/fly/FlyC.java",
-        "constants": {
-          "JUMP_TOL": "0.06",
-          "serverAirTicks": "movementData.getServerAirTicks()",
-          "clientAirTicks": "movementData.getClientAirTicks()",
-          "deltaY": "movementData.getDeltaY()",
-          "lastDeltaY": "movementData.getLastDeltaY()",
-          "deltaXZ": "movementData.getDeltaXZ()",
-          "lastDeltaXZ": "movementData.getLastDeltaXZ()",
-          "accelerationXZ": "deltaXZ - lastDeltaXZ"
-        },
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "back track b",
-        "raw_name": "BackTrackB",
-        "category": "combat",
-        "stable_key": "windfall.combat.back track b",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/backtrack/BackTrackB.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle",
-          "isExempt",
-          "getBufferIncrease",
-          "decreaseTrust",
-          "percentile",
-          "addSample",
-          "isMovement",
-          "decaySoft",
-          "decayHard",
-          "reset",
-          "valid"
-        ]
-      },
-      {
-        "name": "velocity b",
-        "raw_name": "VelocityB",
-        "category": "movement",
-        "stable_key": "windfall.movement.velocity b",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/velocity/VelocityB.java",
-        "constants": {
-          "lastCheckedEntityVelocitySequence": "-1",
-          "EPSILON": "1.0E-7D"
-        },
-        "methods": [
-          "handle",
-          "handle",
-          "isMovement",
-          "handleHorizontalVelocity",
-          "canCheckHorizontalVelocity",
-          "initializeResponse",
-          "fitAttackSlowdown",
-          "getPlayerCollisionHeight",
-          "floor",
-          "isReversed",
-          "isJumpStart",
-          "isDirectSevereEntityReduction",
-          "getInputFriction",
-          "getCarryFriction",
-          "getBlockSlipperiness",
-          "getRequiredPercent",
-          "isAttackSlowdownPossible",
-          "getMaxBuffer",
-          "getVelocityClamp",
-          "getMoveOffset",
-          "getPredictionTolerance",
-          "getMinimumReliableEntityHorizontal",
-          "getWithheldTransactionGraceTicks",
-          "getBowBoostAllowance",
-          "isModernClient",
-          "hasHorizontalVelocity",
-          "resetVelocityState",
-          "finishMovementTick",
-          "clipX",
-          "clipZ",
-          "offset",
-          "strictlyIntersects"
-        ]
-      },
-      {
-        "name": "hitbox a",
-        "raw_name": "HitboxA",
-        "category": "combat",
-        "stable_key": "windfall.combat.hitbox a",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/hitbox/HitboxA.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle",
-          "handleAttack",
-          "isExempt",
-          "getProtocolMargin",
-          "getPingTicks",
-          "distancePointToRay",
-          "angleToPoint",
-          "inside",
-          "isMovement"
-        ]
-      },
-      {
-        "name": "auto clicker g",
-        "raw_name": "AutoClickerG",
-        "category": "combat",
-        "stable_key": "windfall.combat.auto clicker g",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/autoclicker/AutoClickerG.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "auto clicker b",
-        "raw_name": "AutoClickerB",
-        "category": "combat",
-        "stable_key": "windfall.combat.auto clicker b",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/autoclicker/AutoClickerB.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "auto clicker c",
-        "raw_name": "AutoClickerC",
-        "category": "combat",
-        "stable_key": "windfall.combat.auto clicker c",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/autoclicker/AutoClickerC.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "auto clicker d",
-        "raw_name": "AutoClickerD",
-        "category": "combat",
-        "stable_key": "windfall.combat.auto clicker d",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/autoclicker/AutoClickerD.java",
-        "constants": {
-          "LN_2": "Math.log(2.0)"
-        },
-        "methods": [
-          "handle",
-          "handle",
-          "shouldIgnore",
-          "clearSamples"
-        ]
-      },
-      {
-        "name": "auto clicker f",
-        "raw_name": "AutoClickerF",
-        "category": "combat",
-        "stable_key": "windfall.combat.auto clicker f",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/autoclicker/AutoClickerF.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "aim e",
-        "raw_name": "AimE",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim e",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/aimassist/AimE.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "aim c",
-        "raw_name": "AimC",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim c",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/aimassist/AimC.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle",
-          "calculateAim",
-          "getAverageTimeBetweenChanges"
-        ]
-      },
-      {
-        "name": "aim b",
-        "raw_name": "AimB",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim b",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/aimassist/AimB.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      },
-      {
-        "name": "scaffold b",
-        "raw_name": "ScaffoldB",
-        "category": "movement",
-        "stable_key": "windfall.movement.scaffold b",
-        "file_path": "src/main/java/me/arrow/checks/impl/misc/scaffold/ScaffoldB.java",
-        "constants": {
-          "MAX_SAMPLES": "80",
-          "MIN_SAMPLES": "48",
-          "PLACE_CONTEXT_TICKS": "8",
-          "MIN_YAW_SAMPLE": "0.025D",
-          "MIN_PITCH_SAMPLE": "0.010D",
-          "SAME_YAW_EPSILON": "0.035D",
-          "SAME_PITCH_EPSILON": "0.018D",
-          "YAW_SNAP": "18.0D",
-          "PITCH_SNAP": "8.0D",
-          "recentPlaceTicks": "100"
-        },
-        "methods": [
-          "handle",
-          "handle",
-          "isScaffoldContext",
-          "snapCount",
-          "snapThenStopCount",
-          "alternatingSameMagnitude",
-          "duplicateCount",
-          "longestIdenticalStreak",
-          "entropy",
-          "average",
-          "min",
-          "max",
-          "addSample",
-          "clearSamples",
-          "clearIfStale",
-          "decay",
-          "isFlyingPacket",
-          "isRotationPacket",
-          "round"
-        ]
-      },
-      {
-        "name": "scaffold c",
-        "raw_name": "ScaffoldC",
-        "category": "movement",
-        "stable_key": "windfall.movement.scaffold c",
-        "file_path": "src/main/java/me/arrow/checks/impl/misc/scaffold/ScaffoldC.java",
-        "constants": {
-          "CONFIRMED_PLACE_CONTEXT_TICKS": "8",
-          "REQUIRED_CONFIRMED_BRIDGE_BLOCKS": "7",
-          "BRIDGE_STREAK_TIMEOUT_TICKS": "28",
-          "VERTICAL_BRIDGE_EXEMPT_TICKS": "12",
-          "BACKWARD_FAST_SPEED": "0.112D",
-          "BACKWARD_SWITCH_MIN_SPEED": "0.075D",
-          "MAX_ALLOWED_SWITCH_LOSS": "0.010D",
-          "MAX_ALLOWED_SWITCH_ACCEL": "0.014D",
-          "UPWARD_HIGH_DELTA": "0.4205D",
-          "UPWARD_REPEAT_MIN": "0.105D",
-          "UPWARD_REPEAT_ACCEL": "0.014D",
-          "LEGIT_JUMP_MIN": "0.36D",
-          "LEGIT_JUMP_MAX": "0.43D",
-          "confirmedPlaceTicks": "1000",
-          "sinceBridgePlaceTicks": "1000",
-          "lastConfirmedX": "Integer.MIN_VALUE",
-          "lastConfirmedY": "Integer.MIN_VALUE",
-          "lastConfirmedZ": "Integer.MIN_VALUE"
-        },
-        "methods": [
-          "handle",
-          "handle",
-          "updateConfirmedBridgeBlocks",
-          "isBaseContext",
-          "isLegitJumpPlaceMotion",
-          "isNormalJumpArc",
-          "switchedBackwardSide",
-          "resetBridgeStreakIfExpired",
-          "resetBridgeStreak",
-          "resetDetectionCountersOnly",
-          "decayState",
-          "getClientTickTrans",
-          "isFlyingPacket"
-        ]
-      },
-      {
-        "name": "timer b",
-        "raw_name": "TimerB",
-        "category": "movement",
-        "stable_key": "windfall.movement.timer b",
-        "file_path": "src/main/java/me/arrow/checks/impl/misc/timer/TimerB.java",
-        "constants": {
-          "lastPacket": "-1337L"
-        },
-        "methods": [
-          "handle",
-          "handle"
-        ]
-      }
-    ],
+    "new_checks": [],
     "existing_matches": {
       "GroundA": "Ground Spoof A",
       "GroundB": "Ground Spoof A",
       "GroundC": "Ground Spoof A",
+      "MotionB": "Motion A",
+      "MotionF": "Motion A",
+      "MotionD": "Motion A",
       "MotionA": "Motion A",
+      "MotionE": "Motion A",
       "IllegalMoveB": "Phase A",
+      "SpeedC": "Speed A",
+      "SpeedB": "Speed A",
       "SpeedA": "Speed A",
       "OmniSprintA": "Sprint A",
+      "FlyB": "Fly A",
       "ElytraA": "Elytra A",
+      "FlyC": "Fly A",
       "FlyA": "Fly A",
       "BackTrackA": "Backtrack A",
+      "BackTrackB": "Backtrack A",
       "VelocityA": "Velocity A",
+      "VelocityB": "Velocity A",
       "ReachA": "Reach A",
+      "HitboxA": "Hitboxes A",
       "KillauraA": "Kill Aura A",
+      "AutoClickerG": "Autoclicker A",
+      "AutoClickerB": "Autoclicker A",
+      "AutoClickerC": "Autoclicker A",
       "MacroA": "Macro A",
+      "AutoClickerD": "Autoclicker A",
+      "AutoClickerF": "Autoclicker A",
       "AimH": "Aim A",
       "AimF": "Aim A",
       "AimD": "Aim A",
       "AimG": "Aim A",
+      "AimE": "Aim A",
+      "AimC": "Aim A",
+      "AimB": "Aim A",
       "AimA": "Aim A",
       "InteractC": "Self Interact A",
       "InteractD": "Reach A",
       "InteractA": "Self Interact A",
       "ScaffoldA": "Scaffold A",
+      "ScaffoldB": "Scaffold A",
+      "ScaffoldC": "Scaffold A",
       "VehicleA": "Vehicle A",
       "InventoryA": "Inventory A",
       "InventoryB": "Inventory A",
       "TimerA": "Timer A",
+      "TimerB": "Timer A",
       "PhaseA": "Phase A"
     }
   }
