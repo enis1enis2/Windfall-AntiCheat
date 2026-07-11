@@ -1,0 +1,124 @@
+name: Anti-Cheat Monitor
+
+on:
+  schedule:
+    # Run every 24 hours at midnight UTC
+    - cron: '0 0 * * *'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Clone competitor repositories
+        run: |
+          mkdir -p .cache/anticheats
+
+          clone_or_update() {
+            local name=$1 url=$2 branch=$3
+            local dir=".cache/anticheats/$name"
+            if [ ! -d "$dir" ]; then
+              echo "Cloning $name ($branch)..."
+              git clone --depth 1 --branch "$branch" "$url" "$dir" 2>&1 || echo "WARN: Failed to clone $name"
+            else
+              echo "Updating $name..."
+              git -C "$dir" fetch origin "$branch" 2>&1
+              git -C "$dir" checkout "$branch" 2>&1
+              git -C "$dir" pull origin "$branch" 2>&1 || echo "WARN: Failed to pull $name"
+            fi
+          }
+
+          clone_or_update "Grim" "https://github.com/GrimAnticheat/Grim.git" "2.0"
+          clone_or_update "TruthfulAC" "https://github.com/TawnyE/TruthfulAC.git" "main"
+          clone_or_update "Arrow" "https://github.com/StelGR/ArrowAntiCheat.git" "master"
+          clone_or_update "CloudAC" "https://github.com/0xntpower/CloudAC.git" "main"
+
+          echo ""
+          echo "Cloned repositories:"
+          ls -la .cache/anticheats/
+
+      - name: Analyze competitor checks
+        run: |
+          python .github/scripts/analyze-checks.py
+          echo ""
+          echo "=== Report Preview ==="
+          head -80 .github/anticheat-report.md
+
+      - name: Compile and verify
+        run: |
+          mvn compile -q 2>&1 || echo "WARN: Compilation issues detected"
+
+      - name: Commit all changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Windfall Monitor"
+          git add .github/anticheat-report.md
+          git add .github/anticheat-diff.json
+          git diff --staged --quiet || git commit -m "chore: anti-cheat monitor update $(date -u +%Y-%m-%d) [skip ci]"
+          git push
+
+      - name: Create issue on new checks found
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const diffPath = '.github/anticheat-diff.json';
+            if (!fs.existsSync(diffPath)) return;
+
+            const diff = JSON.parse(fs.readFileSync(diffPath, 'utf8'));
+            let totalNew = 0;
+            let body = '## Anti-Cheat Monitor: New Checks Detected\n\n';
+
+            for (const [name, data] of Object.entries(diff)) {
+              if (data.new_checks && data.new_checks.length > 0) {
+                totalNew += data.new_checks.length;
+                body += `### ${name}\n`;
+                for (const check of data.new_checks) {
+                  body += `- **${check.raw_name}** (\`${check.category}\`) → \`${check.stable_key}\`\n`;
+                }
+                body += '\n';
+              }
+            }
+
+            if (totalNew === 0) return;
+
+            body += `**Total: ${totalNew} new checks** found across competitors.\n\n`;
+            body += 'Review the full report in `.github/anticheat-report.md` and diff in `.github/anticheat-diff.json`.\n';
+            body += 'Implement detection logic as needed and test before enabling.\n';
+
+            // Check for existing open issues to avoid duplicates
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'monitor',
+              per_page: 5,
+            });
+
+            // Only create if no open monitor issue exists
+            if (issues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[Monitor] ${totalNew} new competitor checks detected`,
+                body: body,
+                labels: ['monitor'],
+              });
+            }
