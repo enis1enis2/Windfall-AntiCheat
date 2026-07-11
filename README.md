@@ -10,9 +10,10 @@ Windfall intercepts incoming packets via [PacketEvents 2](https://github.com/ret
 
 | Category | Checks |
 |----------|--------|
-| **Combat** (11) | Aim, Autoclicker, Backtrack, Criticals, Fast Heal (1.7–1.8), Hitboxes, Kill Aura, Multi Interact, Reach, Self Interact, Sword Block (1.7–1.8) |
-| **Movement** (14) | Baritone, Elytra (1.9+), Flight, Ground Spoof, Motion, NoFall, NoSlow, Phase, Scaffold, Simulation, Speed, Step, Timer, Velocity |
-| **Packet** (8) | Bad Packets, Chest Stealer, Chat, Crash, Creative, Exploit, Packet Order, Sprint |
+| **Combat** (12) | Aim, Autoclicker, Backtrack, Criticals, Fast Heal (1.7–1.8), Hitboxes, Kill Aura, Macro, Multi Interact, Reach, Self Interact, Sword Block (1.7–1.8) |
+| **Movement** (29) | Air Liquid Break, Air Liquid Place, Baritone, Elytra (1.9+), Far Break, Far Place, Fast Break, Flight, Ground Spoof, Invalid Break, Invalid Place, Motion, Multi Break, Multi Place, NoFall, NoSlow, No Swing, Phase, Position Break, Position Place, Rotation Break, Rotation Place, Scaffold, Simulation, Speed, Step, Timer, Velocity, Wrong Break |
+| **Packet** (10) | Bad Packets, Chat, Chest Stealer, Client Brand, Crash, Creative, Exploit, Packet Order, Sprint, Vehicle |
+| **Inventory** (1) | Inventory |
 
 ### Version-Aware Registration
 
