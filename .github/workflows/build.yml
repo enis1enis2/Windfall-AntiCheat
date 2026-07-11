@@ -28,7 +28,7 @@ jobs:
         run: mvn -B clean package --file pom.xml
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Windfall
           path: target/Windfall.jar
