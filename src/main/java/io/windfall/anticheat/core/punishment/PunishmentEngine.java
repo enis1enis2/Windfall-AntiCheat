@@ -10,9 +10,12 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+// Escalating punishment tiers: warn → kick → tempban → permban
+// Each tier fires once per player — appliedTiers prevents duplicate actions
 public class PunishmentEngine {
 
     private final WindfallPlugin plugin;
+    // Tracks highest tier applied — prevents re-punishing at the same tier
     private final ConcurrentHashMap<UUID, Integer> appliedTiers = new ConcurrentHashMap<>();
 
     private final boolean enabled;
@@ -75,6 +78,8 @@ public class PunishmentEngine {
         }
     }
 
+    // Uses dispatchCommand for ban/tempban because these commands handle async lookups
+    // and are more reliable across server implementations than direct API calls
     private void executeOnce(WindfallPlayer player, int tier) {
         Integer current = appliedTiers.getOrDefault(player.getUuid(), 0);
         if (current >= tier) return;

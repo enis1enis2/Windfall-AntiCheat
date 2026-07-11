@@ -16,6 +16,7 @@ public class TimerCheck extends Check implements PacketCheck {
 
     private static final int NORMAL_PACKETS_PER_TICK_MIN = 1;
     private static final int NORMAL_PACKETS_PER_TICK_MAX = 3;
+    // High-ping players have natural packet bursts — jitter tolerance prevents false positives
     private static final int LATENCY_JITTER_TOLERANCE = 2;
     private static final long WINDOW_DURATION_MS = 1000;
     private static final long WINDOW_TICK_COUNT = 20;
@@ -45,6 +46,7 @@ public class TimerCheck extends Check implements PacketCheck {
 
         double packetsPerTick = packetTimestamps.size() / (double) WINDOW_TICK_COUNT;
 
+        // Ping / 50 converts milliseconds to ticks for jitter tolerance
         int jitterTolerance = Math.max(LATENCY_JITTER_TOLERANCE,
                 (int) Math.ceil(player.getTransactionPing() / 50.0));
 
@@ -52,6 +54,7 @@ public class TimerCheck extends Check implements PacketCheck {
         double speedHackThreshold = maxNormalPerTick * SPEEDHACK_MULTIPLIER;
         double slowHackThreshold = Math.max(0.2, NORMAL_PACKETS_PER_TICK_MIN * SLOWHACK_MULTIPLIER);
 
+        // Need 2 consecutive high-rate windows before flagging to avoid lag spikes
         if (packetsPerTick > speedHackThreshold) {
             if (packetsPerTick > speedHackThreshold * FLAG_THRESHOLD_MULTIPLIER) {
                 consecutiveHighWindows++;
@@ -67,6 +70,7 @@ public class TimerCheck extends Check implements PacketCheck {
                     consecutiveHighWindows = 0;
                 }
             }
+        // 4 consecutive low windows because AFK can temporarily reduce packet rate
         } else if (packetsPerTick < slowHackThreshold) {
             consecutiveLowWindows++;
             if (consecutiveLowWindows >= 4) {
@@ -83,6 +87,7 @@ public class TimerCheck extends Check implements PacketCheck {
             decreaseBuffer(player, 0.1);
         }
 
+        // Secondary window catches burst hacks that the primary window smooths out
         if (now - lastSecondaryFlush >= DOUBLE_BUFFER_INTERVAL_MS) {
             long secondaryCount = secondaryPacketTimestamps.stream()
                     .filter(t -> now - t <= DOUBLE_BUFFER_INTERVAL_MS)

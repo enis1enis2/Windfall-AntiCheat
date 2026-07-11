@@ -11,9 +11,11 @@ import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayDeque;
 
-@CheckData(name = "Sword Block A", stableKey = "windfall.combat.swordblock", decay = 0.015, setbackVl = 10, minVersion = 5, maxVersion = 107)
+    // maxVersion 107 = 1.9.x — sword blocking removed in the combat update
+    @CheckData(name = "Sword Block A", stableKey = "windfall.combat.swordblock", decay = 0.015, setbackVl = 10, minVersion = 5, maxVersion = 107)
 public class SwordBlockCheck extends Check implements PacketCheck {
 
+    // 200ms window for block-then-attack combo detection
     private static final double BLOCK_AND_ATTACK_WINDOW_MS = 200;
     private static final int BLOCK_SPAM_THRESHOLD = 4;
     private static final long BLOCK_SPAM_WINDOW_MS = 1000;
@@ -85,6 +87,7 @@ public class SwordBlockCheck extends Check implements PacketCheck {
         hasBlock = true;
     }
 
+    // Block-to-attack ratio > 70% in 500ms window = scripting behavior
     private void checkBlockAttackSpeed(WindfallPlayer player, long now) {
         long windowMs = 500;
         long recentAttacks = attackTimestamps.stream()

@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerManager {
 
+    // ConcurrentHashMap: concurrent access from Netty (packet threads), main thread, and async tasks
     private final ConcurrentHashMap<UUID, WindfallPlayer> players = new ConcurrentHashMap<>();
 
     public WindfallPlayer get(UUID uuid) {
@@ -20,6 +21,7 @@ public class PlayerManager {
     public WindfallPlayer remove(UUID uuid) {
         WindfallPlayer player = players.remove(uuid);
         if (player != null) {
+            // Mark invalid so packet callbacks stop processing this player
             player.setValid(false);
             WindfallPlugin plugin = WindfallPlugin.getInstance();
             if (plugin.getPunishmentEngine() != null) {

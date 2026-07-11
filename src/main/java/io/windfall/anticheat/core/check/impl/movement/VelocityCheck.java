@@ -51,6 +51,7 @@ public class VelocityCheck extends Check implements PacketCheck {
         if (targetEntityId != selfEntityId) return;
 
         com.github.retrooper.packetevents.util.Vector3d vel = wrapper.getVelocity();
+        // MC sends velocity in fixed-point: actual = value / 8000.0
         double velX = vel.x / 8000.0;
         double velY = vel.y / 8000.0;
         double velZ = vel.z / 8000.0;
@@ -61,6 +62,7 @@ public class VelocityCheck extends Check implements PacketCheck {
             return;
         }
 
+        // Queue up to 5 velocity packets to handle race conditions with lag
         while (pendingVelocities.size() >= MAX_PENDING_VELOCITIES) {
             pendingVelocities.removeFirst();
         }
@@ -76,6 +78,7 @@ public class VelocityCheck extends Check implements PacketCheck {
             if (pv == null) return;
 
             long age = System.currentTimeMillis() - pv.receivedAt;
+            // Give player ping + 500ms to respond before flagging
             long timeout = 500L + player.getTransactionPing();
             if (age > timeout) {
                 pendingVelocities.removeFirst();
@@ -127,6 +130,7 @@ public class VelocityCheck extends Check implements PacketCheck {
             verticalRatio = Math.abs(actualDeltaY) < MIN_VELOCITY_THRESHOLD ? 1.0 : 0.0;
         }
 
+        // Average horizontal + vertical ratios for pure-cancel detection
         double combinedRatio = (horizontalRatio + verticalRatio) / 2.0;
 
         velocityActive = false;
@@ -153,6 +157,7 @@ public class VelocityCheck extends Check implements PacketCheck {
         }
     }
 
+    // Simulates one tick of post-velocity physics to predict expected movement
     private double[] applyPostVelocityPhysics(double velX, double velY, double velZ, WindfallPlayer player) {
         double horizontalFriction = getEffectiveHorizontalFriction(player);
         double verticalFriction = VELOCITY_DRAG_VERTICAL;
@@ -171,6 +176,7 @@ public class VelocityCheck extends Check implements PacketCheck {
             newDeltaY = (velY - GRAVITY) * verticalFriction;
         }
 
+        // Small air-strafe prevents W-tap false positives after velocity
         double airAcceleration = player.getHorizontalSpeed() * 0.026;
         if (!player.isOnGround()) {
             double maxPostVelHorizontal = Math.sqrt(newDeltaX * newDeltaX + newDeltaZ * newDeltaZ);

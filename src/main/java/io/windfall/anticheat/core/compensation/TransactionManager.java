@@ -33,6 +33,7 @@ public final class TransactionManager {
 
         state.pendingTransactions.add(new PendingTransaction(id, sendTime));
 
+        // 1.17+ (protocol 756) uses Ping packets; older versions use WindowConfirmation
         try {
             if (player.getProtocolVersion() >= 756) {
                 WrapperPlayServerPing ping = new WrapperPlayServerPing((int) id);
@@ -52,6 +53,7 @@ public final class TransactionManager {
         long receiveTime = System.nanoTime();
         PendingTransaction matched = null;
 
+        // Linear scan is fine — pending queue never exceeds ~5 entries per player
         Queue<PendingTransaction> remaining = new ConcurrentLinkedQueue<>();
         while (!state.pendingTransactions.isEmpty()) {
             PendingTransaction tx = state.pendingTransactions.poll();
@@ -64,6 +66,7 @@ public final class TransactionManager {
         state.pendingTransactions.addAll(remaining);
 
         if (matched != null) {
+            // NanoTime / 1_000_000 gives millisecond-precision ping
             long pingNanos = receiveTime - matched.sendTime;
             player.setTransactionPing((int) (pingNanos / 1_000_000));
         }
@@ -127,6 +130,7 @@ public final class TransactionManager {
         final Map<Short, Runnable> callbacks = new ConcurrentHashMap<>();
         final AtomicInteger transactionCounter = new AtomicInteger(0);
 
+        // Mask to 15 bits — transaction IDs are shorts, sign bit must stay clear
         short nextTransactionId() {
             return (short) (transactionCounter.incrementAndGet() & 0x7FFF);
         }

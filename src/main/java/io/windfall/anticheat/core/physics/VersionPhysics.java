@@ -30,6 +30,7 @@ public final class VersionPhysics {
 
     public static double getGravity(WindfallPlayer player) {
         int protocol = player.getProtocolVersion();
+        // Gravity changed to 0.08 in 1.21.2; same value but different code path
         if (protocol >= PROTOCOL_1_21_2) {
             return 0.08;
         }
@@ -77,6 +78,7 @@ public final class VersionPhysics {
         return sneaking ? 1.54 : 1.62;
     }
 
+    // Player width (0.6) has never changed across versions — method exists for API completeness
     public static double getPlayerWidth(int protocol) {
         return PhysicsConstants.PLAYER_WIDTH;
     }
@@ -93,6 +95,7 @@ public final class VersionPhysics {
 
     // === REACH ===
 
+    // Pre-1.9 reach was 4 blocks; reduced to 3 in the combat update
     public static double getMaxReach(int protocol) {
         if (protocol < PROTOCOL_1_9) {
             return 4.0;
@@ -167,6 +170,7 @@ public final class VersionPhysics {
         return protocol >= PROTOCOL_1_18;
     }
 
+    // 1.18 introduced extended world height: -64 to 320 (was 0 to 256)
     public static int getMinWorldHeight(int protocol) {
         if (protocol >= PROTOCOL_1_18) return -64;
         return 0;
@@ -229,6 +233,7 @@ public final class VersionPhysics {
 
     // === MOVEMENT FEATURES ===
 
+    // Exists for API symmetry only — sprinting has been in MC since 1.0
     public static boolean hasSprinting(int protocol) {
         return true;
     }

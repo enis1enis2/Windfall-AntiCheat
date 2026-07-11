@@ -22,6 +22,7 @@ public class StepCheck extends Check implements PacketCheck {
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!isMovementPacket(event)) return;
 
+        // Both ticks must be on ground — otherwise it's a jump, not a step
         if (player.isOnGround() && player.isLastOnGround()) {
             double deltaY = player.getY() - player.getLastY();
 
@@ -32,6 +33,7 @@ public class StepCheck extends Check implements PacketCheck {
             if (deltaY > maxHeight + STEP_TOLERANCE) {
                 double overshoot = deltaY - maxHeight;
 
+                // Large overshoots = blatant hacks, immediate flag
                 if (overshoot > 0.3) {
                     flag(player);
                     return;

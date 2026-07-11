@@ -2,15 +2,18 @@ package io.windfall.anticheat.core.severity;
 
 import io.windfall.anticheat.core.player.WindfallPlayer;
 
+// Scales VL increments based on player's cumulative violation level
+// Higher VL → faster escalation → quicker punishments for repeat offenders
 public class SeverityManager {
 
     private final boolean enabled;
-    private final int moderateVl;
-    private final int highVl;
-    private final int extremeVl;
-    private final double moderateMultiplier;
-    private final double highMultiplier;
-    private final double extremeMultiplier;
+    private final int moderateVl;       // Threshold for moderate severity
+    private final int highVl;           // Threshold for high severity
+    private final int extremeVl;        // Threshold for extreme severity
+    private final double moderateMultiplier;  // e.g. 1.3x at moderate
+    private final double highMultiplier;      // e.g. 1.6x at high
+    private final double extremeMultiplier;   // e.g. 2.0x at extreme
+    // Bedrock players get reduced multipliers because touch/controller input is less precise
     private final double bedrockDiscount;
 
     public SeverityManager(boolean enabled, int moderateVl, int highVl, int extremeVl,
@@ -39,6 +42,8 @@ public class SeverityManager {
         );
     }
 
+    // Returns the multiplier applied to VL increments for this player
+    // Bedrock discount is applied after severity scaling — both multiply together
     public double getSeverityMultiplier(WindfallPlayer player) {
         if (!enabled) return 1.0;
 

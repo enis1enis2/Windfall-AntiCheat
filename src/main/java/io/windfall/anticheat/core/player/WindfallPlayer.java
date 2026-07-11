@@ -50,10 +50,12 @@ public class WindfallPlayer {
 
     private double x, y, z;
     private double lastX, lastY, lastZ;
+    // Three-deep history needed for acceleration and jerk calculations in movement checks
     private double lastLastX, lastLastY, lastLastZ;
 
     private double deltaX, deltaY, deltaZ;
 
+    // Standard player bounding box: 0.6 wide × 1.8 tall (MC default since 1.0)
     private double width = 0.6;
     private double height = 1.8;
 
@@ -67,6 +69,7 @@ public class WindfallPlayer {
     private boolean swimming;
     private boolean climbing;
 
+    // Ping via our own transaction system, not Bukkit API — gives sub-tick accuracy
     private int transactionPing;
     private int transactionId;
 
@@ -80,6 +83,7 @@ public class WindfallPlayer {
 
     private double groundX, groundY, groundZ;
 
+    // ConcurrentHashMap required: checks read from Netty, ticks run on main thread
     private final ConcurrentHashMap<String, Integer> violationLevels = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Double> buffers = new ConcurrentHashMap<>();
 
@@ -109,8 +113,8 @@ public class WindfallPlayer {
     }
 
     public double getHeight() {
-        if (swimming || climbing) return 0.6;
-        if (sneaking && protocolVersion >= 477) return 1.5;
+        if (swimming || climbing) return 0.6; // Swimming/crawling halves hitbox
+        if (sneaking && protocolVersion >= 477) return 1.5; // Sneak height changed in 1.14+
         return 1.8;
     }
 
@@ -136,6 +140,7 @@ public class WindfallPlayer {
         return BoundingBox.fromPosition(x, y, z, width, getHeight());
     }
 
+    // Position roll: lastLast ← last ← current each tick
     public void setPosition(double x, double y, double z) {
         this.lastLastX = this.lastX;
         this.lastLastY = this.lastY;
@@ -152,6 +157,7 @@ public class WindfallPlayer {
         this.tickCount++;
     }
 
+    // Must run BEFORE checks each tick so lastOnGround reflects previous tick state
     public void resetTickState() {
         this.movedSinceTick = false;
         this.lastOnGround = this.onGround;
@@ -277,6 +283,7 @@ public class WindfallPlayer {
     public boolean isAlertsEnabled() { return alertsEnabled; }
     public void setAlertsEnabled(boolean alertsEnabled) { this.alertsEnabled = alertsEnabled; }
 
+    // Iterates all check VLs — called frequently by PunishmentEngine and SeverityManager
     public int getTotalViolationLevel() {
         int total = 0;
         for (int v : violationLevels.values()) {

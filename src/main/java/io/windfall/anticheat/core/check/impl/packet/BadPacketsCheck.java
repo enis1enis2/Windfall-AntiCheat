@@ -49,6 +49,7 @@ public class BadPacketsCheck extends Check implements PacketCheck {
         PacketTypeCommon type = event.getPacketType();
         long now = System.currentTimeMillis();
 
+        // Reset attack counter every tick for auto-clicker detection
         if (now - currentTickStart > 50) {
             attackCountThisTick = 0;
             currentTickStart = now;
@@ -60,6 +61,7 @@ public class BadPacketsCheck extends Check implements PacketCheck {
                 || type == PacketType.Play.Client.PLAYER_ROTATION) {
             lastMovementPacketTime = now;
 
+            // Movement before LOGIN_SUCCESS should never happen — protocol violation
             if (!loggedIn) {
                 flagDetail(player, "movement before login complete");
                 return;
@@ -171,6 +173,7 @@ public class BadPacketsCheck extends Check implements PacketCheck {
         }
     }
 
+    // NaN/Infinite coordinates cause server exceptions — kick immediately
     private void validateCoordinates(WindfallPlayer player, double x, double y, double z) {
         if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)
                 || Double.isInfinite(x) || Double.isInfinite(y) || Double.isInfinite(z)) {
@@ -180,6 +183,7 @@ public class BadPacketsCheck extends Check implements PacketCheck {
         }
 
         int protocol = player.getProtocolVersion();
+        // 64 blocks above max height — tolerance for entity tracking packets
         double maxY = VersionPhysics.getMaxWorldHeight(protocol) + 64;
         double minY = VersionPhysics.getMinWorldHeight(protocol);
 
@@ -204,6 +208,7 @@ public class BadPacketsCheck extends Check implements PacketCheck {
         }
     }
 
+    // Epsilon-based duplicate detection catches position spam from hacked clients
     private void checkDuplicate(WindfallPlayer player, double x, double y, double z, float pitch, float yaw) {
         double epsilon = 0.00001;
         if (Math.abs(x - lastPosX) < epsilon

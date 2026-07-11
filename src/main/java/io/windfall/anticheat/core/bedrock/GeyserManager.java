@@ -9,6 +9,8 @@ import java.lang.reflect.Method;
 import java.util.UUID;
 import java.util.logging.Level;
 
+// Handles Geyser/Floodgate detection and Bedrock player queries via reflection
+// Reflection is required because Geyser is an optional dependency — can't compile against it
 public final class GeyserManager {
 
     private static GeyserManager instance;
@@ -16,6 +18,7 @@ public final class GeyserManager {
     private boolean geyserPresent = false;
     private boolean floodgatePresent = false;
 
+    // Cached method handles — looked up once at startup, reused for every query
     private Method floodgateApiGetInstance;
     private Method floodgateApiIsFloodgatePlayer;
     private Method floodgateApiGetPlayer;
@@ -28,6 +31,8 @@ public final class GeyserManager {
 
     private GeyserManager() {}
 
+    // Discovery order: Geyser plugin → Floodgate plugin → GeyserApi fallback
+    // Each step is optional — graceful degradation if not installed
     public static GeyserManager init(WindfallPlugin plugin) {
         GeyserManager mgr = new GeyserManager();
 
@@ -84,6 +89,7 @@ public final class GeyserManager {
         return geyserPresent;
     }
 
+    // Two-tier lookup: Floodgate API (more reliable) → GeyserApi (fallback)
     public boolean isBedrockPlayer(UUID uuid) {
         if (!geyserPresent) return false;
         try {

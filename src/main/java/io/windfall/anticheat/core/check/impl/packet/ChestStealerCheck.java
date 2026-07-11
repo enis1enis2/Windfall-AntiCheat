@@ -16,6 +16,7 @@ import java.util.ArrayDeque;
 @CheckData(name = "Chest Stealer A", stableKey = "windfall.packet.cheststealer", decay = 0.01, setbackVl = 15)
 public class ChestStealerCheck extends Check implements PacketCheck {
 
+    // Chest has 27+36 = 63 slots; 40 clicks in one window is suspicious
     private static final int MAX_CLICKS_PER_WINDOW = 40;
     private static final long WINDOW_TIMEOUT_MS = 3000;
     private static final int FAST_CLICK_THRESHOLD = 6;
@@ -42,6 +43,7 @@ public class ChestStealerCheck extends Check implements PacketCheck {
 
     @Override
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
+        // Only server knows true window type — track opens from server-side packets
         if (event.getPacketType() == PacketType.Play.Server.OPEN_WINDOW) {
             windowOpen = true;
             windowOpenTime = System.currentTimeMillis();
@@ -78,6 +80,7 @@ public class ChestStealerCheck extends Check implements PacketCheck {
         if (!windowOpen) return;
 
         long windowDuration = now - windowOpenTime;
+        // Short window + excessive clicks = compound condition for chest stealing
         if (windowDuration < WINDOW_TIMEOUT_MS && clicksThisWindow > MAX_ITEMS_PER_SECOND) {
             increaseBuffer(player, 0.5);
             if (getBuffer(player) > 3.0) {

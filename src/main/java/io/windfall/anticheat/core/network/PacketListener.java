@@ -77,8 +77,9 @@ public class PacketListener extends PacketListenerAbstract {
                 wp.setOnGround(wrapper.isOnGround());
             } else if (type == PacketType.Play.Client.KEEP_ALIVE) {
                 WrapperPlayClientKeepAlive wrapper = new WrapperPlayClientKeepAlive(event);
-                long id = wrapper.getId();
-                transactionManager.processTransaction(wp, (short) (id & 0xFFFF));
+            long id = wrapper.getId();
+            // KeepAlive IDs are longs, mask to 16 bits for transaction system short IDs
+            transactionManager.processTransaction(wp, (short) (id & 0xFFFF));
             } else if (type == PacketType.Play.Client.INTERACT_ENTITY) {
                 wp.setLastAttackTime(System.currentTimeMillis());
             }
@@ -107,6 +108,7 @@ public class PacketListener extends PacketListenerAbstract {
 
             if (type == PacketType.Play.Server.ENTITY_VELOCITY) {
                 WrapperPlayServerEntityVelocity wrapper = new WrapperPlayServerEntityVelocity(event);
+                // Only capture velocity for THIS player, not other entities
                 if (wrapper.getEntityId() == player.getEntityId()) {
                     Vector3d vel = wrapper.getVelocity();
                     wp.setServerVelocityX(vel.x);
@@ -117,6 +119,7 @@ public class PacketListener extends PacketListenerAbstract {
             } else if (type == PacketType.Play.Server.PLAYER_POSITION_AND_LOOK) {
                 WrapperPlayServerPlayerPositionAndLook wrapper = new WrapperPlayServerPlayerPositionAndLook(event);
                 wp.setTeleportPosition(wrapper.getX(), wrapper.getY(), wrapper.getZ());
+            // On respawn, reset to origin — server teleports player next tick
             } else if (type == PacketType.Play.Server.RESPAWN) {
                 wp.setPosition(0, 0, 0);
                 wp.setOnGround(true);
@@ -136,6 +139,7 @@ public class PacketListener extends PacketListenerAbstract {
         }
     }
 
+    // LOGIN_SUCCESS is earliest safe point to create WindfallPlayer — before this, User data is incomplete
     private void handleLogin(Player player, PacketSendEvent event) {
         if (playerManager.get(player.getUniqueId()) != null) return;
 
@@ -152,6 +156,7 @@ public class PacketListener extends PacketListenerAbstract {
         }
 
         GeyserManager geyserManager = plugin.getGeyserManager();
+        // Check Geyser at login only — Bedrock status doesn't change mid-session
         if (geyserManager != null && geyserManager.isGeyserPresent()) {
             BedrockInfo bedrockInfo = geyserManager.getBedrockInfo(player.getUniqueId());
             if (bedrockInfo != null) {

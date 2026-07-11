@@ -21,6 +21,7 @@ public class AimCheck extends Check implements PacketCheck {
     private double pitchAccumulator;
     private int rotationCount;
 
+    // 180 degrees in one tick is physically impossible for any human input
     private static final double INSTANT_SNAP_THRESHOLD = 180.0;
     private static final double ROTATION_MODULO = 360.0;
     private static final int MIN_ROTATION_SAMPLES = 5;
@@ -47,6 +48,7 @@ public class AimCheck extends Check implements PacketCheck {
         }
 
         float deltaYaw = yaw - lastYaw;
+        // Normalize to [-180, 180] to handle 359→1 wraparound correctly
         if (deltaYaw > 180) deltaYaw -= ROTATION_MODULO;
         if (deltaYaw < -180) deltaYaw += ROTATION_MODULO;
 
@@ -71,6 +73,7 @@ public class AimCheck extends Check implements PacketCheck {
             double avgYawDelta = yawAccumulator / rotationCount;
             double avgPitchDelta = pitchAccumulator / rotationCount;
 
+            // Low pitch + high yaw variance = horizontal aim assistance signature
             if (avgYawDelta > 0.1 && avgPitchDelta < AIMBOT_YAW_VARIANCE_THRESHOLD) {
                 increaseBuffer(player, 0.3);
                 if (getBuffer(player) > 5.0) {

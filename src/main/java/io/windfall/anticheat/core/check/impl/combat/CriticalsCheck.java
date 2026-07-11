@@ -13,6 +13,7 @@ import io.windfall.anticheat.core.player.WindfallPlayer;
 @CheckData(name = "Criticals A", stableKey = "windfall.combat.criticals", decay = 0.01, setbackVl = 10)
 public class CriticalsCheck extends Check implements PacketCheck {
 
+    // MC requires deltaY in (0.11, 0.5) for a valid critical hit
     private static final double MIN_DELTA_Y_CRITICAL = 0.11;
     private static final double MAX_DELTA_Y_CRITICAL = 0.5;
 
@@ -38,6 +39,7 @@ public class CriticalsCheck extends Check implements PacketCheck {
     }
 
     private void handleAttack(WindfallPlayer player) {
+        // Ground attacks are never criticals — reset counter
         if (player.isOnGround()) {
             consecutiveInvalid = Math.max(0, consecutiveInvalid - 1);
             return;
@@ -46,6 +48,7 @@ public class CriticalsCheck extends Check implements PacketCheck {
         double deltaY = player.getDeltaY();
         boolean validCritMotion = deltaY > MIN_DELTA_Y_CRITICAL && deltaY < MAX_DELTA_Y_CRITICAL;
 
+        // Slight negative tolerance for float precision at jump apex
         if (!validCritMotion && deltaY >= -0.01) {
             consecutiveInvalid++;
             if (consecutiveInvalid >= 4) {

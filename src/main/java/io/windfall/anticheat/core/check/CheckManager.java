@@ -31,6 +31,7 @@ public class CheckManager {
     private final WindfallPlugin plugin;
     private final List<Check> checks = new ArrayList<>();
     private final Map<String, Check> checkByKey = new ConcurrentHashMap<>();
+    // Captured once at startup — server protocol never changes mid-session
     private final int serverProtocol;
 
     public CheckManager(WindfallPlugin plugin) {
@@ -59,6 +60,7 @@ public class CheckManager {
         allChecks.add(new ChestStealerCheck());
         allChecks.add(new CreativeCheck());
 
+        // Version filter: checks outside server protocol range are never registered
         for (Check check : allChecks) {
             if (serverProtocol >= check.getMinVersion() && serverProtocol <= check.getMaxVersion()) {
                 checks.add(check);
@@ -96,10 +98,12 @@ public class CheckManager {
         }
     }
 
+    // Runs every 50ms via PlatformScheduler — reward before decay is intentional
     public void onTick() {
         io.windfall.anticheat.core.punishment.PunishmentEngine pe = plugin.getPunishmentEngine();
         for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
             if (!player.isValid()) continue;
+            // Must run before checks so lastOnGround reflects previous tick
             player.resetTickState();
             for (Check check : checks) {
                 if (!check.isEnabled()) continue;

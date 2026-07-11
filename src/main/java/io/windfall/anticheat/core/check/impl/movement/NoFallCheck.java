@@ -29,13 +29,15 @@ public class NoFallCheck extends Check implements PacketCheck {
         double deltaY = player.getDeltaY();
         double fallDistance = player.getLastY() - player.getY();
 
+        // All three conditions must be true: fast fall + distance + claiming ground
         if (deltaY < -MIN_FALL_VELOCITY && fallDistance > MIN_FALL_DISTANCE && onGround) {
             consecutiveNoFall++;
 
             if (fallDistance > maxFallDistance) maxFallDistance = fallDistance;
             if (Math.abs(deltaY) > maxFallVelocity) maxFallVelocity = Math.abs(deltaY);
 
-            if (consecutiveNoFall >= MAX_CONSECUTIVE) {
+            // Require 5 consecutive violations to avoid lag-spike false positives
+        if (consecutiveNoFall >= MAX_CONSECUTIVE) {
                 flag(player);
                 consecutiveNoFall = 0;
                 maxFallDistance = 0;

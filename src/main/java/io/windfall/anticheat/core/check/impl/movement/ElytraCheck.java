@@ -10,7 +10,8 @@ import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.physics.VersionPhysics;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 
-@CheckData(name = "Elytra A", stableKey = "windfall.movement.elytra", decay = 0.01, setbackVl = 20, minVersion = 107, maxVersion = 999)
+    // Elytra added in 1.9 (protocol 107) — check disabled on older versions
+    @CheckData(name = "Elytra A", stableKey = "windfall.movement.elytra", decay = 0.01, setbackVl = 20, minVersion = 107, maxVersion = 999)
 public class ElytraCheck extends Check implements PacketCheck {
 
     private static final double ELYTRA_MAX_HORIZONTAL_SPEED = 1.5;
@@ -89,6 +90,7 @@ public class ElytraCheck extends Check implements PacketCheck {
             elytraHoverTicks = Math.max(0, elytraHoverTicks - 1);
         }
 
+        // Some hacks boost upward at elytra start — detect suspicious lift-off
         if (deltaY > 0 && deltaY > ELYTRA_KICKBOOST_MAX && player.isOnGround()) {
             increaseBuffer(player, 0.3);
             if (getBuffer(player) > 5.0) {
@@ -97,6 +99,7 @@ public class ElytraCheck extends Check implements PacketCheck {
             }
         }
 
+        // After 5 gliding ticks, player should always descend — upward movement is suspicious
         if (deltaY > 0 && !player.isOnGround() && elytraTicks > 5) {
             double expectedDescent = ELYTRA_MIN_DESCENT;
             if (deltaY > Math.abs(expectedDescent) + ELYTRA_VERTICAL_TOLERANCE) {

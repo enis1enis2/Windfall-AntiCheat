@@ -18,6 +18,7 @@ public class KillAuraCheck extends Check implements PacketCheck {
     private static final int SWING_WINDOW_MS = 1000;
     private static final double SNAP_TO_TARGET_THRESHOLD = 60.0;
     private static final int MIN_SNAP_COUNT = 3;
+    // Human aim is asymmetric; ratio > 0.95 means mathematically generated rotations
     private static final double BOT_ROTATION_SYMMETRY_THRESHOLD = 0.95;
 
     private final ArrayDeque<TargetEvent> recentTargets = new ArrayDeque<>();
@@ -58,6 +59,7 @@ public class KillAuraCheck extends Check implements PacketCheck {
 
         totalAttacks++;
 
+        // Evaluate multi-target every 20 attacks to avoid single-target false positives
         if (totalAttacks > 0 && totalAttacks % 20 == 0) {
             checkMultiAura(player);
         }
@@ -117,6 +119,7 @@ public class KillAuraCheck extends Check implements PacketCheck {
 
         if (total < 10) return;
 
+        // min(positive, negative) / total measures how balanced the direction changes are
         double symmetryRatio = Math.min(positiveCount, negativeCount) / (double) total;
 
         if (symmetryRatio > BOT_ROTATION_SYMMETRY_THRESHOLD) {
@@ -130,6 +133,7 @@ public class KillAuraCheck extends Check implements PacketCheck {
             decreaseBuffer(player, 0.2);
         }
 
+        // Prevent snap counter from growing unbounded
         if (snapCount > MIN_SNAP_COUNT * 3) {
             snapCount = 0;
         }

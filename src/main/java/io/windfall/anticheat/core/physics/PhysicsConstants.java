@@ -10,6 +10,7 @@ public final class PhysicsConstants {
     public static final double GRAVITY = 0.08;
     public static final double PLAYER_JUMP_MOMENTUM = 0.42;
     public static final double AIR_DRAG = 0.98;
+    // Exact IEEE float from decompiled MC — do not "round" this value
     public static final double WATER_DRAG = 0.800000011920929;
     public static final double LAVA_DRAG = 0.5;
     public static final double GROUND_FRICTION = 0.91;
@@ -27,6 +28,7 @@ public final class PhysicsConstants {
     public static final double PLAYER_HEIGHT_SNEAKING = 1.5;
     public static final double PLAYER_EYE_HEIGHT_NORMAL = 1.62;
     public static final double PLAYER_EYE_HEIGHT_SNEAKING = 1.27;
+    // Same IEEE float precision issue as WATER_DRAG — raw decompiled value
     public static final double SWIM_BOOST = 0.03999999910593033;
     public static final double WEB_SLOWDOWN = 0.25;
     public static final double LADDER_CLIMB_SPEED = 0.15;
@@ -39,6 +41,7 @@ public final class PhysicsConstants {
 
     private static final Map<Material, Double> FRICTION_MAP = new ConcurrentHashMap<>();
 
+    // String-based matching avoids compile-time Material import dependencies across MC versions
     static {
         addFriction("SOUL_SAND", SOUL_SAND_FRICTION);
         addFriction("SOUL_SOIL", SOUL_SAND_FRICTION);
@@ -70,6 +73,7 @@ public final class PhysicsConstants {
         return 0.1 * (amplifier + 1);
     }
 
+    // Pre-1.9 jump boost: 0.15/level; post-1.9: 0.1/level
     public static double getJumpBoostVertical(int amplifier, boolean is19Plus) {
         if (is19Plus) {
             return 0.1 * (amplifier + 1);

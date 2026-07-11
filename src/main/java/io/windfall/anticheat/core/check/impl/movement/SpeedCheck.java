@@ -12,11 +12,14 @@ import io.windfall.anticheat.core.player.WindfallPlayer;
 @CheckData(name = "Speed A", stableKey = "windfall.movement.speed", decay = 0.01, setbackVl = 20)
 public class SpeedCheck extends Check implements PacketCheck {
 
+    // 0.102 slightly above 0.1 to account for client micro-acceleration rounding
     private static final double BASE_WALK_SPEED = 0.102;
     private static final double SPRINT_MULTIPLIER = 1.3;
     private static final double SNEAK_MULTIPLIER = 0.3;
     private static final double GROUND_FRICTION = 0.91;
+    // 0.16277136 = (0.1 * movementInput) / friction³ — decompiled from MC movement equation
     private static final double GROUND_ACCEL_FACTOR = 0.16277136;
+    // Air control much lower than ground — speed hacks are most obvious mid-air
     private static final double AIR_ACCEL_FACTOR = 0.026;
     private static final double AIR_FRICTION = 0.91;
     private static final double SPEED_TOLERANCE = 1.05;
@@ -46,6 +49,7 @@ public class SpeedCheck extends Check implements PacketCheck {
             maxObservedSpeed = actualSpeed;
         }
 
+        // Older versions send micro-movement packets even at rest — skip tiny speeds
         if (actualSpeed < PRE_1_18_2_THRESHOLD && player.getProtocolVersion() < 757) {
             decreaseBuffer(player, 0.1);
             return;
@@ -100,6 +104,7 @@ public class SpeedCheck extends Check implements PacketCheck {
         return speed;
     }
 
+    // Reimplements MC's horizontal movement equation: lastSpeed * friction + baseSpeed * accelFactor
     private double calculateMaxHorizontalSpeed(double baseSpeed, double lastHorizontalSpeed, WindfallPlayer player) {
         boolean onGround = player.isOnGround();
         boolean inWeb = player.isClimbing() && !player.isSwimming();

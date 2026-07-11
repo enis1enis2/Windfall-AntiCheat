@@ -25,6 +25,7 @@ public class CreativeCheck extends Check implements PacketCheck {
         PacketTypeCommon type = event.getPacketType();
         if (type != PacketType.Play.Client.CREATIVE_INVENTORY_ACTION) return;
 
+        // Creative packets in survival = always a hack, immediate kick
         if (player.getPlayer().getGameMode() != org.bukkit.GameMode.CREATIVE) {
             flag(player);
             player.getPlayer().kickPlayer("[Windfall] Creative packet in non-creative mode");
@@ -32,6 +33,7 @@ public class CreativeCheck extends Check implements PacketCheck {
         }
 
         long now = System.currentTimeMillis();
+        // 50ms = one tick; creative actions capped per-tick
         if (now - lastTickStart > 50) {
             actionsThisTick = 0;
             lastTickStart = now;

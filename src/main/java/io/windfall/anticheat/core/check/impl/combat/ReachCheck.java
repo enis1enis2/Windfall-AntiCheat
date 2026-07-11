@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @CheckData(name = "Reach A", stableKey = "windfall.combat.reach", decay = 0.05, setbackVl = 10)
 public class ReachCheck extends Check implements PacketCheck {
 
+    // 0.1 block tolerance for float rounding in the client's own reach calculation
     private static final double TOLERANCE = 0.1;
 
     private static final double REACH_LEGACY = 4.0;
@@ -30,8 +31,10 @@ public class ReachCheck extends Check implements PacketCheck {
     private static final double PLAYER_SNEAK_HEIGHT_LEGACY = 1.62;
     private static final double ENTITY_DEFAULT_SIZE = 0.25;
 
+    // 20-sample window = 1 second at 20 TPS
     private static final int ROLLING_WINDOW = 20;
 
+    // Static map persists across instances; cleaned up periodically via cleanup()
     private static final ConcurrentHashMap<Integer, TrackedEntity> trackedEntities = new ConcurrentHashMap<>();
 
     private final ArrayDeque<Double> reachSamples = new ArrayDeque<>();
@@ -85,6 +88,7 @@ public class ReachCheck extends Check implements PacketCheck {
 
         double limit = getReachLimit(player);
 
+        // Ping-proportional tolerance, capped at 0.3 blocks to prevent abuse
         double pingTolerance = Math.min(player.getTransactionPing() * 0.001, 0.3);
         double effectiveLimit = limit + TOLERANCE + pingTolerance;
 
@@ -131,6 +135,7 @@ public class ReachCheck extends Check implements PacketCheck {
         return VersionPhysics.getPlayerEyeHeight(player.isSneaking(), protocol);
     }
 
+    // Closest-point-on-AABB algorithm — clamps eye position to box bounds
     private double calculateReachDistance(double eyeX, double eyeY, double eyeZ,
                                           double bbMinX, double bbMinY, double bbMinZ,
                                           double bbMaxX, double bbMaxY, double bbMaxZ) {
@@ -145,6 +150,7 @@ public class ReachCheck extends Check implements PacketCheck {
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
+    // Fallback to player-sized AABB when entity type is unknown
     private double[] getEntityBoundingBox(int entityId) {
         TrackedEntity te = trackedEntities.get(entityId);
         if (te == null) return null;

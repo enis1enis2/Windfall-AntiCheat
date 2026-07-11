@@ -25,16 +25,20 @@ import java.util.Map;
 
 public class ChecklistGUI implements Listener {
 
+    // 6 rows total, bottom row reserved for navigation/info
     private static final int ROWS = 6;
     private static final int PAGE_SIZE = (ROWS - 1) * 9;
     private static final String TITLE_PREFIX = "Windfall Checks";
 
+    // Materials that don't exist in 1.12 and below — null means fallback to solid colors
     private static final Material MAT_LIME_GLASS = getMaterial("LIME_STAINED_GLASS_PANE");
     private static final Material MAT_YELLOW_GLASS = getMaterial("YELLOW_STAINED_GLASS_PANE");
     private static final Material MAT_RED_GLASS = getMaterial("RED_STAINED_GLASS_PANE");
+    // Paper 1.20.5+ removed string-based ItemMeta methods — detect once at startup
     private static final boolean HAS_MODERN_META = hasModernMeta();
 
     private final WindfallPlugin plugin;
+    // Inventory hashCode → checks on that page; fragile if inventory is recreated, but fine for single-session GUI
     private final Map<Integer, List<Check>> pageChecks = new HashMap<>();
     private final Map<Integer, Integer> inventoryPage = new HashMap<>();
 
@@ -201,6 +205,7 @@ public class ChecklistGUI implements Listener {
         topInventory.setItem(slot, createCheckItem(check));
     }
 
+    // Returns null on pre-1.13 servers where stained glass panes don't exist
     private static Material getMaterial(String name) {
         try {
             Material mat = Material.matchMaterial(name);
@@ -210,6 +215,8 @@ public class ChecklistGUI implements Listener {
         }
     }
 
+    // Paper 1.20.5+ added displayName(Component) and removed displayName(String)
+    // Detection via reflection avoids compile-time dependency on Adventure
     private static boolean hasModernMeta() {
         try {
             ItemMeta.class.getMethod("displayName", net.kyori.adventure.text.Component.class);
@@ -219,12 +226,12 @@ public class ChecklistGUI implements Listener {
         }
     }
 
+    // Three-tier fallback: Paper 1.20.5+ → legacy setDisplayName(String) → direct call
+    // Reflection is used because Adventure API isn't on Spigot's classpath
     private void setDisplayName(ItemMeta meta, String name) {
         try {
             if (HAS_MODERN_META) {
-                // Paper 1.20.5+ - use adventure Component via reflection
                 Class<?> componentClass = Class.forName("net.kyori.adventure.text.Component");
-                Class<?> textClass = Class.forName("net.kyori.adventure.text.TextComponent");
                 Method textOf = componentClass.getMethod("text", Object.class);
                 Object component = textOf.invoke(null, name);
                 Method displayName = ItemMeta.class.getMethod("displayName", componentClass);
@@ -233,7 +240,6 @@ public class ChecklistGUI implements Listener {
                 throw new NoSuchMethodException("fallback");
             }
         } catch (Exception e) {
-            // Legacy Spigot or older Paper - use setDisplayName(String)
             try {
                 Method setDisplayName = ItemMeta.class.getMethod("setDisplayName", String.class);
                 setDisplayName.invoke(meta, name);
@@ -243,12 +249,11 @@ public class ChecklistGUI implements Listener {
         }
     }
 
+    // Same three-tier fallback as setDisplayName but for lore lines
     private void setLore(ItemMeta meta, List<String> lore) {
         try {
             if (HAS_MODERN_META) {
-                // Paper 1.20.5+ - use adventure Components via reflection
                 Class<?> componentClass = Class.forName("net.kyori.adventure.text.Component");
-                Class<?> textClass = Class.forName("net.kyori.adventure.text.TextComponent");
                 Method textOf = componentClass.getMethod("text", Object.class);
 
                 List<Object> components = new ArrayList<>();
@@ -262,7 +267,6 @@ public class ChecklistGUI implements Listener {
                 throw new NoSuchMethodException("fallback");
             }
         } catch (Exception e) {
-            // Legacy Spigot or older Paper - use setLore(List<String>)
             try {
                 Method setLore = ItemMeta.class.getMethod("setLore", List.class);
                 setLore.invoke(meta, lore);

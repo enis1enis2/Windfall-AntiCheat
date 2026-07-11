@@ -13,6 +13,7 @@ import java.util.ArrayDeque;
 @CheckData(name = "Fast Heal A", stableKey = "windfall.combat.fastheal", decay = 0.02, setbackVl = 10, minVersion = 5, maxVersion = 107)
 public class FastHealCheck extends Check implements PacketCheck {
 
+    // 3 HP per swing is beyond normal regeneration — threshold for suspicious healing
     private static final double HEALTH_SWING_THRESHOLD = 3.0;
     private static final int HEAL_WINDOW_MS = 500;
     private static final int MIN_SWINGS_FOR_FLAG = 3;
@@ -81,6 +82,7 @@ public class FastHealCheck extends Check implements PacketCheck {
                 .orElse(0.0);
 
             double maxHealth = player.getPlayer().getMaxHealth();
+            // Compare against max health to account for Health Boost effect scaling
             double healRatio = avgHeal / maxHealth;
 
             if (healRatio > HEALTH_RATIO_THRESHOLD) {
@@ -90,6 +92,7 @@ public class FastHealCheck extends Check implements PacketCheck {
                     resetBuffer(player);
                 }
             }
+        // Single massive heals bypass the multi-swing window check
         } else if (healthDelta > HEALTH_SWING_THRESHOLD * 2) {
             increaseBuffer(player, 0.5);
             if (getBuffer(player) > 5.0) {

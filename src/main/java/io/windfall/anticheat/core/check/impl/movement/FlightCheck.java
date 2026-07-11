@@ -35,6 +35,7 @@ public class FlightCheck extends Check implements PacketCheck {
 
     private static final double LEVITATION_STRENGTH = 0.05;
 
+    // Tracks predicted vertical velocity from previous tick for comparison
     private double expectedDeltaY;
     private int hoverTicks;
 
@@ -63,6 +64,7 @@ public class FlightCheck extends Check implements PacketCheck {
             return;
         }
 
+        // On leaving ground, seed expectedDeltaY with jump momentum or zero for airborne start
         if (lastGround && !currentOnGround) {
             if (deltaY >= JUMP_MOMENTUM - 0.01 && deltaY <= JUMP_MOMENTUM + 0.15) {
                 expectedDeltaY = JUMP_MOMENTUM;
@@ -91,7 +93,8 @@ public class FlightCheck extends Check implements PacketCheck {
             double levitationAmplifier = getLevitationAmplifier(player);
             predictedDeltaY = expectedDeltaY + LEVITATION_STRENGTH * levitationAmplifier;
         } else {
-            predictedDeltaY = (expectedDeltaY - gravity) * AIR_DRAG;
+        // MC air movement formula: (expectedDeltaY - gravity) * airDrag
+        predictedDeltaY = (expectedDeltaY - gravity) * AIR_DRAG;
         }
 
         double verticalDelta = deltaY - predictedDeltaY;
@@ -101,6 +104,7 @@ public class FlightCheck extends Check implements PacketCheck {
         if (verticalDeviation && !isFallFlying && !hasRiptide && !hasLevitation) {
             handleHoverDetection(player, deltaY);
 
+            // Positive deltaY when should be falling = strongest fly signal
             if (deltaY > 0 && expectedDeltaY <= 0 && !hasLevitation && !hasRiptide && !isFallFlying) {
                 increaseBuffer(player, 1.5);
                 if (getBuffer(player) > 3.0) {
@@ -155,6 +159,7 @@ public class FlightCheck extends Check implements PacketCheck {
         }
     }
 
+    // Secondary NoFall check: detects clients claiming ground while falling fast
     private void handleNoFall(WindfallPlayer player, boolean currentOnGround, double deltaY,
                               double lastY, double currentY) {
         if (!currentOnGround && deltaY < -NO_FALL_VELOCITY_THRESHOLD) {
@@ -247,6 +252,7 @@ public class FlightCheck extends Check implements PacketCheck {
         return false;
     }
 
+    // isRiptiding() doesn't exist before 1.13 — reflection avoids compile-time breakage
     private boolean checkRiptiding(WindfallPlayer player) {
         try {
             java.lang.reflect.Method m = player.getPlayer().getClass().getMethod("isRiptiding");
@@ -257,6 +263,7 @@ public class FlightCheck extends Check implements PacketCheck {
         }
     }
 
+    // isGliding() doesn't exist before 1.9 — same reflection pattern as isRiptiding
     private boolean checkFallFlying(WindfallPlayer player) {
         try {
             java.lang.reflect.Method m = player.getPlayer().getClass().getMethod("isGliding");

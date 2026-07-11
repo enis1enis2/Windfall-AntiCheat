@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class CompensatedWorld {
 
+    // Only caches changed blocks; unchanged blocks fall through to live world lookup
     private final Map<Long, Material> blockChanges = new ConcurrentHashMap<>();
     private final World world;
 
@@ -28,6 +29,7 @@ public final class CompensatedWorld {
     }
 
     public void onChunkUnload(int chunkX, int chunkZ) {
+        // Key packing mirrors MC internal chunk serialization format
         long chunkKey = chunkKey(chunkX, chunkZ);
         blockChanges.entrySet().removeIf(entry -> {
             long blockKey = entry.getKey();
@@ -48,6 +50,7 @@ public final class CompensatedWorld {
         return block.getType();
     }
 
+    // Friction sampled from the block below the player (y-1), matching MC movement code
     public double getBlockFriction(int x, int y, int z) {
         Material material = getBlock(x, y, z - 1);
         if (material == null) material = getBlock(x, y, z);
@@ -122,6 +125,7 @@ public final class CompensatedWorld {
         return material != null && material.name().equals("POWDER_SNOW");
     }
 
+    // Enumerates all solid blocks in an AABB region for collision detection
     public List<BoundingBox> getCollisionBoxes(BoundingBox box, int protocolVersion) {
         List<BoundingBox> boxes = new ArrayList<>();
         int minX = (int) Math.floor(box.minX);
@@ -149,6 +153,7 @@ public final class CompensatedWorld {
         return world;
     }
 
+    // Minecraft-style bit-packed coordinates avoid HashMap overhead
     private static long blockKey(int x, int y, int z) {
         return ((long) (x & 0x3FFFFFF) << 38) | ((long) (y & 0xFFF) << 26) | (long) (z & 0x3FFFFFF);
     }

@@ -18,6 +18,7 @@ public class PlatformScheduler {
         this.folia = detectFolia();
     }
 
+    // Folia detection by class presence — RegionizedServer only exists on Folia
     private boolean detectFolia() {
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
@@ -35,6 +36,7 @@ public class PlatformScheduler {
         }
     }
 
+    // Folia has no global sync scheduler; async + 50ms fixed rate as proxy for anti-cheat heartbeat
     private void startFoliaGlobalTick() {
         try {
             Method getAsyncScheduler = Bukkit.class.getMethod("getAsyncScheduler");
@@ -48,6 +50,7 @@ public class PlatformScheduler {
         }
     }
 
+    // 50ms loop is the heartbeat — runs reward, decay, and punishment evaluation
     private void tick() {
         if (!plugin.isRunning()) return;
         try {
@@ -57,6 +60,7 @@ public class PlatformScheduler {
         }
     }
 
+    // Folia requires global region scheduler for cross-region tasks; Bukkit uses standard task scheduler
     public void runSync(Runnable runnable) {
         if (folia) {
             try {

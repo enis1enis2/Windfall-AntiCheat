@@ -13,6 +13,7 @@ public class VersionManager {
     }
 
     private int parseProtocolVersion(String version) {
+        // Bukkit version strings look like "1.20.4-R0.1-SNAPSHOT"; split for the MC version
         String mcVersion = version.split("-")[0];
         return mapVersionToProtocol(mcVersion);
     }
@@ -61,6 +62,7 @@ public class VersionManager {
             case "1.21.3": return 768;
             case "1.21.4": return 769;
             default:
+                // Unknown future versions get an estimated protocol number
                 try {
                     String[] ver = mcVersion.split("\\.");
                     int major = Integer.parseInt(ver[0]);
@@ -76,10 +78,12 @@ public class VersionManager {
         return serverVersion;
     }
 
+    // Protocol 393 = 1.13, the "flattening" update that changed all internal IDs
     public boolean isLegacy() {
         return protocolVersion < 393;
     }
 
+    // Protocol 763 = 1.20.1, new world height and movement code
     public boolean isModern() {
         return protocolVersion >= 763;
     }

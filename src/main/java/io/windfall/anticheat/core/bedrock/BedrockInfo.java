@@ -2,13 +2,15 @@ package io.windfall.anticheat.core.bedrock;
 
 import java.util.Objects;
 
+// Immutable snapshot of a Bedrock player's device info from Floodgate
+// Used by checks to apply platform-specific thresholds (touch has higher aim-snap tolerance)
 public final class BedrockInfo {
 
-    private final String deviceOs;
-    private final String inputMode;
-    private final String uiProfile;
-    private final String clientVersion;
-    private final String languageCode;
+    private final String deviceOs;      // ANDROID, IOS, XBOX, PS4, SWITCH, WINDOWS
+    private final String inputMode;     // KEYBOARD_MOUSE, TOUCH, CONTROLLER
+    private final String uiProfile;     // TOUCH, CLASSIC, POCKET, PLUS
+    private final String clientVersion; // e.g. "1.21.50"
+    private final String languageCode;  // e.g. "en_US"
 
     public BedrockInfo(String deviceOs, String inputMode, String uiProfile, String clientVersion, String languageCode) {
         this.deviceOs = deviceOs;

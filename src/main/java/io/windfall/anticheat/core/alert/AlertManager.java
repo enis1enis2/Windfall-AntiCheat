@@ -12,10 +12,13 @@ import org.bukkit.entity.Player;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+// Coordinates in-game chat alerts and Discord webhook dispatch
+// Rate-limits alerts per player+check to prevent chat spam
 public class AlertManager {
 
     private final WindfallPlugin plugin;
     private final DiscordWebhook discordWebhook;
+    // Set.add() returns false if already present — used as a non-blocking rate limiter
     private final Set<String> alertCooldowns = ConcurrentHashMap.newKeySet();
 
     public AlertManager(WindfallPlugin plugin) {
@@ -30,10 +33,12 @@ public class AlertManager {
         int vl = player.getViolationLevels().getOrDefault(check.getStableKey(), 0);
         String cooldownKey = player.getUuid() + ":" + check.getStableKey();
 
+        // Atomic add — returns false if cooldown already active
         long now = System.currentTimeMillis();
         if (!alertCooldowns.add(cooldownKey)) {
             return;
         }
+        // Cooldown in ms divided by 50ms tick = number of ticks to wait
         plugin.getScheduler().runLater(() -> alertCooldowns.remove(cooldownKey),
             config.getDiscordRateLimitMs() / 50);
 

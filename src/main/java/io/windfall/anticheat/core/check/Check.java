@@ -11,6 +11,7 @@ import org.bukkit.Location;
 public abstract class Check {
 
     protected final String name;
+    // stableKey maps 1:1 to config.yml — never rename without updating all config files
     protected final String stableKey;
     protected boolean enabled;
     protected boolean punishable;
@@ -21,6 +22,7 @@ public abstract class Check {
     protected int maxVersion;
 
     public Check() {
+        // Every check class must declare @CheckData or the server crashes at startup
         CheckData data = getClass().getAnnotation(CheckData.class);
         if (data == null) {
             throw new IllegalStateException(
@@ -49,6 +51,7 @@ public abstract class Check {
         int increment = plugin.getSeverityManager().getScaledVlIncrement(player);
         int vl = player.getViolationLevels().merge(stableKey, increment, Integer::sum);
 
+        // Cap at maxVl so VL cannot exceed threshold even under rapid flagging
         if (vl > maxVl) {
             player.getViolationLevels().put(stableKey, maxVl);
             vl = maxVl;
@@ -65,6 +68,7 @@ public abstract class Check {
             plugin.getPunishmentEngine().evaluate(player);
         }
 
+        // Reset before setback to prevent instant re-punishment on next flag
         if (vl >= setbackVl) {
             player.getViolationLevels().put(stableKey, 0);
             performSetback(player);
@@ -115,6 +119,7 @@ public abstract class Check {
         }
     }
 
+    // Prefers last teleport position; falls back to last ground if no teleport sent yet (0,0,0 sentinel)
     protected void performSetback(WindfallPlayer player) {
         double tx = player.getTeleportX();
         double ty = player.getTeleportY();
@@ -142,6 +147,7 @@ public abstract class Check {
         player.getBuffers().merge(stableKey, amount, Double::sum);
     }
 
+    // Floor at 0.0 — buffers represent confidence and must never go negative
     public void decreaseBuffer(WindfallPlayer player, double amount) {
         player.getBuffers().merge(stableKey, -amount, (a, b) -> Math.max(0.0, a + b));
     }

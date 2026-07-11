@@ -26,6 +26,7 @@ public final class BoundingBox {
         return new BoundingBox(minX + x, minY + y, minZ + z, maxX + x, maxY + y, maxZ + z);
     }
 
+    // Standard AABB overlap: all three axes must overlap for intersection
     public boolean intersects(BoundingBox other) {
         return maxX > other.minX && minX < other.maxX
                 && maxY > other.minY && minY < other.maxY
@@ -48,6 +49,7 @@ public final class BoundingBox {
         return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
     }
 
+    // Point-to-box distance: returns 0 if point is inside the box
     public double distanceTo(double x, double y, double z) {
         double dx = Math.max(0, Math.max(minX - x, x - maxX));
         double dy = Math.max(0, Math.max(minY - y, y - maxY));
@@ -59,6 +61,7 @@ public final class BoundingBox {
         return distanceTo(x, y, z);
     }
 
+    // Expands bounding volume to encompass this box AND the two given points
     public BoundingBox addCoords(double x1, double y1, double z1, double x2, double y2, double z2) {
         double nminX = Math.min(minX, Math.min(x1, x2));
         double nminY = Math.min(minY, Math.min(y1, y2));
@@ -75,6 +78,7 @@ public final class BoundingBox {
         return new BoundingBox(x - halfWidth, y, z - halfWidth, x + halfWidth, y + height, z + halfWidth);
     }
 
+    // Currently ignores look direction — needs ray-based variant for eye-trace checks
     public static BoundingBox fromPlayerLook(double x, double y, double z, float yaw, float pitch,
                                               boolean sneaking, int protocol) {
         return fromPlayer(x, y, z, sneaking, protocol);

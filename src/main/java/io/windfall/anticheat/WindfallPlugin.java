@@ -17,6 +17,7 @@ import io.windfall.anticheat.core.version.VersionManager;
 import io.windfall.anticheat.core.compensation.TransactionManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+// Single entry point — owns all managers, enforces strict init order
 public final class WindfallPlugin extends JavaPlugin {
 
     private static WindfallPlugin instance;
@@ -34,6 +35,7 @@ public final class WindfallPlugin extends JavaPlugin {
     private ChecklistGUI checklistGUI;
     private volatile boolean running;
 
+    // PacketEvents must init in onLoad so it's ready before other plugins register listeners
     @Override
     public void onLoad() {
         instance = this;
@@ -41,6 +43,7 @@ public final class WindfallPlugin extends JavaPlugin {
         PacketEvents.getAPI().load();
     }
 
+    // Init order matters: config → version → scheduler → players → checks → commands → network
     @Override
     public void onEnable() {
         long start = System.nanoTime();

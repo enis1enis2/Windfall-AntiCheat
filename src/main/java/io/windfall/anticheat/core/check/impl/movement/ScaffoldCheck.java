@@ -14,6 +14,7 @@ import io.windfall.anticheat.core.player.WindfallPlayer;
 @CheckData(name = "Scaffold A", stableKey = "windfall.movement.scaffold", decay = 0.005, setbackVl = 30)
 public class ScaffoldCheck extends Check implements PacketCheck {
 
+    // Touch/keyboard/controller have different max placement rates — Bedrock-specific thresholds
     private static final double JAVA_MAX_BLOCK_PLACE_PER_SECOND = 12.0;
     private static final double BEDROCK_TOUCH_MAX_BLOCKS_PER_SEC = 8.0;
     private static final double BEDROCK_KB_MAX_BLOCKS_PER_SEC = 10.0;
@@ -77,6 +78,7 @@ public class ScaffoldCheck extends Check implements PacketCheck {
                 flag(player);
                 resetBuffer(player);
             }
+        // Placing blocks while sprinting is unusual — strong scaffold indicator
         } else if (player.isSprinting() && bps > SPRINTING_BLOCKS_PER_SEC_THRESHOLD) {
             increaseBuffer(player, 0.5);
             if (getBuffer(player) > 3.0) {

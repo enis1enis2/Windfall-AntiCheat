@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Registers /windfall via CommandMap reflection — avoids plugin.yml dependency issues
+// Subcommands are dispatched in a switch for clarity over annotation-based frameworks
 public class CommandManager {
 
     private static final List<String> SUBCOMMANDS = Arrays.asList(
@@ -34,6 +36,7 @@ public class CommandManager {
         registerCommand();
     }
 
+    // Reflective registration — works on all server forks without plugin.yml edits
     private void registerCommand() {
         try {
             Field field = Bukkit.getServer().getClass().getDeclaredField("commandMap");
@@ -164,6 +167,7 @@ public class CommandManager {
         sender.sendMessage(ChatColor.GRAY + "Java 11+ required");
     }
 
+    // Debug shows all tracked data for a player — useful for diagnosing false positives
     private void handleDebug(CommandSender sender, String targetName) {
         if (targetName == null) {
             sendMessage(sender, "Usage: /windfall debug <player>");
@@ -282,6 +286,7 @@ public class CommandManager {
         sender.sendMessage(ChatColor.GOLD + "/windfall gui" + ChatColor.GRAY + " - Open check GUI");
     }
 
+    // Inner class keeps command registration self-contained
     private class WindfallCommand extends Command {
 
         protected WindfallCommand() {
@@ -319,6 +324,7 @@ public class CommandManager {
             return true;
         }
 
+        // Tab completion for subcommands and player names — only for admins
         @Override
         public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
             if (!sender.hasPermission("windfall.admin")) {

@@ -6,8 +6,11 @@ import io.windfall.anticheat.core.physics.VersionPhysics;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+// Tracks entity positions from server packets for hit-accuracy and reach checks
+// Entity positions lag behind the client's view due to server tick delay
 public final class CompensatedEntities {
 
+    // 40 ticks ≈ 2 seconds of history — enough for high-ping players
     private static final int HISTORY_SIZE = 40;
 
     private final Map<Integer, History> entities = new ConcurrentHashMap<>();
@@ -37,6 +40,7 @@ public final class CompensatedEntities {
         );
     }
 
+    // Fixed-size circular buffer — avoids GC pressure from list resizing
     private static class History {
         private final double[][] positions = new double[HISTORY_SIZE][3];
         private int head = 0;
@@ -50,6 +54,7 @@ public final class CompensatedEntities {
             if (size < HISTORY_SIZE) size++;
         }
 
+        // Returns the most recent position — callers must handle null
         double[] getLatest() {
             if (size == 0) return null;
             int idx = (head - 1 + HISTORY_SIZE) % HISTORY_SIZE;

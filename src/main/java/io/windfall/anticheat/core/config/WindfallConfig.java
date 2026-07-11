@@ -6,6 +6,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.Collections;
 import java.util.Set;
 
+// Typed accessors for every config value — keeps config keys out of business logic
+// Defaults are set once in setDefaults() and merged into the file on first load
 public class WindfallConfig {
 
     private final WindfallPlugin plugin;
@@ -16,6 +18,7 @@ public class WindfallConfig {
         plugin.saveDefaultConfig();
         this.config = plugin.getConfig();
         setDefaults();
+        // copyDefaults(true) fills missing keys without overwriting user edits
         config.options().copyDefaults(true);
         plugin.saveConfig();
     }
@@ -77,14 +80,14 @@ public class WindfallConfig {
         config.addDefault("punishments.tempban-reason", "[Windfall] Temporarily banned for cheating.");
         config.addDefault("punishments.permban-reason", "[Windfall] Permanently banned for cheating.");
 
-        // Check defaults
+        // Check defaults — per-check values override these if set
         config.addDefault("checks.default.enabled", true);
         config.addDefault("checks.default.max-vl", 100);
         config.addDefault("checks.default.setback-vl", 20);
         config.addDefault("checks.default.decay", 0.02);
         config.addDefault("checks.default.punishable", true);
 
-        // Per-check defaults
+        // Per-check overrides — only need to add entries here when adding new checks
         String[] allChecks = {
             "windfall.movement.speed", "windfall.movement.fly",
             "windfall.movement.velocity", "windfall.movement.timer",
@@ -287,7 +290,7 @@ public class WindfallConfig {
             "[Windfall] Permanently banned for cheating.");
     }
 
-    // === Check config ===
+    // === Check config — falls back to default.* if per-check key not set ===
     public boolean isCheckEnabled(String checkKey) {
         String path = "checks." + checkKey + ".enabled";
         if (config.isSet(path)) {

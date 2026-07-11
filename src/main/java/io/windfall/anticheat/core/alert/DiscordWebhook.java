@@ -10,15 +10,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
+// Zero-dependency Discord webhook using raw HttpURLConnection
+// Avoids adding Discord SDK or webhook4j as dependencies
 public class DiscordWebhook {
 
     private final WindfallPlugin plugin;
+    // Per-player+check rate limit — separate from AlertManager's in-game cooldown
     private final Map<String, Long> lastAlertTimes = new ConcurrentHashMap<>();
 
     public DiscordWebhook(WindfallPlugin plugin) {
         this.plugin = plugin;
     }
 
+    // Sends a rich embed to Discord — runs async to avoid blocking the server thread
     public void sendAlert(String playerName, String platform, String deviceInfo,
                           String checkName, int vl, String serverName,
                           int ping, String detail,
@@ -41,8 +45,10 @@ public class DiscordWebhook {
             mention = "@everyone ";
         }
 
+        // mc-heads.net is a free Minecraft avatar API — no API key required
         String headUrl = "https://mc-heads.net/avatar/" + playerName + "/100";
 
+        // Manual JSON construction avoids adding a JSON library dependency
         StringBuilder json = new StringBuilder();
         json.append("{\"content\":\"").append(escapeJson(mention)).append("\",");
         json.append("\"embeds\":[{");
