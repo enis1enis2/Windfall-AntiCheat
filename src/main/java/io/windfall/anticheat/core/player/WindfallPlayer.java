@@ -1,0 +1,287 @@
+package io.windfall.anticheat.core.player;
+
+import com.github.retrooper.packetevents.protocol.player.ClientVersion;
+import com.github.retrooper.packetevents.protocol.player.User;
+import io.windfall.anticheat.core.bedrock.BedrockInfo;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import org.bukkit.entity.Player;
+
+public class WindfallPlayer {
+
+    public static final class BoundingBox {
+        public final double minX, minY, minZ, maxX, maxY, maxZ;
+
+        public BoundingBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+            this.minX = minX;
+            this.minY = minY;
+            this.minZ = minZ;
+            this.maxX = maxX;
+            this.maxY = maxY;
+            this.maxZ = maxZ;
+        }
+
+        public static BoundingBox fromPosition(double x, double y, double z, double width, double height) {
+            double half = width / 2.0;
+            return new BoundingBox(x - half, y, z - half, x + half, y + height, z + half);
+        }
+
+        public boolean collides(BoundingBox other) {
+            return this.minX < other.maxX && this.maxX > other.minX
+                && this.minY < other.maxY && this.maxY > other.minY
+                && this.minZ < other.maxZ && this.maxZ > other.minZ;
+        }
+
+        public BoundingBox expand(double x, double y, double z) {
+            return new BoundingBox(
+                minX - x, minY - y, minZ - z,
+                maxX + x, maxY + y, maxZ + z
+            );
+        }
+    }
+
+    private final UUID uuid;
+    private final String name;
+    private final Player player;
+    private final User user;
+
+    private ClientVersion clientVersion;
+    private int protocolVersion;
+
+    private double x, y, z;
+    private double lastX, lastY, lastZ;
+    private double lastLastX, lastLastY, lastLastZ;
+
+    private double deltaX, deltaY, deltaZ;
+
+    private double width = 0.6;
+    private double height = 1.8;
+
+    private boolean onGround;
+    private boolean lastOnGround;
+    private boolean serverOnGround;
+
+    private boolean sprinting;
+    private boolean sneaking;
+    private boolean flying;
+    private boolean swimming;
+    private boolean climbing;
+
+    private int transactionPing;
+    private int transactionId;
+
+    private double velocityX, velocityY, velocityZ;
+    private double serverVelocityX, serverVelocityY, serverVelocityZ;
+    private boolean velocityReceived;
+
+    private boolean allowFlight;
+
+    private double teleportX, teleportY, teleportZ;
+
+    private double groundX, groundY, groundZ;
+
+    private final ConcurrentHashMap<String, Integer> violationLevels = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Double> buffers = new ConcurrentHashMap<>();
+
+    private int attackCooldown;
+    private long lastAttackTime;
+
+    private int tickCount;
+    private long joinTime;
+
+    private float yaw, pitch;
+    private float lastYaw, lastPitch;
+
+    private boolean movedSinceTick;
+    private boolean valid = true;
+
+    private BedrockInfo bedrockInfo;
+    private boolean alertsEnabled = true;
+
+    public WindfallPlayer(Player player, User user) {
+        this.uuid = player.getUniqueId();
+        this.name = player.getName();
+        this.player = player;
+        this.user = user;
+        this.clientVersion = user.getClientVersion();
+        this.protocolVersion = clientVersion.getProtocolVersion();
+        this.joinTime = System.currentTimeMillis();
+    }
+
+    public double getHeight() {
+        if (swimming || climbing) return 0.6;
+        if (sneaking && protocolVersion >= 477) return 1.5;
+        return 1.8;
+    }
+
+    public double getDeltaX() { return deltaX; }
+    public double getDeltaZ() { return deltaZ; }
+
+    public double getHorizontalSpeed() {
+        return Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
+    }
+
+    public double getVerticalSpeed() {
+        return Math.abs(deltaY);
+    }
+
+    public double getDistanceSq(double x, double y, double z) {
+        double dx = this.x - x;
+        double dy = this.y - y;
+        double dz = this.z - z;
+        return dx * dx + dy * dy + dz * dz;
+    }
+
+    public BoundingBox getCollisionBox() {
+        return BoundingBox.fromPosition(x, y, z, width, getHeight());
+    }
+
+    public void setPosition(double x, double y, double z) {
+        this.lastLastX = this.lastX;
+        this.lastLastY = this.lastY;
+        this.lastLastZ = this.lastZ;
+        this.lastX = this.x;
+        this.lastY = this.y;
+        this.lastZ = this.z;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.deltaX = x - this.lastX;
+        this.deltaY = y - this.lastY;
+        this.deltaZ = z - this.lastZ;
+        this.tickCount++;
+    }
+
+    public void resetTickState() {
+        this.movedSinceTick = false;
+        this.lastOnGround = this.onGround;
+        this.lastYaw = this.yaw;
+        this.lastPitch = this.pitch;
+    }
+
+    public void updateGroundPosition() {
+        if (onGround) {
+            this.groundX = x;
+            this.groundY = y;
+            this.groundZ = z;
+        }
+    }
+
+    public UUID getUuid() { return uuid; }
+    public String getName() { return name; }
+    public Player getPlayer() { return player; }
+    public User getUser() { return user; }
+    public ClientVersion getClientVersion() { return clientVersion; }
+    public void setClientVersion(ClientVersion clientVersion) { this.clientVersion = clientVersion; this.protocolVersion = clientVersion.getProtocolVersion(); }
+    public int getProtocolVersion() { return protocolVersion; }
+
+    public double getX() { return x; }
+    public double getY() { return y; }
+    public double getZ() { return z; }
+    public double getLastX() { return lastX; }
+    public double getLastY() { return lastY; }
+    public double getLastZ() { return lastZ; }
+    public double getLastLastX() { return lastLastX; }
+    public double getLastLastY() { return lastLastY; }
+    public double getLastLastZ() { return lastLastZ; }
+    public double getDeltaY() { return deltaY; }
+
+    public double getWidth() { return width; }
+    public void setHeight(double height) { this.height = height; }
+
+    public boolean isOnGround() { return onGround; }
+    public void setOnGround(boolean onGround) {
+        this.lastOnGround = this.onGround;
+        this.onGround = onGround;
+        if (onGround) updateGroundPosition();
+    }
+    public boolean isLastOnGround() { return lastOnGround; }
+    public boolean isServerOnGround() { return serverOnGround; }
+    public void setServerOnGround(boolean serverOnGround) { this.serverOnGround = serverOnGround; }
+
+    public boolean isSprinting() { return sprinting; }
+    public void setSprinting(boolean sprinting) { this.sprinting = sprinting; }
+    public boolean isSneaking() { return sneaking; }
+    public void setSneaking(boolean sneaking) { this.sneaking = sneaking; }
+    public boolean isFlying() { return flying; }
+    public void setFlying(boolean flying) { this.flying = flying; }
+    public boolean isSwimming() { return swimming; }
+    public void setSwimming(boolean swimming) { this.swimming = swimming; }
+    public boolean isClimbing() { return climbing; }
+    public void setClimbing(boolean climbing) { this.climbing = climbing; }
+
+    public int getTransactionPing() { return transactionPing; }
+    public void setTransactionPing(int transactionPing) { this.transactionPing = transactionPing; }
+    public int getTransactionId() { return transactionId; }
+    public void setTransactionId(int transactionId) { this.transactionId = transactionId; }
+
+    public double getVelocityX() { return velocityX; }
+    public void setVelocityX(double velocityX) { this.velocityX = velocityX; }
+    public double getVelocityY() { return velocityY; }
+    public void setVelocityY(double velocityY) { this.velocityY = velocityY; }
+    public double getVelocityZ() { return velocityZ; }
+    public void setVelocityZ(double velocityZ) { this.velocityZ = velocityZ; }
+    public void setVelocity(double x, double y, double z) { this.velocityX = x; this.velocityY = y; this.velocityZ = z; }
+
+    public double getServerVelocityX() { return serverVelocityX; }
+    public void setServerVelocityX(double v) { this.serverVelocityX = v; }
+    public double getServerVelocityY() { return serverVelocityY; }
+    public void setServerVelocityY(double v) { this.serverVelocityY = v; }
+    public double getServerVelocityZ() { return serverVelocityZ; }
+    public void setServerVelocityZ(double v) { this.serverVelocityZ = v; }
+    public boolean isVelocityReceived() { return velocityReceived; }
+    public void setVelocityReceived(boolean v) { this.velocityReceived = v; }
+
+    public boolean isAllowFlight() { return allowFlight; }
+    public void setAllowFlight(boolean allowFlight) { this.allowFlight = allowFlight; }
+
+    public void setProtocolVersion(int protocolVersion) { this.protocolVersion = protocolVersion; }
+
+    public double getTeleportX() { return teleportX; }
+    public double getTeleportY() { return teleportY; }
+    public double getTeleportZ() { return teleportZ; }
+    public void setTeleportPosition(double x, double y, double z) { this.teleportX = x; this.teleportY = y; this.teleportZ = z; }
+
+    public double getGroundX() { return groundX; }
+    public double getGroundY() { return groundY; }
+    public double getGroundZ() { return groundZ; }
+
+    public ConcurrentHashMap<String, Integer> getViolationLevels() { return violationLevels; }
+    public ConcurrentHashMap<String, Double> getBuffers() { return buffers; }
+
+    public int getAttackCooldown() { return attackCooldown; }
+    public void setAttackCooldown(int attackCooldown) { this.attackCooldown = attackCooldown; }
+    public long getLastAttackTime() { return lastAttackTime; }
+    public void setLastAttackTime(long lastAttackTime) { this.lastAttackTime = lastAttackTime; }
+
+    public int getTickCount() { return tickCount; }
+    public long getJoinTime() { return joinTime; }
+
+    public float getYaw() { return yaw; }
+    public void setYaw(float yaw) { this.yaw = yaw; }
+    public float getPitch() { return pitch; }
+    public void setPitch(float pitch) { this.pitch = pitch; }
+    public float getLastYaw() { return lastYaw; }
+    public float getLastPitch() { return lastPitch; }
+
+    public boolean isMovedSinceTick() { return movedSinceTick; }
+    public void setMovedSinceTick(boolean movedSinceTick) { this.movedSinceTick = movedSinceTick; }
+
+    public boolean isValid() { return valid; }
+    public void setValid(boolean valid) { this.valid = valid; }
+
+    public BedrockInfo getBedrockInfo() { return bedrockInfo; }
+    public void setBedrockInfo(BedrockInfo bedrockInfo) { this.bedrockInfo = bedrockInfo; }
+    public boolean isBedrock() { return bedrockInfo != null; }
+
+    public boolean isAlertsEnabled() { return alertsEnabled; }
+    public void setAlertsEnabled(boolean alertsEnabled) { this.alertsEnabled = alertsEnabled; }
+
+    public int getTotalViolationLevel() {
+        int total = 0;
+        for (int v : violationLevels.values()) {
+            total += v;
+        }
+        return total;
+    }
+}

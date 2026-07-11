@@ -1,0 +1,25 @@
+name: Windfall
+version: '${project.version}'
+main: io.windfall.anticheat.WindfallPlugin
+author: Windfall team
+description: Enterprise-grade packet-based anti-cheat for Minecraft 1.7-26.2+
+depend: [packetevents]
+softdepend: [Geyser-Spigot, floodgate, ViaVersion]
+
+commands:
+  windfall:
+    description: Windfall anti-cheat commands
+    usage: /windfall help
+    aliases: [wf, wfall]
+    permission: windfall.admin
+
+permissions:
+  windfall.admin:
+    description: Full Windfall admin access
+    default: op
+  windfall.alerts:
+    description: Receive anti-cheat alerts
+    default: op
+  windfall.gui:
+    description: Open Windfall GUI
+    default: op
