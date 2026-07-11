@@ -274,6 +274,8 @@ SYNONYM_MAP = {
     "movementchecksupport": "phase",
     "post": "noswing",
     "checkabilties": "exploit",
+    "abilties": "exploit",
+    "abilities": "exploit",
 }
 
 
