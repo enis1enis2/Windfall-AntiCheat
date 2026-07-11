@@ -180,23 +180,10 @@
     }
   },
   "CloudAC": {
-    "new_checks": [
-      {
-        "name": "abilties",
-        "raw_name": "CheckAbilties",
-        "category": "packet",
-        "stable_key": "windfall.packet.abilties",
-        "file_path": "ComputationServer/sys/checks.go",
-        "constants": {
-          "_": "= net.Dial(\"tcp\", \"localhost:1212\")"
-        },
-        "methods": [
-          "OnPacketReceived",
-          "OnPacketReceived"
-        ]
-      }
-    ],
-    "existing_matches": {}
+    "new_checks": [],
+    "existing_matches": {
+      "CheckAbilties": "Exploit A"
+    }
   },
   "Arrow": {
     "new_checks": [],
