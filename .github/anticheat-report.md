@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-07-11 14:45:01 UTC
+**Generated:** 2026-07-11 14:50:37 UTC
 
 ---
 
@@ -63,128 +63,13 @@
 
 ### Grim
 
-**Missing from Windfall (69 checks):**
+**Missing from Windfall (17 checks):**
 
-- `movement` **SetbackBlocker** → `windfall.movement.setback blocker`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/movement/SetbackBlocker.java`
-- `movement` **VehiclePredictionRunner** → `windfall.movement.vehicle prediction runner`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/movement/VehiclePredictionRunner.java`
-- `packet` **PacketOrderK** → `windfall.packet.packet order k`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderK.java`
-  - `KIND_OPEN = 0`
-  - `KIND_CLICK = 1`
-  - `KIND_CLOSE = 2`
-- `packet` **PacketOrderM** → `windfall.packet.packet order m`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderM.java`
-- `packet` **PacketOrderF** → `windfall.packet.packet order f`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderF.java`
-  - `ACTION_INTERACT = 0`
-  - `ACTION_ATTACK = 1`
-  - `ACTION_SPECTATE_ENTITY = 2`
-- `packet` **PacketOrderD** → `windfall.packet.packet order d`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderD.java`
-  - `entity = packet.getEntityId()`
-- `packet` **PacketOrderB** → `windfall.packet.packet order b`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderB.java`
-- `packet` **PacketOrderJ** → `windfall.packet.packet order j`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderJ.java`
-- `packet` **PacketOrderL** → `windfall.packet.packet order l`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderL.java`
-  - `ACTION_INVENTORY = 0`
-  - `ACTION_SWAP = 1`
-- `packet` **PacketOrderE** → `windfall.packet.packet order e`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderE.java`
-  - `ATTACKING = 1 << 0`
-  - `RIGHT_CLICKING = 1 << 1`
-  - `OPENING_INVENTORY = 1 << 2`
-- `packet` **PacketOrderC** → `windfall.packet.packet order c`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderC.java`
-  - `KIND_SKIPPED_INTERACT_AT = 0`
-  - `KIND_SKIPPED_INTERACT = 1`
-  - `KIND_SKIPPED_INTERACT_TICK = 2`
-- `packet` **PacketOrderN** → `windfall.packet.packet order n`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderN.java`
-- `packet` **PacketOrderO** → `windfall.packet.packet order o`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderO.java`
-- `packet` **PacketOrderG** → `windfall.packet.packet order g`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderG.java`
-  - `ACTION_OPEN_INVENTORY = 0`
-  - `ACTION_SWAP = 1`
-  - `ACTION_DROP = 2`
-- `packet` **PacketOrderH** → `windfall.packet.packet order h`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderH.java`
-- `packet` **PacketOrderP** → `windfall.packet.packet order p`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderP.java`
-- `packet` **PacketOrderI** → `windfall.packet.packet order i`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderI.java`
-  - `TYPE_INTERACT = 0`
-  - `TYPE_PLACE_USE = 1`
-  - `TYPE_RELEASE = 2`
-- `packet` **ChatD** → `windfall.packet.chat d`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/chat/ChatD.java`
-- `packet` **ChatC** → `windfall.packet.chat c`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/chat/ChatC.java`
-- `packet` **ChatB** → `windfall.packet.chat b`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/chat/ChatB.java`
-- `packet` **SprintC** → `windfall.packet.sprint c`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintC.java`
-- `packet` **SprintG** → `windfall.packet.sprint g`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintG.java`
-- `packet` **SprintF** → `windfall.packet.sprint f`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintF.java`
-- `packet` **SprintE** → `windfall.packet.sprint e`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintE.java`
-- `packet` **SprintB** → `windfall.packet.sprint b`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintB.java`
-- `packet` **SprintD** → `windfall.packet.sprint d`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintD.java`
-- `movement` **ElytraE** → `windfall.movement.elytra e`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraE.java`
-- `movement` **ElytraI** → `windfall.movement.elytra i`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraI.java`
-- `movement` **ElytraH** → `windfall.movement.elytra h`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraH.java`
-- `movement` **ElytraB** → `windfall.movement.elytra b`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraB.java`
-- `movement` **ElytraG** → `windfall.movement.elytra g`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraG.java`
-- `movement` **ElytraF** → `windfall.movement.elytra f`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraF.java`
-- `movement` **ElytraD** → `windfall.movement.elytra d`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraD.java`
-- `movement` **ElytraC** → `windfall.movement.elytra c`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraC.java`
-- `packet` **VerboseCodecs** → `windfall.packet.verbose codecs`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/verbose/VerboseCodecs.java`
-  - `PACKET_NONE = Integer.MIN_VALUE`
-  - `PACKET_TRANSACTION = Integer.MIN_VALUE + 1`
-- `packet` **MultiActionsA** → `windfall.packet.multi actions a`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsA.java`
 - `packet` **MultiActionsG** → `windfall.packet.multi actions g`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsG.java`
   - `ACTION_INTERACT = 0`
   - `ACTION_ATTACK = 1`
   - `ACTION_SPECTATE_ENTITY = 2`
-- `packet` **MultiActionsC** → `windfall.packet.multi actions c`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsC.java`
-- `packet` **MultiActionsB** → `windfall.packet.multi actions b`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsB.java`
-- `packet` **MultiActionsD** → `windfall.packet.multi actions d`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsD.java`
-- `packet` **MultiActionsE** → `windfall.packet.multi actions e`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsE.java`
-- `packet` **MultiActionsF** → `windfall.packet.multi actions f`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsF.java`
-  - `ACTION_PLACE = 0`
-  - `ACTION_ENTITY = 1`
-  - `ACTION_DIG = 2`
-- `movement` **VectorPrecisionConverter** → `windfall.movement.vector precision converter`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/velocity/VectorPrecisionConverter.java`
-  - `PRECISION_LOSS_FIX = 1e-11d`
-- `combat` **AimModulo360** → `windfall.combat.aim modulo360`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/aim/AimModulo360.java`
-- `combat` **AimDuplicateLook** → `windfall.combat.aim duplicate look`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/aim/AimDuplicateLook.java`
 - `movement` **AirLiquidBreak** → `windfall.movement.air liquid break`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/breaking/AirLiquidBreak.java`
 - `movement` **WrongBreak** → `windfall.movement.wrong break`
@@ -198,28 +83,6 @@
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/breaking/MultiBreak.java`
   - `face = VerboseCodecs.enumId(blockBreak.face)`
   - `previousFace = VerboseCodecs.enumId(lastFace)`
-- `packet` **ExploitB** → `windfall.packet.exploit b`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/exploit/ExploitB.java`
-  - `BOOK_EXPECTED_SLOT = 0`
-  - `BOOK_EXPECTED_TYPE = 1`
-  - `BOOK_EXPECTED_AMOUNT = 2`
-- `movement` **TimerLimit** → `windfall.movement.timer limit`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/timer/TimerLimit.java`
-- `movement` **TickTimer** → `windfall.movement.tick timer`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/timer/TickTimer.java`
-  - `flyingPackets = 0`
-- `movement` **VehicleTimer** → `windfall.movement.vehicle timer`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/timer/VehicleTimer.java`
-- `movement` **NegativeTimer** → `windfall.movement.negative timer`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/timer/NegativeTimer.java`
-- `packet` **CrashH** → `windfall.packet.crash h`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashH.java`
-  - `length = text.length()`
-- `packet` **CrashD** → `windfall.packet.crash d`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashD.java`
-  - `lecternId = -1`
-- `packet` **CrashI** → `windfall.packet.crash i`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashI.java`
 - `packet` **CrashE** → `windfall.packet.crash e`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashE.java`
 - `packet` **CrashG** → `windfall.packet.crash g`
@@ -251,13 +114,53 @@
 **Matched with existing Windfall checks:**
 
 - `NoSlow` → `NoSlow A`
+- `PacketOrderK` → `Packet Order A`
+- `PacketOrderM` → `Packet Order A`
+- `PacketOrderF` → `Packet Order A`
+- `PacketOrderD` → `Packet Order A`
+- `PacketOrderB` → `Packet Order A`
+- `PacketOrderJ` → `Packet Order A`
+- `PacketOrderL` → `Packet Order A`
+- `PacketOrderE` → `Packet Order A`
+- `PacketOrderC` → `Packet Order A`
+- `PacketOrderN` → `Packet Order A`
 - `PacketOrderA` → `Packet Order A`
+- `PacketOrderO` → `Packet Order A`
+- `PacketOrderG` → `Packet Order A`
+- `PacketOrderH` → `Packet Order A`
+- `PacketOrderP` → `Packet Order A`
+- `PacketOrderI` → `Packet Order A`
+- `ChatD` → `Chat A`
 - `ChatA` → `Chat A`
+- `ChatC` → `Chat A`
+- `ChatB` → `Chat A`
 - `FlightA` → `Fly A`
+- `SprintC` → `Sprint A`
+- `SprintG` → `Sprint A`
 - `SprintA` → `Sprint A`
+- `SprintF` → `Sprint A`
+- `SprintE` → `Sprint A`
+- `SprintB` → `Sprint A`
+- `SprintD` → `Sprint A`
+- `ElytraE` → `Elytra A`
+- `ElytraI` → `Elytra A`
+- `ElytraH` → `Elytra A`
+- `ElytraB` → `Elytra A`
+- `ElytraG` → `Elytra A`
 - `ElytraA` → `Elytra A`
+- `ElytraF` → `Elytra A`
+- `ElytraD` → `Elytra A`
+- `ElytraC` → `Elytra A`
+- `MultiActionsA` → `Multi Interact A`
+- `MultiActionsC` → `Multi Interact A`
+- `MultiActionsB` → `Multi Interact A`
+- `MultiActionsD` → `Multi Interact A`
+- `MultiActionsE` → `Multi Interact A`
+- `MultiActionsF` → `Multi Interact A`
 - `Phase` → `Phase A`
 - `GroundSpoof` → `Ground Spoof A`
+- `AimModulo360` → `Aim A`
+- `AimDuplicateLook` → `Aim A`
 - `InvalidBreak` → `Invalid Break A`
 - `NoSwingBreak` → `No Swing A`
 - `FastBreak` → `Fast Break A`
@@ -269,6 +172,7 @@
 - `VehicleD` → `Vehicle A`
 - `VehicleF` → `Vehicle A`
 - `Baritone` → `Baritone A`
+- `ExploitB` → `Exploit A`
 - `ExploitA` → `Exploit A`
 - `MultiInteractA` → `Multi Interact A`
 - `SelfInteract` → `Self Interact A`
@@ -276,7 +180,14 @@
 - `MultiInteractB` → `Multi Interact A`
 - `Reach` → `Reach A`
 - `NoFall` → `NoFall A`
+- `TimerLimit` → `Timer A`
+- `TickTimer` → `Timer A`
+- `VehicleTimer` → `Timer A`
 - `Timer` → `Timer A`
+- `NegativeTimer` → `Timer A`
+- `CrashH` → `Crash A`
+- `CrashD` → `Crash A`
+- `CrashI` → `Crash A`
 - `CrashA` → `Crash A`
 - `FabricatedPlace` → `Invalid Place A`
 - `InvalidPlaceA` → `Invalid Place A`
@@ -286,7 +197,7 @@
 
 ### TruthfulAC
 
-**Missing from Windfall (46 checks):**
+**Missing from Windfall (41 checks):**
 
 - `movement` **MovementCheckSupport** → `windfall.movement.movement check support`
   - Source: `src/main/java/ret/tawny/truthful/checks/impl/movement/MovementCheckSupport.java`
@@ -420,16 +331,6 @@
   - `MAX_CHANNEL_LENGTH = 32`
   - `MAX_PAYLOAD_SIZE = 32767`
   - `SUSPICIOUS_PAYLOAD_SIZE = 30000`
-- `packet` **SprintB** → `windfall.packet.sprint b`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/sprint/SprintB.java`
-- `packet` **PacketOrderD** → `windfall.packet.packet order d`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/order/PacketOrderD.java`
-- `packet` **PacketOrderB** → `windfall.packet.packet order b`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/order/PacketOrderB.java`
-- `packet` **PacketOrderE** → `windfall.packet.packet order e`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/order/PacketOrderE.java`
-- `packet` **PacketOrderC** → `windfall.packet.packet order c`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/order/PacketOrderC.java`
 
 **Matched with existing Windfall checks:**
 
@@ -447,8 +348,13 @@
 - `ReachA` → `Reach A`
 - `AutoClickerA` → `Autoclicker A`
 - `SprintA` → `Sprint A`
+- `SprintB` → `Sprint A`
 - `InvalidA` → `Invalid Place A`
 - `TimerA` → `Timer A`
+- `PacketOrderD` → `Packet Order A`
+- `PacketOrderB` → `Packet Order A`
+- `PacketOrderE` → `Packet Order A`
+- `PacketOrderC` → `Packet Order A`
 - `PacketOrderA` → `Packet Order A`
 - `BadPacketA` → `Bad Packets A`
 - `BadPacketE` → `Bad Packets A`
@@ -580,7 +486,7 @@
 ## Summary
 
 - Windfall has **44 checks**
-- Found **144 new checks** across competitors that Windfall doesn't have
+- Found **87 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 

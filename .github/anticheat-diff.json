@@ -2,473 +2,6 @@
   "Grim": {
     "new_checks": [
       {
-        "name": "setback blocker",
-        "raw_name": "SetbackBlocker",
-        "category": "movement",
-        "stable_key": "windfall.movement.setback blocker",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/movement/SetbackBlocker.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "vehicle prediction runner",
-        "raw_name": "VehiclePredictionRunner",
-        "category": "movement",
-        "stable_key": "windfall.movement.vehicle prediction runner",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/movement/VehiclePredictionRunner.java",
-        "constants": {},
-        "methods": [
-          "process"
-        ]
-      },
-      {
-        "name": "packet order k",
-        "raw_name": "PacketOrderK",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order k",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderK.java",
-        "constants": {
-          "KIND_OPEN": "0",
-          "KIND_CLICK": "1",
-          "KIND_CLOSE": "2"
-        },
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "packet order m",
-        "raw_name": "PacketOrderM",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order m",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderM.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "packet order f",
-        "raw_name": "PacketOrderF",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order f",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderF.java",
-        "constants": {
-          "ACTION_INTERACT": "0",
-          "ACTION_ATTACK": "1",
-          "ACTION_SPECTATE_ENTITY": "2",
-          "ACTION_PLACE": "3",
-          "ACTION_USE": "4",
-          "ACTION_PICK": "5",
-          "ACTION_DIG": "6",
-          "ACTION_OPEN_INVENTORY": "7"
-        },
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "packet order d",
-        "raw_name": "PacketOrderD",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order d",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderD.java",
-        "constants": {
-          "entity": "packet.getEntityId()"
-        },
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "packet order b",
-        "raw_name": "PacketOrderB",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order b",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderB.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onAttack"
-        ]
-      },
-      {
-        "name": "packet order j",
-        "raw_name": "PacketOrderJ",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order j",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderJ.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "packet order l",
-        "raw_name": "PacketOrderL",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order l",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderL.java",
-        "constants": {
-          "ACTION_INVENTORY": "0",
-          "ACTION_SWAP": "1"
-        },
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "packet order e",
-        "raw_name": "PacketOrderE",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order e",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderE.java",
-        "constants": {
-          "ATTACKING": "1 << 0",
-          "RIGHT_CLICKING": "1 << 1",
-          "OPENING_INVENTORY": "1 << 2",
-          "RELEASING": "1 << 3",
-          "SNEAKING": "1 << 4",
-          "SPRINTING": "1 << 5",
-          "LEAVING_BED": "1 << 6",
-          "GLIDING": "1 << 7",
-          "MOUNT_JUMPING": "1 << 8"
-        },
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete",
-          "currentFlags"
-        ]
-      },
-      {
-        "name": "packet order c",
-        "raw_name": "PacketOrderC",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order c",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderC.java",
-        "constants": {
-          "KIND_SKIPPED_INTERACT_AT": "0",
-          "KIND_SKIPPED_INTERACT": "1",
-          "KIND_SKIPPED_INTERACT_TICK": "2",
-          "KIND_MISMATCH": "3"
-        },
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "packet order n",
-        "raw_name": "PacketOrderN",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order n",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderN.java",
-        "constants": {},
-        "methods": [
-          "onBlockPlace",
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "packet order o",
-        "raw_name": "PacketOrderO",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order o",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderO.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "packet order g",
-        "raw_name": "PacketOrderG",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order g",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderG.java",
-        "constants": {
-          "ACTION_OPEN_INVENTORY": "0",
-          "ACTION_SWAP": "1",
-          "ACTION_DROP": "2"
-        },
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "packet order h",
-        "raw_name": "PacketOrderH",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order h",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderH.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "packet order p",
-        "raw_name": "PacketOrderP",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order p",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderP.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPacketSend"
-        ]
-      },
-      {
-        "name": "packet order i",
-        "raw_name": "PacketOrderI",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order i",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/packetorder/PacketOrderI.java",
-        "constants": {
-          "TYPE_INTERACT": "0",
-          "TYPE_PLACE_USE": "1",
-          "TYPE_RELEASE": "2",
-          "TYPE_ATTACK": "3"
-        },
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete",
-          "onAttack",
-          "onReload"
-        ]
-      },
-      {
-        "name": "chat d",
-        "raw_name": "ChatD",
-        "category": "packet",
-        "stable_key": "windfall.packet.chat d",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/chat/ChatD.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "chat c",
-        "raw_name": "ChatC",
-        "category": "packet",
-        "stable_key": "windfall.packet.chat c",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/chat/ChatC.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "check",
-          "onReload"
-        ]
-      },
-      {
-        "name": "chat b",
-        "raw_name": "ChatB",
-        "category": "packet",
-        "stable_key": "windfall.packet.chat b",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/chat/ChatB.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "sprint c",
-        "raw_name": "SprintC",
-        "category": "packet",
-        "stable_key": "windfall.packet.sprint c",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintC.java",
-        "constants": {},
-        "methods": [
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "sprint g",
-        "raw_name": "SprintG",
-        "category": "packet",
-        "stable_key": "windfall.packet.sprint g",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintG.java",
-        "constants": {},
-        "methods": [
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "sprint f",
-        "raw_name": "SprintF",
-        "category": "packet",
-        "stable_key": "windfall.packet.sprint f",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintF.java",
-        "constants": {},
-        "methods": [
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "sprint e",
-        "raw_name": "SprintE",
-        "category": "packet",
-        "stable_key": "windfall.packet.sprint e",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintE.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "sprint b",
-        "raw_name": "SprintB",
-        "category": "packet",
-        "stable_key": "windfall.packet.sprint b",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintB.java",
-        "constants": {},
-        "methods": [
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "sprint d",
-        "raw_name": "SprintD",
-        "category": "packet",
-        "stable_key": "windfall.packet.sprint d",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/sprint/SprintD.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "elytra e",
-        "raw_name": "ElytraE",
-        "category": "movement",
-        "stable_key": "windfall.movement.elytra e",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraE.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "elytra i",
-        "raw_name": "ElytraI",
-        "category": "movement",
-        "stable_key": "windfall.movement.elytra i",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraI.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "elytra h",
-        "raw_name": "ElytraH",
-        "category": "movement",
-        "stable_key": "windfall.movement.elytra h",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraH.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "elytra b",
-        "raw_name": "ElytraB",
-        "category": "movement",
-        "stable_key": "windfall.movement.elytra b",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraB.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "elytra g",
-        "raw_name": "ElytraG",
-        "category": "movement",
-        "stable_key": "windfall.movement.elytra g",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraG.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "elytra f",
-        "raw_name": "ElytraF",
-        "category": "movement",
-        "stable_key": "windfall.movement.elytra f",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraF.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "elytra d",
-        "raw_name": "ElytraD",
-        "category": "movement",
-        "stable_key": "windfall.movement.elytra d",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraD.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "elytra c",
-        "raw_name": "ElytraC",
-        "category": "movement",
-        "stable_key": "windfall.movement.elytra c",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/elytra/ElytraC.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "verbose codecs",
-        "raw_name": "VerboseCodecs",
-        "category": "packet",
-        "stable_key": "windfall.packet.verbose codecs",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/verbose/VerboseCodecs.java",
-        "constants": {
-          "PACKET_NONE": "Integer.MIN_VALUE",
-          "PACKET_TRANSACTION": "Integer.MIN_VALUE + 1"
-        },
-        "methods": []
-      },
-      {
-        "name": "multi actions a",
-        "raw_name": "MultiActionsA",
-        "category": "packet",
-        "stable_key": "windfall.packet.multi actions a",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsA.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
         "name": "multi actions g",
         "raw_name": "MultiActionsG",
         "category": "packet",
@@ -485,101 +18,6 @@
           "onPacketReceive",
           "onBlockPlace",
           "isCheckActive"
-        ]
-      },
-      {
-        "name": "multi actions c",
-        "raw_name": "MultiActionsC",
-        "category": "packet",
-        "stable_key": "windfall.packet.multi actions c",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsC.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "multi actions b",
-        "raw_name": "MultiActionsB",
-        "category": "packet",
-        "stable_key": "windfall.packet.multi actions b",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsB.java",
-        "constants": {},
-        "methods": [
-          "onBlockBreak"
-        ]
-      },
-      {
-        "name": "multi actions d",
-        "raw_name": "MultiActionsD",
-        "category": "packet",
-        "stable_key": "windfall.packet.multi actions d",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsD.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "multi actions e",
-        "raw_name": "MultiActionsE",
-        "category": "packet",
-        "stable_key": "windfall.packet.multi actions e",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsE.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "multi actions f",
-        "raw_name": "MultiActionsF",
-        "category": "packet",
-        "stable_key": "windfall.packet.multi actions f",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsF.java",
-        "constants": {
-          "ACTION_PLACE": "0",
-          "ACTION_ENTITY": "1",
-          "ACTION_DIG": "2"
-        },
-        "methods": [
-          "onBlockPlace",
-          "onPacketReceive",
-          "onBlockBreak",
-          "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "vector precision converter",
-        "raw_name": "VectorPrecisionConverter",
-        "category": "movement",
-        "stable_key": "windfall.movement.vector precision converter",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/velocity/VectorPrecisionConverter.java",
-        "constants": {
-          "PRECISION_LOSS_FIX": "1e-11d"
-        },
-        "methods": []
-      },
-      {
-        "name": "aim modulo360",
-        "raw_name": "AimModulo360",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim modulo360",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/aim/AimModulo360.java",
-        "constants": {},
-        "methods": [
-          "process"
-        ]
-      },
-      {
-        "name": "aim duplicate look",
-        "raw_name": "AimDuplicateLook",
-        "category": "combat",
-        "stable_key": "windfall.combat.aim duplicate look",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/aim/AimDuplicateLook.java",
-        "constants": {},
-        "methods": [
-          "process"
         ]
       },
       {
@@ -643,141 +81,6 @@
           "onBlockBreak",
           "onPacketReceive",
           "onPredictionComplete"
-        ]
-      },
-      {
-        "name": "exploit b",
-        "raw_name": "ExploitB",
-        "category": "packet",
-        "stable_key": "windfall.packet.exploit b",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/exploit/ExploitB.java",
-        "constants": {
-          "BOOK_EXPECTED_SLOT": "0",
-          "BOOK_EXPECTED_TYPE": "1",
-          "BOOK_EXPECTED_AMOUNT": "2",
-          "BOOK_EXPECTED_META": "3",
-          "BOOK_NO_NBT": "4",
-          "BOOK_NO_PAGES": "5",
-          "BOOK_NO_TITLE": "6",
-          "BOOK_EXPECTED_AUTHOR": "7",
-          "BOOK_INVALID_PAGE": "8",
-          "BOOK_MODIFIED_NBT": "9",
-          "BOOK_TITLE_TOO_LONG": "10",
-          "BOOK_INVALID_TITLE": "11",
-          "BOOK_NOT_EDITING": "12",
-          "BOOK_TOO_MANY_PAGES": "13",
-          "BOOK_PAGE_TOO_LONG": "14",
-          "BOOK_EMPTY_LAST_PAGE": "15",
-          "UNUSED_TYPE": "-1"
-        },
-        "methods": [
-          "onPacketReceive",
-          "checkEditBook",
-          "checkItemStack",
-          "checkTitle",
-          "checkEditingBook",
-          "checkTooManyPages",
-          "checkPage",
-          "checkEmptyLastPage",
-          "flagExpectedSlot",
-          "flagExpectedType",
-          "flagExpectedAmount",
-          "flagExpectedMeta",
-          "flagExpectedAuthor",
-          "flagInvalidTitle",
-          "flagLiteral",
-          "flagBookEdit",
-          "typeId"
-        ]
-      },
-      {
-        "name": "timer limit",
-        "raw_name": "TimerLimit",
-        "category": "movement",
-        "stable_key": "windfall.movement.timer limit",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/timer/TimerLimit.java",
-        "constants": {},
-        "methods": [
-          "doCheck",
-          "limitFallBehind",
-          "onReload"
-        ]
-      },
-      {
-        "name": "tick timer",
-        "raw_name": "TickTimer",
-        "category": "movement",
-        "stable_key": "windfall.movement.tick timer",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/timer/TickTimer.java",
-        "constants": {
-          "flyingPackets": "0"
-        },
-        "methods": [
-          "onPacketReceive",
-          "handleViolation"
-        ]
-      },
-      {
-        "name": "vehicle timer",
-        "raw_name": "VehicleTimer",
-        "category": "movement",
-        "stable_key": "windfall.movement.vehicle timer",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/timer/VehicleTimer.java",
-        "constants": {},
-        "methods": [
-          "shouldCountPacketForTimer"
-        ]
-      },
-      {
-        "name": "negative timer",
-        "raw_name": "NegativeTimer",
-        "category": "movement",
-        "stable_key": "windfall.movement.negative timer",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/timer/NegativeTimer.java",
-        "constants": {},
-        "methods": [
-          "onPredictionComplete",
-          "doCheck",
-          "onReload"
-        ]
-      },
-      {
-        "name": "crash h",
-        "raw_name": "CrashH",
-        "category": "packet",
-        "stable_key": "windfall.packet.crash h",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashH.java",
-        "constants": {
-          "length": "text.length()"
-        },
-        "methods": [
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "crash d",
-        "raw_name": "CrashD",
-        "category": "packet",
-        "stable_key": "windfall.packet.crash d",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashD.java",
-        "constants": {
-          "lecternId": "-1"
-        },
-        "methods": [
-          "onPacketSend",
-          "onPacketReceive",
-          "isSupportedVersion"
-        ]
-      },
-      {
-        "name": "crash i",
-        "raw_name": "CrashI",
-        "category": "packet",
-        "stable_key": "windfall.packet.crash i",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashI.java",
-        "constants": {},
-        "methods": [
-          "onPacketReceive"
         ]
       },
       {
@@ -923,13 +226,53 @@
     ],
     "existing_matches": {
       "NoSlow": "NoSlow A",
+      "PacketOrderK": "Packet Order A",
+      "PacketOrderM": "Packet Order A",
+      "PacketOrderF": "Packet Order A",
+      "PacketOrderD": "Packet Order A",
+      "PacketOrderB": "Packet Order A",
+      "PacketOrderJ": "Packet Order A",
+      "PacketOrderL": "Packet Order A",
+      "PacketOrderE": "Packet Order A",
+      "PacketOrderC": "Packet Order A",
+      "PacketOrderN": "Packet Order A",
       "PacketOrderA": "Packet Order A",
+      "PacketOrderO": "Packet Order A",
+      "PacketOrderG": "Packet Order A",
+      "PacketOrderH": "Packet Order A",
+      "PacketOrderP": "Packet Order A",
+      "PacketOrderI": "Packet Order A",
+      "ChatD": "Chat A",
       "ChatA": "Chat A",
+      "ChatC": "Chat A",
+      "ChatB": "Chat A",
       "FlightA": "Fly A",
+      "SprintC": "Sprint A",
+      "SprintG": "Sprint A",
       "SprintA": "Sprint A",
+      "SprintF": "Sprint A",
+      "SprintE": "Sprint A",
+      "SprintB": "Sprint A",
+      "SprintD": "Sprint A",
+      "ElytraE": "Elytra A",
+      "ElytraI": "Elytra A",
+      "ElytraH": "Elytra A",
+      "ElytraB": "Elytra A",
+      "ElytraG": "Elytra A",
       "ElytraA": "Elytra A",
+      "ElytraF": "Elytra A",
+      "ElytraD": "Elytra A",
+      "ElytraC": "Elytra A",
+      "MultiActionsA": "Multi Interact A",
+      "MultiActionsC": "Multi Interact A",
+      "MultiActionsB": "Multi Interact A",
+      "MultiActionsD": "Multi Interact A",
+      "MultiActionsE": "Multi Interact A",
+      "MultiActionsF": "Multi Interact A",
       "Phase": "Phase A",
       "GroundSpoof": "Ground Spoof A",
+      "AimModulo360": "Aim A",
+      "AimDuplicateLook": "Aim A",
       "InvalidBreak": "Invalid Break A",
       "NoSwingBreak": "No Swing A",
       "FastBreak": "Fast Break A",
@@ -941,6 +284,7 @@
       "VehicleD": "Vehicle A",
       "VehicleF": "Vehicle A",
       "Baritone": "Baritone A",
+      "ExploitB": "Exploit A",
       "ExploitA": "Exploit A",
       "MultiInteractA": "Multi Interact A",
       "SelfInteract": "Self Interact A",
@@ -948,7 +292,14 @@
       "MultiInteractB": "Multi Interact A",
       "Reach": "Reach A",
       "NoFall": "NoFall A",
+      "TimerLimit": "Timer A",
+      "TickTimer": "Timer A",
+      "VehicleTimer": "Timer A",
       "Timer": "Timer A",
+      "NegativeTimer": "Timer A",
+      "CrashH": "Crash A",
+      "CrashD": "Crash A",
+      "CrashI": "Crash A",
       "CrashA": "Crash A",
       "FabricatedPlace": "Invalid Place A",
       "InvalidPlaceA": "Invalid Place A",
@@ -1673,67 +1024,6 @@
           "handlePacketPlayerReceive",
           "onQuit"
         ]
-      },
-      {
-        "name": "sprint b",
-        "raw_name": "SprintB",
-        "category": "packet",
-        "stable_key": "windfall.packet.sprint b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/sprint/SprintB.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "packet order d",
-        "raw_name": "PacketOrderD",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order d",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/order/PacketOrderD.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "packet order b",
-        "raw_name": "PacketOrderB",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/order/PacketOrderB.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "isFlying",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "packet order e",
-        "raw_name": "PacketOrderE",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order e",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/order/PacketOrderE.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive"
-        ]
-      },
-      {
-        "name": "packet order c",
-        "raw_name": "PacketOrderC",
-        "category": "packet",
-        "stable_key": "windfall.packet.packet order c",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/order/PacketOrderC.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
       }
     ],
     "existing_matches": {
@@ -1751,8 +1041,13 @@
       "ReachA": "Reach A",
       "AutoClickerA": "Autoclicker A",
       "SprintA": "Sprint A",
+      "SprintB": "Sprint A",
       "InvalidA": "Invalid Place A",
       "TimerA": "Timer A",
+      "PacketOrderD": "Packet Order A",
+      "PacketOrderB": "Packet Order A",
+      "PacketOrderE": "Packet Order A",
+      "PacketOrderC": "Packet Order A",
       "PacketOrderA": "Packet Order A",
       "BadPacketA": "Bad Packets A",
       "BadPacketE": "Bad Packets A",
