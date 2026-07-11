@@ -4,6 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # Bukkit API internal deps — provided by server at runtime, not in our JAR
+      # Cannot exclude without breaking compile-time Material access
+      - dependency-name: "commons-lang:commons-lang"
+      - dependency-name: "com.google.guava:guava"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

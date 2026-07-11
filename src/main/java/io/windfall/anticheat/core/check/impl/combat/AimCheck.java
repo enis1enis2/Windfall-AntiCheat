@@ -23,7 +23,7 @@ public class AimCheck extends Check implements PacketCheck {
 
     // 180 degrees in one tick is physically impossible for any human input
     private static final double INSTANT_SNAP_THRESHOLD = 180.0;
-    private static final double ROTATION_MODULO = 360.0;
+    private static final float ROTATION_MODULO = 360.0f;
     private static final int MIN_ROTATION_SAMPLES = 5;
     private static final double AIMBOT_YAW_VARIANCE_THRESHOLD = 0.5;
     private static final double SNAP_BUFFER_FLAG_THRESHOLD = 3.0;
