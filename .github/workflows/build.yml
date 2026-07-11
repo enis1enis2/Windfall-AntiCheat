@@ -65,15 +65,19 @@ jobs:
         id: version
         run: |
           COMMIT_MSG="${{ steps.commit.outputs.commit_msg }}"
-          if [[ "$COMMIT_MSG" =~ ^v[0-9]+\.[0-9]+ ]]; then
-            TAG=$(echo "$COMMIT_MSG" | grep -oP '^v[0-9]+\.[0-9]+')
+          # Match full semver: v1.2.2, v2.0.0-beta.1, etc.
+          if [[ "$COMMIT_MSG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            TAG=$(echo "$COMMIT_MSG" | grep -oP '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?')
+            echo "is_version=true" >> "$GITHUB_OUTPUT"
           else
-            TAG="build-${{ steps.commit.outputs.short_sha }}"
+            echo "is_version=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping release — commit message does not start with vX.Y.Z"
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Release tag: $TAG"
 
-      - name: Create or update release
+      - name: Create release
+        if: steps.version.outputs.is_version == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
@@ -84,15 +88,12 @@ jobs:
             **Commit:** `${{ steps.commit.outputs.short_sha }}`
             **Message:** ${{ steps.commit.outputs.commit_msg }}
 
-            ### What's included
-            - Pre-built `Windfall.jar` — drop into `plugins/` alongside PacketEvents 2.13.0+
-            - Supports Minecraft 1.7 through 1.21+ (Spigot / Paper / Folia)
-            - Requires Java 11+
-
             ### Installation
             1. Download `Windfall.jar` from below
             2. Place it in `plugins/` next to `packetevents-spigot-2.x.x.jar`
             3. Restart the server
+
+            **Requires:** Java 11+ · PacketEvents 2.13.0+ · MC 1.7–26.2+
           files: target/Windfall.jar
           make_latest: true
         env:
