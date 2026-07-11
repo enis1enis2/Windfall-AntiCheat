@@ -78,6 +78,7 @@ jobs:
         if: success()
         uses: actions/github-script@v9
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const diffPath = '.github/anticheat-diff.json';
@@ -105,21 +106,23 @@ jobs:
             body += 'Implement detection logic as needed and test before enabling.\n';
 
             // Check for existing open issues to avoid duplicates
-            const issues = await github.rest.issues.listForRepo({
+            const existingIssues = await github.request('GET /repos/{owner}/{repo}/issues', {
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
               labels: 'monitor',
               per_page: 5,
+              headers: { 'X-GitHub-Api-Version': '2022-11-28' },
             });
 
             // Only create if no open monitor issue exists
-            if (issues.data.length === 0) {
-              await github.rest.issues.create({
+            if (existingIssues.data.length === 0) {
+              await github.request('POST /repos/{owner}/{repo}/issues', {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 title: `[Monitor] ${totalNew} new competitor checks detected`,
                 body: body,
                 labels: ['monitor'],
+                headers: { 'X-GitHub-Api-Version': '2022-11-28' },
               });
             }
