@@ -1,12 +1,12 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-07-11 14:53:31 UTC
+**Generated:** 2026-07-11 18:19:37 UTC
 
 ---
 
 ## Windfall Current Checks
 
-**Total: 44 checks**
+**Total: 52 checks**
 
 ### Combat
 - `windfall.combat.fastheal` — Fast Heal A
@@ -29,20 +29,28 @@
 - `windfall.movement.farplace` — Far Place A
 - `windfall.movement.invalidplace` — Invalid Place A
 - `windfall.movement.phase` — Phase A
+- `windfall.movement.airliquidplace` — Air Liquid Place
+- `windfall.movement.rotationplace` — Rotation Place
 - `windfall.movement.fastbreak` — Fast Break A
 - `windfall.movement.nofall` — NoFall A
+- `windfall.movement.multiplace` — Multi Place
+- `windfall.movement.multibreak` — Multi Break
 - `windfall.movement.motion` — Motion A
 - `windfall.movement.noslow` — NoSlow A
 - `windfall.movement.step` — Step A
+- `windfall.movement.positionplace` — Position Place
 - `windfall.movement.invalidbreak` — Invalid Break A
 - `windfall.movement.noswing` — No Swing A
 - `windfall.movement.farbreak` — Far Break A
 - `windfall.movement.timer` — Timer A
 - `windfall.movement.baritone` — Baritone A
+- `windfall.movement.wrongbreak` — Wrong Break
 - `windfall.movement.fly` — Fly A
 - `windfall.movement.elytra` — Elytra A
 - `windfall.movement.groundspoof` — Ground Spoof A
 - `windfall.movement.scaffold` — Scaffold A
+- `windfall.movement.airliquidbreak` — Air Liquid Break
+- `windfall.movement.positionbreak` — Position Break
 - `windfall.movement.velocity` — Velocity A
 
 ### Packet
@@ -63,26 +71,13 @@
 
 ### Grim
 
-**Missing from Windfall (17 checks):**
+**Missing from Windfall (7 checks):**
 
 - `packet` **MultiActionsG** → `windfall.packet.multi actions g`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsG.java`
   - `ACTION_INTERACT = 0`
   - `ACTION_ATTACK = 1`
   - `ACTION_SPECTATE_ENTITY = 2`
-- `movement` **AirLiquidBreak** → `windfall.movement.air liquid break`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/breaking/AirLiquidBreak.java`
-- `movement` **WrongBreak** → `windfall.movement.wrong break`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/breaking/WrongBreak.java`
-  - `exemptedY = player.getClientVersion().isOlderThan(ClientVersion.V_1_8) ? 255 : (PacketEvents.getAPI().getServerManager().getVersion().isNewerThanOrEquals(ServerVersion.V_1_14) ? -1 : 4095)`
-- `movement` **PositionBreakA** → `windfall.movement.position break a`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/breaking/PositionBreakA.java`
-- `movement` **PositionBreakB** → `windfall.movement.position break b`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/breaking/PositionBreakB.java`
-- `movement` **MultiBreak** → `windfall.movement.multi break`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/breaking/MultiBreak.java`
-  - `face = VerboseCodecs.enumId(blockBreak.face)`
-  - `previousFace = VerboseCodecs.enumId(lastFace)`
 - `packet` **CrashE** → `windfall.packet.crash e`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashE.java`
 - `packet` **CrashG** → `windfall.packet.crash g`
@@ -93,20 +88,6 @@
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashF.java`
 - `packet` **CrashC** → `windfall.packet.crash c`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashC.java`
-- `movement` **AirLiquidPlace** → `windfall.movement.air liquid place`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/AirLiquidPlace.java`
-- `movement` **DuplicateRotPlace** → `windfall.movement.duplicate rot place`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/DuplicateRotPlace.java`
-- `movement` **RotationPlace** → `windfall.movement.rotation place`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/RotationPlace.java`
-  - `flagBuffer = 0`
-  - `distance = player.compensatedEntities.self.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE)`
-- `movement` **PositionPlace** → `windfall.movement.position place`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/PositionPlace.java`
-- `movement` **MultiPlace** → `windfall.movement.multi place`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/MultiPlace.java`
-  - `faceId = VerboseCodecs.enumId(face)`
-  - `lastFaceId = VerboseCodecs.enumId(lastFace)`
 - `packet` **Post** → `windfall.packet.post`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/misc/Post.java`
   - `isExemptFromSwingingCheck = Integer.MIN_VALUE`
@@ -161,9 +142,14 @@
 - `GroundSpoof` → `Ground Spoof A`
 - `AimModulo360` → `Aim A`
 - `AimDuplicateLook` → `Aim A`
+- `AirLiquidBreak` → `Air Liquid Break`
 - `InvalidBreak` → `Invalid Break A`
 - `NoSwingBreak` → `No Swing A`
+- `WrongBreak` → `Wrong Break`
+- `PositionBreakA` → `Position Break`
+- `PositionBreakB` → `Position Break`
 - `FastBreak` → `Fast Break A`
+- `MultiBreak` → `Multi Break`
 - `FarBreak` → `Far Break A`
 - `RotationBreak` → `Rotation Break A`
 - `VehicleA` → `Vehicle A`
@@ -190,9 +176,14 @@
 - `CrashI` → `Crash A`
 - `CrashA` → `Crash A`
 - `FabricatedPlace` → `Invalid Place A`
+- `AirLiquidPlace` → `Air Liquid Place`
 - `InvalidPlaceA` → `Invalid Place A`
+- `DuplicateRotPlace` → `Rotation Place`
+- `RotationPlace` → `Rotation Place`
 - `InvalidPlaceB` → `Invalid Place A`
+- `PositionPlace` → `Position Place`
 - `FarPlace` → `Far Place A`
+- `MultiPlace` → `Multi Place`
 - `ClientBrand` → `Client Brand A`
 
 ### TruthfulAC
@@ -376,12 +367,15 @@
 
 ### Arrow
 
-**Missing from Windfall (28 checks):**
+**Missing from Windfall (31 checks):**
 
 - `movement` **GroundA** → `windfall.movement.ground a`
   - Source: `src/main/java/me/arrow/checks/impl/movement/ground/GroundA.java`
 - `movement` **GroundB** → `windfall.movement.ground b`
   - Source: `src/main/java/me/arrow/checks/impl/movement/ground/GroundB.java`
+  - `AIR_ICE_INCREMENT_PER_TICK = 0.1225`
+  - `AIR_ICE_INCREMENT_PER_TICK_SMALLER = 0.0625`
+  - `AIR_MAX_ICE_SPEED_BOOST = 6.25`
 - `movement` **GroundC** → `windfall.movement.ground c`
   - Source: `src/main/java/me/arrow/checks/impl/movement/ground/GroundC.java`
 - `movement` **MotionB** → `windfall.movement.motion b`
@@ -421,6 +415,10 @@
   - Source: `src/main/java/me/arrow/checks/impl/combat/backtrack/BackTrackB.java`
 - `movement` **VelocityB** → `windfall.movement.velocity b`
   - Source: `src/main/java/me/arrow/checks/impl/combat/velocity/VelocityB.java`
+  - `lastCheckedEntityVelocitySequence = -1`
+  - `EPSILON = 1.0E-7D`
+- `combat` **HitboxA** → `windfall.combat.hitbox a`
+  - Source: `src/main/java/me/arrow/checks/impl/combat/hitbox/HitboxA.java`
 - `combat` **AutoClickerG** → `windfall.combat.auto clicker g`
   - Source: `src/main/java/me/arrow/checks/impl/combat/autoclicker/AutoClickerG.java`
 - `combat` **AutoClickerB** → `windfall.combat.auto clicker b`
@@ -432,6 +430,11 @@
   - `LN_2 = Math.log(2.0)`
 - `combat` **AutoClickerF** → `windfall.combat.auto clicker f`
   - Source: `src/main/java/me/arrow/checks/impl/combat/autoclicker/AutoClickerF.java`
+- `combat` **AimH** → `windfall.combat.aim h`
+  - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimH.java`
+  - `WINDOW_SIZE = 32`
+  - `ANALYZE_EVERY = 4`
+  - `COMBAT_SAMPLE_TICKS = 10`
 - `combat` **AimF** → `windfall.combat.aim f`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimF.java`
   - `eps = 1.0E-9D`
@@ -439,12 +442,20 @@
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimD.java`
 - `combat` **AimG** → `windfall.combat.aim g`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimG.java`
+  - `WINDOW_SIZE = 20`
+  - `ANALYZE_EVERY = 4`
+  - `COMBAT_SAMPLE_TICKS = 10`
 - `combat` **AimE** → `windfall.combat.aim e`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimE.java`
 - `combat` **AimC** → `windfall.combat.aim c`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimC.java`
 - `combat` **AimB** → `windfall.combat.aim b`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimB.java`
+- `packet` **InteractD** → `windfall.packet.interact d`
+  - Source: `src/main/java/me/arrow/checks/impl/misc/interact/InteractD.java`
+  - `MAX_RAY_DISTANCE = 6.0D`
+  - `MAX_TARGET_HISTORY = 40`
+  - `MAX_TRACKED_BLOCKS = 32`
 - `movement` **ScaffoldB** → `windfall.movement.scaffold b`
   - Source: `src/main/java/me/arrow/checks/impl/misc/scaffold/ScaffoldB.java`
   - `MAX_SAMPLES = 80`
@@ -485,8 +496,8 @@
 
 ## Summary
 
-- Windfall has **44 checks**
-- Found **87 new checks** across competitors that Windfall doesn't have
+- Windfall has **52 checks**
+- Found **80 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 

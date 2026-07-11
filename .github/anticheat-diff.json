@@ -21,69 +21,6 @@
         ]
       },
       {
-        "name": "air liquid break",
-        "raw_name": "AirLiquidBreak",
-        "category": "movement",
-        "stable_key": "windfall.movement.air liquid break",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/breaking/AirLiquidBreak.java",
-        "constants": {},
-        "methods": [
-          "onBlockBreak"
-        ]
-      },
-      {
-        "name": "wrong break",
-        "raw_name": "WrongBreak",
-        "category": "movement",
-        "stable_key": "windfall.movement.wrong break",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/breaking/WrongBreak.java",
-        "constants": {
-          "exemptedY": "player.getClientVersion().isOlderThan(ClientVersion.V_1_8) ? 255 : (PacketEvents.getAPI().getServerManager().getVersion().isNewerThanOrEquals(ServerVersion.V_1_14) ? -1 : 4095)"
-        },
-        "methods": [
-          "shouldExempt",
-          "onBlockBreak"
-        ]
-      },
-      {
-        "name": "position break a",
-        "raw_name": "PositionBreakA",
-        "category": "movement",
-        "stable_key": "windfall.movement.position break a",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/breaking/PositionBreakA.java",
-        "constants": {},
-        "methods": [
-          "onBlockBreak"
-        ]
-      },
-      {
-        "name": "position break b",
-        "raw_name": "PositionBreakB",
-        "category": "movement",
-        "stable_key": "windfall.movement.position break b",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/breaking/PositionBreakB.java",
-        "constants": {},
-        "methods": [
-          "onBlockBreak"
-        ]
-      },
-      {
-        "name": "multi break",
-        "raw_name": "MultiBreak",
-        "category": "movement",
-        "stable_key": "windfall.movement.multi break",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/breaking/MultiBreak.java",
-        "constants": {
-          "face": "VerboseCodecs.enumId(blockBreak.face)",
-          "previousFace": "VerboseCodecs.enumId(lastFace)"
-        },
-        "methods": [
-          "onBlockBreak",
-          "onPacketReceive",
-          "onPredictionComplete"
-        ]
-      },
-      {
         "name": "crash e",
         "raw_name": "CrashE",
         "category": "packet",
@@ -139,73 +76,6 @@
         "constants": {},
         "methods": [
           "onPacketReceive"
-        ]
-      },
-      {
-        "name": "air liquid place",
-        "raw_name": "AirLiquidPlace",
-        "category": "movement",
-        "stable_key": "windfall.movement.air liquid place",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/AirLiquidPlace.java",
-        "constants": {},
-        "methods": [
-          "onBlockPlace",
-          "onReload"
-        ]
-      },
-      {
-        "name": "duplicate rot place",
-        "raw_name": "DuplicateRotPlace",
-        "category": "movement",
-        "stable_key": "windfall.movement.duplicate rot place",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/DuplicateRotPlace.java",
-        "constants": {},
-        "methods": [
-          "process",
-          "onPostFlyingBlockPlace"
-        ]
-      },
-      {
-        "name": "rotation place",
-        "raw_name": "RotationPlace",
-        "category": "movement",
-        "stable_key": "windfall.movement.rotation place",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/RotationPlace.java",
-        "constants": {
-          "flagBuffer": "0",
-          "distance": "player.compensatedEntities.self.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE)"
-        },
-        "methods": [
-          "onBlockPlace",
-          "onPostFlyingBlockPlace",
-          "didRayTraceHit"
-        ]
-      },
-      {
-        "name": "position place",
-        "raw_name": "PositionPlace",
-        "category": "movement",
-        "stable_key": "windfall.movement.position place",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/PositionPlace.java",
-        "constants": {},
-        "methods": [
-          "onBlockPlace"
-        ]
-      },
-      {
-        "name": "multi place",
-        "raw_name": "MultiPlace",
-        "category": "movement",
-        "stable_key": "windfall.movement.multi place",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/MultiPlace.java",
-        "constants": {
-          "faceId": "VerboseCodecs.enumId(face)",
-          "lastFaceId": "VerboseCodecs.enumId(lastFace)"
-        },
-        "methods": [
-          "onBlockPlace",
-          "onPacketReceive",
-          "onPredictionComplete"
         ]
       },
       {
@@ -273,9 +143,14 @@
       "GroundSpoof": "Ground Spoof A",
       "AimModulo360": "Aim A",
       "AimDuplicateLook": "Aim A",
+      "AirLiquidBreak": "Air Liquid Break",
       "InvalidBreak": "Invalid Break A",
       "NoSwingBreak": "No Swing A",
+      "WrongBreak": "Wrong Break",
+      "PositionBreakA": "Position Break",
+      "PositionBreakB": "Position Break",
       "FastBreak": "Fast Break A",
+      "MultiBreak": "Multi Break",
       "FarBreak": "Far Break A",
       "RotationBreak": "Rotation Break A",
       "VehicleA": "Vehicle A",
@@ -302,9 +177,14 @@
       "CrashI": "Crash A",
       "CrashA": "Crash A",
       "FabricatedPlace": "Invalid Place A",
+      "AirLiquidPlace": "Air Liquid Place",
       "InvalidPlaceA": "Invalid Place A",
+      "DuplicateRotPlace": "Rotation Place",
+      "RotationPlace": "Rotation Place",
       "InvalidPlaceB": "Invalid Place A",
+      "PositionPlace": "Position Place",
       "FarPlace": "Far Place A",
+      "MultiPlace": "Multi Place",
       "ClientBrand": "Client Brand A"
     }
   },
@@ -1099,16 +979,18 @@
         "category": "movement",
         "stable_key": "windfall.movement.ground b",
         "file_path": "src/main/java/me/arrow/checks/impl/movement/ground/GroundB.java",
-        "constants": {},
+        "constants": {
+          "AIR_ICE_INCREMENT_PER_TICK": "0.1225",
+          "AIR_ICE_INCREMENT_PER_TICK_SMALLER": "0.0625",
+          "AIR_MAX_ICE_SPEED_BOOST": "6.25"
+        },
         "methods": [
           "handle",
           "handle",
           "getAirTickLimit",
           "getLagTicks",
-          "getBlockPlaceLimit",
           "getJumpBoostLevel",
           "getExpectedJumpMotion",
-          "isHoldingBlock",
           "isMovementPacket"
         ]
       },
@@ -1296,26 +1178,63 @@
         "category": "movement",
         "stable_key": "windfall.movement.velocity b",
         "file_path": "src/main/java/me/arrow/checks/impl/combat/velocity/VelocityB.java",
-        "constants": {},
+        "constants": {
+          "lastCheckedEntityVelocitySequence": "-1",
+          "EPSILON": "1.0E-7D"
+        },
         "methods": [
           "handle",
           "handle",
           "isMovement",
           "handleHorizontalVelocity",
           "canCheckHorizontalVelocity",
+          "initializeResponse",
           "fitAttackSlowdown",
+          "getPlayerCollisionHeight",
+          "floor",
           "isReversed",
           "isJumpStart",
+          "isDirectSevereEntityReduction",
           "getInputFriction",
           "getCarryFriction",
+          "getBlockSlipperiness",
           "getRequiredPercent",
+          "isAttackSlowdownPossible",
           "getMaxBuffer",
           "getVelocityClamp",
           "getMoveOffset",
+          "getPredictionTolerance",
+          "getMinimumReliableEntityHorizontal",
+          "getWithheldTransactionGraceTicks",
+          "getBowBoostAllowance",
           "isModernClient",
           "hasHorizontalVelocity",
           "resetVelocityState",
-          "finishMovementTick"
+          "finishMovementTick",
+          "clipX",
+          "clipZ",
+          "offset",
+          "strictlyIntersects"
+        ]
+      },
+      {
+        "name": "hitbox a",
+        "raw_name": "HitboxA",
+        "category": "combat",
+        "stable_key": "windfall.combat.hitbox a",
+        "file_path": "src/main/java/me/arrow/checks/impl/combat/hitbox/HitboxA.java",
+        "constants": {},
+        "methods": [
+          "handle",
+          "handle",
+          "handleAttack",
+          "isExempt",
+          "getProtocolMargin",
+          "getPingTicks",
+          "distancePointToRay",
+          "angleToPoint",
+          "inside",
+          "isMovement"
         ]
       },
       {
@@ -1383,6 +1302,39 @@
         ]
       },
       {
+        "name": "aim h",
+        "raw_name": "AimH",
+        "category": "combat",
+        "stable_key": "windfall.combat.aim h",
+        "file_path": "src/main/java/me/arrow/checks/impl/combat/aimassist/AimH.java",
+        "constants": {
+          "WINDOW_SIZE": "32",
+          "ANALYZE_EVERY": "4",
+          "COMBAT_SAMPLE_TICKS": "10",
+          "MAX_WINDOW_GAP_MS": "1500L",
+          "targetId": "-1"
+        },
+        "methods": [
+          "handle",
+          "handle",
+          "collect",
+          "canSample",
+          "canUseTarget",
+          "handleSnap",
+          "analyzeSmoothCorrections",
+          "verboseSmooth",
+          "getPingTicks",
+          "getEyeHeight",
+          "average",
+          "standardDeviation",
+          "median",
+          "medianAbsoluteDeviation",
+          "wrap",
+          "resetWindow",
+          "error"
+        ]
+      },
+      {
         "name": "aim f",
         "raw_name": "AimF",
         "category": "combat",
@@ -1443,12 +1395,37 @@
         "category": "combat",
         "stable_key": "windfall.combat.aim g",
         "file_path": "src/main/java/me/arrow/checks/impl/combat/aimassist/AimG.java",
-        "constants": {},
+        "constants": {
+          "WINDOW_SIZE": "20",
+          "ANALYZE_EVERY": "4",
+          "COMBAT_SAMPLE_TICKS": "10",
+          "MAX_SAMPLE_GAP_MS": "1750L",
+          "PLAYER_HALF_WIDTH": "0.30D",
+          "CLUSTER_RADIUS_XZ": "0.34D",
+          "CLUSTER_RADIUS_Y": "0.22D",
+          "sampledTargetId": "-1",
+          "lastSampleYaw": "Float.NaN",
+          "lastSamplePitch": "Float.NaN"
+        },
         "methods": [
           "handle",
           "handle",
-          "invalidPitch",
-          "invalidYaw"
+          "collectTargetSample",
+          "canSample",
+          "canUseTarget",
+          "analyze",
+          "dominantRegionCellRatio",
+          "ratioWithinAxis",
+          "getPingTicks",
+          "getEyeHeight",
+          "resetWindow",
+          "median",
+          "percentileSorted",
+          "outside",
+          "distance",
+          "angleDistance",
+          "square",
+          "clamp"
         ]
       },
       {
@@ -1487,6 +1464,46 @@
         "methods": [
           "handle",
           "handle"
+        ]
+      },
+      {
+        "name": "interact d",
+        "raw_name": "InteractD",
+        "category": "packet",
+        "stable_key": "windfall.packet.interact d",
+        "file_path": "src/main/java/me/arrow/checks/impl/misc/interact/InteractD.java",
+        "constants": {
+          "MAX_RAY_DISTANCE": "6.0D",
+          "MAX_TARGET_HISTORY": "40",
+          "MAX_TRACKED_BLOCKS": "32"
+        },
+        "methods": [
+          "handle",
+          "handle",
+          "handleDigging",
+          "rememberServerUpdate",
+          "handleAttack",
+          "overlaps",
+          "getRayBoxEntryDistance",
+          "getRayBoxEntryDistance",
+          "clipAxis",
+          "isExempt",
+          "isClientPredictedAir",
+          "isServerUpdateInFlight",
+          "isUnexpired",
+          "putBounded",
+          "removeExpiredBlockHistory",
+          "getClientBreakGraceMillis",
+          "getServerUpdateGraceMillis",
+          "getPingMillis",
+          "getTargetHorizontalExpand",
+          "getEyeHeight",
+          "getTargetHeight",
+          "isMovement",
+          "isValidBlockPosition",
+          "floor",
+          "equals",
+          "hashCode"
         ]
       },
       {
