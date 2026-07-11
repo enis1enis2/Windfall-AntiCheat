@@ -3,30 +3,40 @@ package io.windfall.anticheat.core.check.impl.movement;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
-import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import com.github.retrooper.packetevents.protocol.player.DiggingAction;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerDigging;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.Material;
 
-/**
- * Detects players breaking blocks faster than vanilla allows.
- * Tracks break start/abort/dig times and compares against vanilla block hardness.
- */
 @CheckData(name = "Fast Break A", stableKey = "windfall.movement.fastbreak", decay = 0.02, setbackVl = 20)
 public class FastBreakCheck extends Check implements PacketCheck {
 
     private static final double MAX_FAST_BREAK_MULTIPLIER = 0.85;
     private static final int BUFFER_THRESHOLD = 3;
 
-    private long breakStartTime;
-    private boolean breaking;
-    private int buffer;
-    private int blockX, blockY, blockZ;
-    private Material blockType;
+    private static final class PlayerState {
+        long breakStartTime;
+        boolean breaking;
+        int blockX, blockY, blockZ;
+        Material blockType;
+
+        void reset() {
+            breaking = false;
+            breakStartTime = 0;
+            blockType = null;
+        }
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
@@ -34,41 +44,42 @@ public class FastBreakCheck extends Check implements PacketCheck {
 
         WrapperPlayClientPlayerDigging wrapper = new WrapperPlayClientPlayerDigging(event);
         DiggingAction action = wrapper.getAction();
+        PlayerState state = getState(player);
 
         if (action == DiggingAction.START_DIGGING) {
-            breaking = true;
-            breakStartTime = System.currentTimeMillis();
-            blockX = wrapper.getBlockPosition().getX();
-            blockY = wrapper.getBlockPosition().getY();
-            blockZ = wrapper.getBlockPosition().getZ();
+            state.breaking = true;
+            state.breakStartTime = System.currentTimeMillis();
+            state.blockX = wrapper.getBlockPosition().getX();
+            state.blockY = wrapper.getBlockPosition().getY();
+            state.blockZ = wrapper.getBlockPosition().getZ();
             try {
-                blockType = player.getPlayer().getWorld()
-                    .getBlockAt(blockX, blockY, blockZ).getType();
+                state.blockType = player.getPlayer().getWorld()
+                    .getBlockAt(state.blockX, state.blockY, state.blockZ).getType();
             } catch (Exception e) {
-                blockType = Material.STONE;
+                state.blockType = Material.STONE;
             }
         } else if (action == DiggingAction.CANCELLED_DIGGING) {
-            reset();
+            state.reset();
         } else if (action == DiggingAction.FINISHED_DIGGING) {
-            if (!breaking || blockType == null) {
-                reset();
+            if (!state.breaking || state.blockType == null) {
+                state.reset();
                 return;
             }
 
-            long elapsed = System.currentTimeMillis() - breakStartTime;
-            double vanillaTime = getVanillaBreakTime(blockType);
+            long elapsed = System.currentTimeMillis() - state.breakStartTime;
+            double vanillaTime = getVanillaBreakTime(state.blockType);
             double maxAllowed = vanillaTime * MAX_FAST_BREAK_MULTIPLIER * 1000.0;
 
             if (elapsed < maxAllowed && vanillaTime > 0) {
-                buffer++;
-                if (buffer >= BUFFER_THRESHOLD) {
+                increaseBuffer(player, 1.0);
+                if (getBuffer(player) > BUFFER_THRESHOLD) {
                     flag(player);
-                    buffer = 0;
+                    resetBuffer(player);
                 }
             } else {
-                buffer = Math.max(0, buffer - 1);
+                decreaseBuffer(player, 1.0);
             }
-            reset();
+            state.reset();
         }
     }
 
@@ -88,11 +99,5 @@ public class FastBreakCheck extends Check implements PacketCheck {
         if (name.equals("WOOD") || name.contains("PLANKS") || name.contains("_LOG")) return 2.0;
         if (material.isBlock() && material.isSolid()) return 1.0;
         return 0.5;
-    }
-
-    private void reset() {
-        breaking = false;
-        breakStartTime = 0;
-        blockType = null;
     }
 }

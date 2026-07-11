@@ -81,6 +81,18 @@ Requires JDK 11+ and Maven 3.6+.
 
 ---
 
+## Credits
+
+Windfall's architecture draws inspiration from several open-source anti-cheat projects. Huge respect to their authors for pioneering these patterns in the community:
+
+- **[ArrowAntiCheat](https://github.com/StelGR/ArrowAntiCheat)** by **StelGR** — foundational check framework, `@CheckData` annotation system, and packet-based detection patterns that Windfall's check registration is built on
+- **[GrimAC](https://github.com/GrimAnticheat/Grim)** by **GrimAnticheat** — movement prediction engine, physics constants (gravity, drag, friction), and the vertical/horizontal delta validation model used across Windfall's movement checks
+- **[TruthfulAC](https://github.com/TawnyE/TruthfulAC)** by **TawnyE** — per-player state isolation pattern, buffer escalation mechanics, and the decay-based violation level system
+
+If you're building your own anti-cheat, these projects are excellent references for understanding how modern packet-level detection works.
+
+---
+
 ## License
 
 MIT License — Copyright (c) 2026 Enis Polat

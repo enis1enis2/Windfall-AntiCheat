@@ -10,11 +10,9 @@ import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Detects macro keybinding: repetitive identical movement/action patterns
- * that indicate automated input rather than human play.
- */
 @CheckData(name = "Macro A", stableKey = "windfall.combat.macro", decay = 0.01, setbackVl = 20)
 public class MacroCheck extends Check implements PacketCheck {
 
@@ -22,10 +20,18 @@ public class MacroCheck extends Check implements PacketCheck {
     private static final int MIN_REPEAT_COUNT = 8;
     private static final double REPETITION_THRESHOLD = 0.9;
 
-    private final Map<String, Integer> movementPatterns = new HashMap<>();
-    private long lastPatternTime;
-    private StringBuilder patternBuffer = new StringBuilder();
-    private int totalPatterns;
+    private static final class PlayerState {
+        final Map<String, Integer> movementPatterns = new HashMap<>();
+        long lastPatternTime;
+        StringBuilder patternBuffer = new StringBuilder();
+        int totalPatterns;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
@@ -33,22 +39,23 @@ public class MacroCheck extends Check implements PacketCheck {
 
         if (!isMovementType(type)) return;
 
+        PlayerState state = getState(player);
         long now = System.currentTimeMillis();
-        if (now - lastPatternTime > 100) {
-            flushPattern(player);
+        if (now - state.lastPatternTime > 100) {
+            flushPattern(player, state);
         }
-        lastPatternTime = now;
+        state.lastPatternTime = now;
 
         char movementCode = getMovementCode(type, player);
-        patternBuffer.append(movementCode);
-        totalPatterns++;
+        state.patternBuffer.append(movementCode);
+        state.totalPatterns++;
 
-        if (patternBuffer.length() > PATTERN_WINDOW) {
-            patternBuffer.deleteCharAt(0);
+        if (state.patternBuffer.length() > PATTERN_WINDOW) {
+            state.patternBuffer.deleteCharAt(0);
         }
 
-        if (patternBuffer.length() >= 10) {
-            detectRepetition(player);
+        if (state.patternBuffer.length() >= 10) {
+            detectRepetition(player, state);
         }
     }
 
@@ -56,33 +63,33 @@ public class MacroCheck extends Check implements PacketCheck {
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
     }
 
-    private void flushPattern(WindfallPlayer player) {
-        if (patternBuffer.length() >= 5) {
-            String pattern = patternBuffer.toString();
-            movementPatterns.merge(pattern, 1, Integer::sum);
+    private void flushPattern(WindfallPlayer player, PlayerState state) {
+        if (state.patternBuffer.length() >= 5) {
+            String pattern = state.patternBuffer.toString();
+            state.movementPatterns.merge(pattern, 1, Integer::sum);
         }
-        patternBuffer = new StringBuilder();
+        state.patternBuffer = new StringBuilder();
     }
 
-    private void detectRepetition(WindfallPlayer player) {
-        String current = patternBuffer.toString();
+    private void detectRepetition(WindfallPlayer player, PlayerState state) {
+        String current = state.patternBuffer.toString();
         if (current.length() < 10) return;
 
         int occurrences = 0;
-        for (Map.Entry<String, Integer> entry : movementPatterns.entrySet()) {
+        for (Map.Entry<String, Integer> entry : state.movementPatterns.entrySet()) {
             if (entry.getKey().contains(current.substring(current.length() - 5))) {
                 occurrences += entry.getValue();
             }
         }
 
-        double ratio = (double) occurrences / Math.max(totalPatterns, 1);
+        double ratio = (double) occurrences / Math.max(state.totalPatterns, 1);
         if (ratio > REPETITION_THRESHOLD && occurrences >= MIN_REPEAT_COUNT) {
             increaseBuffer(player, 2.0);
             if (getBuffer(player) > 5.0) {
                 flag(player);
                 resetBuffer(player);
-                movementPatterns.clear();
-                totalPatterns = 0;
+                state.movementPatterns.clear();
+                state.totalPatterns = 0;
             }
         }
     }

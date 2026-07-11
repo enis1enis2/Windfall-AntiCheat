@@ -11,26 +11,32 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Detects breaking or placing blocks without the corresponding arm swing animation.
- * Hacked clients often skip the swing animation for speed or stealth.
- */
 @CheckData(name = "No Swing A", stableKey = "windfall.movement.noswing", decay = 0.02, setbackVl = 10)
 public class NoSwingCheck extends Check implements PacketCheck {
 
     private static final long SWING_TIMEOUT_MS = 300;
     private static final int BUFFER_THRESHOLD = 3;
 
-    private long lastSwingTime;
-    private int missingSwingCount;
+    private static final class PlayerState {
+        long lastSwingTime;
+        int missingSwingCount;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         PacketTypeCommon type = event.getPacketType();
 
         if (type == PacketType.Play.Client.ANIMATION) {
-            lastSwingTime = System.currentTimeMillis();
+            getState(player).lastSwingTime = System.currentTimeMillis();
             return;
         }
 
@@ -54,10 +60,11 @@ public class NoSwingCheck extends Check implements PacketCheck {
     }
 
     private void checkSwing(WindfallPlayer player) {
+        PlayerState state = getState(player);
         long now = System.currentTimeMillis();
-        if (now - lastSwingTime > SWING_TIMEOUT_MS) {
-            missingSwingCount++;
-            if (missingSwingCount >= BUFFER_THRESHOLD) {
+        if (now - state.lastSwingTime > SWING_TIMEOUT_MS) {
+            state.missingSwingCount++;
+            if (state.missingSwingCount >= BUFFER_THRESHOLD) {
                 increaseBuffer(player, 1.0);
                 if (getBuffer(player) > 3.0) {
                     flag(player);
@@ -65,7 +72,7 @@ public class NoSwingCheck extends Check implements PacketCheck {
                 }
             }
         } else {
-            missingSwingCount = Math.max(0, missingSwingCount - 1);
+            state.missingSwingCount = Math.max(0, state.missingSwingCount - 1);
         }
     }
 }
