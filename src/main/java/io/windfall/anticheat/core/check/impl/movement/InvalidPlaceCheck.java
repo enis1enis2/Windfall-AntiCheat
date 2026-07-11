@@ -8,31 +8,39 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.Material;
 
-/**
- * Detects invalid block placement: placing inside the player, placing
- * in mid-air with no adjacent support, or placing inside another entity.
- */
 @CheckData(name = "Invalid Place A", stableKey = "windfall.movement.invalidplace", decay = 0.02, setbackVl = 10)
 public class InvalidPlaceCheck extends Check implements PacketCheck {
 
     private static final int MAX_PLACEMENTS_PER_TICK = 4;
-    private int placementsThisTick;
-    private long lastTick;
+
+    private static final class PlayerState {
+        int placementsThisTick;
+        long lastTick;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (event.getPacketType() != PacketType.Play.Client.PLAYER_BLOCK_PLACEMENT) return;
 
+        PlayerState state = getState(player);
         long now = System.currentTimeMillis();
-        if (now - lastTick > 50) {
-            placementsThisTick = 0;
-            lastTick = now;
+        if (now - state.lastTick > 50) {
+            state.placementsThisTick = 0;
+            state.lastTick = now;
         }
 
-        placementsThisTick++;
-        if (placementsThisTick > MAX_PLACEMENTS_PER_TICK) {
+        state.placementsThisTick++;
+        if (state.placementsThisTick > MAX_PLACEMENTS_PER_TICK) {
             increaseBuffer(player, 1.0);
             if (getBuffer(player) > 5.0) {
                 flag(player);
@@ -66,7 +74,6 @@ public class InvalidPlaceCheck extends Check implements PacketCheck {
                 flagDetail(player, "placing block inside player");
             }
         } catch (Exception e) {
-            // World access failed — skip
         }
     }
 

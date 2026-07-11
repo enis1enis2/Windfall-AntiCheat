@@ -81,6 +81,16 @@ Requires JDK 11+ and Maven 3.6+.
 
 ---
 
+## Credits
+
+Windfall's architecture draws inspiration from several open-source anti-cheat projects:
+
+- **[ArrowAntiCheat](https://github.com/StelGR/ArrowAntiCheat)** by StelGR — check framework and packet-based detection patterns
+- **[GrimAC](https://github.com/GrimAnticheat/Grim)** by GrimAnticheat — movement prediction engine and physics constants
+- **[TruthfulAC](https://github.com/TawnyE/TruthfulAC)** by TawnyE — per-player state management and buffer mechanics
+
+---
+
 ## License
 
 MIT License — Copyright (c) 2026 Enis Polat

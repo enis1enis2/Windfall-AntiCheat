@@ -10,21 +10,27 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Detects inventory manipulation: clicking windows too fast, creative mode
- * item spawning in survival, and abnormal click patterns.
- */
 @CheckData(name = "Inventory A", stableKey = "windfall.inventory.inventory", decay = 0.02, setbackVl = 15)
 public class InventoryCheck extends Check implements PacketCheck {
 
     private static final int MAX_CLICKS_PER_SECOND = 20;
     private static final long CLICK_WINDOW_MS = 50;
 
-    private long lastClickTime;
-    private int clickCount;
-    private int clicksThisSecond;
-    private long secondStart;
+    private static final class PlayerState {
+        long lastClickTime;
+        int clickCount;
+        int clicksThisSecond;
+        long secondStart;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
@@ -42,11 +48,12 @@ public class InventoryCheck extends Check implements PacketCheck {
     }
 
     private void handleClickWindow(WindfallPlayer player, PacketReceiveEvent event) {
+        PlayerState state = getState(player);
         long now = System.currentTimeMillis();
 
-        if (now - lastClickTime < CLICK_WINDOW_MS) {
-            clickCount++;
-            if (clickCount > 5) {
+        if (now - state.lastClickTime < CLICK_WINDOW_MS) {
+            state.clickCount++;
+            if (state.clickCount > 5) {
                 increaseBuffer(player, 1.0);
                 if (getBuffer(player) > 3.0) {
                     flag(player);
@@ -54,16 +61,16 @@ public class InventoryCheck extends Check implements PacketCheck {
                 }
             }
         } else {
-            clickCount = 0;
+            state.clickCount = 0;
         }
-        lastClickTime = now;
+        state.lastClickTime = now;
 
-        if (now - secondStart > 1000) {
-            clicksThisSecond = 0;
-            secondStart = now;
+        if (now - state.secondStart > 1000) {
+            state.clicksThisSecond = 0;
+            state.secondStart = now;
         }
-        clicksThisSecond++;
-        if (clicksThisSecond > MAX_CLICKS_PER_SECOND) {
+        state.clicksThisSecond++;
+        if (state.clicksThisSecond > MAX_CLICKS_PER_SECOND) {
             flag(player);
         }
     }

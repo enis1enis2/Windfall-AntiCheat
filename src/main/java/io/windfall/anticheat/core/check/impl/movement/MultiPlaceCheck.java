@@ -8,20 +8,25 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Detects placing multiple blocks in the same tick.
- * Vanilla clients can only place one block per tick.
- * Hacked clients can place multiple blocks simultaneously.
- */
 @CheckData(name = "Multi Place", stableKey = "windfall.movement.multiplace", decay = 0.02, setbackVl = 10)
 public class MultiPlaceCheck extends Check implements PacketCheck {
 
     private static final int MAX_PLACES_PER_TICK = 1;
     private static final int BUFFER_THRESHOLD = 2;
 
-    private int placesThisTick;
-    private long lastTick;
+    private static final class PlayerState {
+        int placesThisTick;
+        long lastTick;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
@@ -30,15 +35,16 @@ public class MultiPlaceCheck extends Check implements PacketCheck {
         WrapperPlayClientPlayerBlockPlacement wrapper = new WrapperPlayClientPlayerBlockPlacement(event);
         if (wrapper.getFace() == null) return;
 
+        PlayerState state = getState(player);
         long currentTick = player.getTickCount();
-        if (currentTick != lastTick) {
-            placesThisTick = 0;
-            lastTick = currentTick;
+        if (currentTick != state.lastTick) {
+            state.placesThisTick = 0;
+            state.lastTick = currentTick;
         }
 
-        placesThisTick++;
+        state.placesThisTick++;
 
-        if (placesThisTick > MAX_PLACES_PER_TICK) {
+        if (state.placesThisTick > MAX_PLACES_PER_TICK) {
             increaseBuffer(player, 1.0);
             if (getBuffer(player) > BUFFER_THRESHOLD) {
                 flag(player);

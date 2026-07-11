@@ -9,20 +9,25 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Detects rotation inconsistencies during block breaking.
- * If the player's rotation changes drastically between break start and finish,
- * it indicates aim manipulation or multi-task cheating.
- */
 @CheckData(name = "Rotation Break A", stableKey = "windfall.movement.rotationbreak", decay = 0.02, setbackVl = 15)
 public class RotationBreakCheck extends Check implements PacketCheck {
 
     private static final float MAX_ROTATION_DELTA = 45.0f;
 
-    private float breakStartYaw;
-    private float breakStartPitch;
-    private boolean breaking;
+    private static final class PlayerState {
+        float breakStartYaw;
+        float breakStartPitch;
+        boolean breaking;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
@@ -30,17 +35,18 @@ public class RotationBreakCheck extends Check implements PacketCheck {
 
         WrapperPlayClientPlayerDigging wrapper = new WrapperPlayClientPlayerDigging(event);
         DiggingAction action = wrapper.getAction();
+        PlayerState state = getState(player);
 
         if (action == DiggingAction.START_DIGGING) {
-            breaking = true;
-            breakStartYaw = player.getYaw();
-            breakStartPitch = player.getPitch();
+            state.breaking = true;
+            state.breakStartYaw = player.getYaw();
+            state.breakStartPitch = player.getPitch();
         } else if (action == DiggingAction.FINISHED_DIGGING) {
-            if (!breaking) return;
-            breaking = false;
+            if (!state.breaking) return;
+            state.breaking = false;
 
-            float deltaYaw = Math.abs(player.getYaw() - breakStartYaw);
-            float deltaPitch = Math.abs(player.getPitch() - breakStartPitch);
+            float deltaYaw = Math.abs(player.getYaw() - state.breakStartYaw);
+            float deltaPitch = Math.abs(player.getPitch() - state.breakStartPitch);
 
             if (deltaYaw > 180) deltaYaw = 360 - deltaYaw;
 
@@ -54,7 +60,7 @@ public class RotationBreakCheck extends Check implements PacketCheck {
                 decreaseBuffer(player, 0.1);
             }
         } else if (action == DiggingAction.CANCELLED_DIGGING) {
-            breaking = false;
+            state.breaking = false;
         }
     }
 
