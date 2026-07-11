@@ -1,0 +1,152 @@
+# Windfall AntiCheat Configuration
+
+# === Alerts ===
+alerts:
+  enabled: true
+  prefix: "&8[&bWindfall&8] &7"
+  staff-permission: "windfall.alerts"
+  broadcast-to-all-staff: true
+
+# === Discord Webhook ===
+discord:
+  enabled: false
+  webhook-url: ""
+  server-name: "My Server"
+  mention-on-high-vl: true
+  mention-threshold: 25
+  avatar-url: ""
+  embed-color-low: 16776960
+  embed-color-med: 16744448
+  embed-color-high: 16711680
+  rate-limit-ms: 5000
+
+# === Bedrock / Geyser ===
+bedrock:
+  enabled: true
+  geyser-plugin-name: "Geyser-Spigot"
+  use-floodgate-api: true
+  bedrock-reach-multiplier: 1.5
+  bedrock-speed-tolerance: 1.15
+  bedrock-scaffold-threshold: 0.8
+  bedrock-aim-snap-threshold: 200.0
+  bedrock-controller-aim-snap: 185.0
+  bedrock-touch-aim-snap: 200.0
+  bedrock-cps-limit: 20
+  bedrock-tolerance: 1.10
+
+# === Verbose ===
+verbose: true
+
+# === Severity / Priority System ===
+# Higher total VL = stricter checking. Bedrock players get extra tolerance.
+severity:
+  enabled: true
+  moderate-vl: 10
+  high-vl: 25
+  extreme-vl: 50
+  moderate-multiplier: 1.3
+  high-multiplier: 1.6
+  extreme-multiplier: 2.0
+  bedrock-discount: 0.6
+
+# === Punishments ===
+# Global tiers based on player's total VL across all punishable checks.
+punishments:
+  enabled: true
+  warn-vl: 5
+  kick-vl: 10
+  tempban-vl: 20
+  tempban-duration: "1d"
+  permban-vl: 30
+  warn-message: "&c[Windfall] &eWarning: further cheating will result in a kick."
+  kick-message: "&c[Windfall] Kicked for cheating."
+  tempban-reason: "[Windfall] Temporarily banned for cheating."
+  permban-reason: "[Windfall] Permanently banned for cheating."
+
+# === Checks ===
+# Each check has: enabled, max-vl, setback-vl, punishable
+# - enabled: whether the check runs at all
+# - punishable: whether the check contributes to global punishment tiers
+# Left-click in GUI toggles enabled, Shift-click toggles punishable
+checks:
+  default:
+    enabled: true
+    max-vl: 100
+    setback-vl: 20
+    punishable: true
+
+  # Combat
+  windfall.combat.aim:
+    enabled: true
+    max-vl: 80
+    setback-vl: 10
+    punishable: true
+  windfall.combat.reach:
+    enabled: true
+    max-vl: 80
+    setback-vl: 10
+    punishable: true
+  windfall.combat.criticals:
+    enabled: true
+    max-vl: 80
+    setback-vl: 10
+    punishable: true
+  windfall.combat.killaura:
+    enabled: true
+    max-vl: 100
+    setback-vl: 25
+    punishable: true
+
+  # Movement
+  windfall.movement.speed:
+    enabled: true
+    max-vl: 100
+    setback-vl: 20
+    punishable: true
+  windfall.movement.fly:
+    enabled: true
+    max-vl: 100
+    setback-vl: 15
+    punishable: true
+  windfall.movement.velocity:
+    enabled: true
+    max-vl: 100
+    setback-vl: 30
+    punishable: true
+  windfall.movement.timer:
+    enabled: true
+    max-vl: 100
+    setback-vl: 25
+    punishable: true
+  windfall.movement.nofall:
+    enabled: true
+    max-vl: 80
+    setback-vl: 15
+    punishable: false
+  windfall.movement.step:
+    enabled: true
+    max-vl: 80
+    setback-vl: 15
+    punishable: true
+  windfall.movement.scaffold:
+    enabled: true
+    max-vl: 100
+    setback-vl: 30
+    punishable: true
+
+  # Packet
+  windfall.packet.bad:
+    enabled: true
+    max-vl: 50
+    setback-vl: 5
+    punishable: false
+  windfall.packet.cheststealer:
+    enabled: true
+    max-vl: 60
+    setback-vl: 15
+    punishable: true
+  windfall.packet.creative:
+    enabled: true
+    max-vl: 50
+    setback-vl: 5
+    punishable: true

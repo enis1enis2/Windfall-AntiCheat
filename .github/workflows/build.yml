@@ -1,0 +1,99 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B clean package --file pom.xml
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windfall
+          path: target/Windfall.jar
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B clean package --file pom.xml
+
+      - name: Get commit info
+        id: commit
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "commit_msg=$COMMIT_MSG" >> "$GITHUB_OUTPUT"
+
+      - name: Determine version tag
+        id: version
+        run: |
+          COMMIT_MSG="${{ steps.commit.outputs.commit_msg }}"
+          if [[ "$COMMIT_MSG" =~ ^v[0-9]+\.[0-9]+ ]]; then
+            TAG=$(echo "$COMMIT_MSG" | grep -oP '^v[0-9]+\.[0-9]+')
+          else
+            TAG="build-${{ steps.commit.outputs.short_sha }}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release tag: $TAG"
+
+      - name: Create or update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Windfall ${{ steps.version.outputs.tag }}"
+          body: |
+            ## Windfall ${{ steps.version.outputs.tag }}
+
+            **Commit:** `${{ steps.commit.outputs.short_sha }}`
+            **Message:** ${{ steps.commit.outputs.commit_msg }}
+
+            ### What's included
+            - Pre-built `Windfall.jar` — drop into `plugins/` alongside PacketEvents 2.13.0+
+            - Supports Minecraft 1.7 through 1.21+ (Spigot / Paper / Folia)
+            - Requires Java 11+
+
+            ### Installation
+            1. Download `Windfall.jar` from below
+            2. Place it in `plugins/` next to `packetevents-spigot-2.x.x.jar`
+            3. Restart the server
+          files: target/Windfall.jar
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
