@@ -151,6 +151,8 @@ def load_windfall_checks() -> List[WindfallCheck]:
 # Synonym map: competitor concept → windfall concept
 SYNONYM_MAP = {
     "flight": "fly",
+    "fly": "flight",
+    "hitbox": "hitboxes",
     "fastbreak": "fastbreak",
     "noswingbreak": "noswing",
     "invalidbreak": "invalidbreak",
@@ -438,13 +440,17 @@ def match_competitor_to_windfall(
     """Match competitor checks against Windfall's existing checks.
     Returns (unmatched_new, matched_pairs)."""
 
-    # Build lookup by flattened name and by stable_key
+    # Build lookup by flattened name, by stable_key, and by stripped flat name (base concept)
     windfall_by_flat = {}
     windfall_by_key = {}
+    windfall_by_base = {}  # base concept (trailing letter stripped) -> windfall check
     for wc in windfall_checks:
         flat = flatten_name(wc.name)
         windfall_by_flat[flat] = wc
         windfall_by_key[wc.stable_key] = wc
+        base = re.sub(r'[a-z]$', '', flat).strip()
+        if base and base != flat:
+            windfall_by_base[base] = wc
 
     new_checks = []
     matches = {}
@@ -463,23 +469,34 @@ def match_competitor_to_windfall(
             matches[cc.raw_name] = windfall_by_flat[comp_flat].name
             continue
 
-        # 3. Synonym match: check if competitor's normalized name maps to a windfall concept
-        comp_flat_stripped = re.sub(r'[a-z]$', '', comp_flat).strip()
+        # 3. Strip trailing letter and match base concept directly
+        comp_base = re.sub(r'[a-z]$', '', comp_flat).strip()
+        if comp_base and comp_base in windfall_by_base:
+            matches[cc.raw_name] = windfall_by_base[comp_base].name
+            continue
+
+        # 4. Synonym match: check if competitor's base maps to a windfall concept
         for syn_key, syn_val in SYNONYM_MAP.items():
-            if comp_flat == syn_key or comp_flat_stripped == syn_key:
-                # Find windfall check that matches the synonym value
+            if comp_flat == syn_key or comp_base == syn_key:
+                # Find windfall check whose flat name or base contains the synonym value
                 for wf_flat, wc in windfall_by_flat.items():
                     if syn_val in wf_flat:
                         matches[cc.raw_name] = wc.name
                         matched = True
                         break
+                if not matched:
+                    for wf_base, wc in windfall_by_base.items():
+                        if syn_val in wf_base:
+                            matches[cc.raw_name] = wc.name
+                            matched = True
+                            break
                 if matched:
                     break
 
         if matched:
             continue
 
-        # 4. Substring match on flattened names
+        # 5. Substring match on flattened names
         for wf_flat, wc in windfall_by_flat.items():
             if len(comp_flat) >= 4 and len(wf_flat) >= 4:
                 if comp_flat in wf_flat or wf_flat in comp_flat:
