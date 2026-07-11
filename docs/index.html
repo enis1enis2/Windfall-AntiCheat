@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windfall — Minecraft Anti-Cheat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        a { color: #6c5ce7; text-decoration: none; transition: color 0.2s; }
+        a:hover { color: #a29bfe; }
+
+        .hero {
+            text-align: center;
+            padding: 100px 20px 80px;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+            border-bottom: 1px solid #1a1a2e;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: #8a8a9a;
+            max-width: 600px;
+            margin: 0 auto 32px;
+        }
+        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background: #6c5ce7;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #5a4bd1; color: #fff; }
+        .btn-secondary {
+            background: transparent;
+            color: #a29bfe;
+            border: 2px solid #6c5ce7;
+        }
+        .btn-secondary:hover { background: #6c5ce7; color: #fff; }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+        .section { padding: 80px 0; }
+        .section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 48px;
+            color: #fff;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: #12121a;
+            border: 1px solid #1a1a2e;
+            border-radius: 12px;
+            padding: 32px;
+            transition: border-color 0.2s;
+        }
+        .feature-card:hover { border-color: #6c5ce7; }
+        .feature-card h3 {
+            color: #a29bfe;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+        .feature-card p { color: #8a8a9a; font-size: 0.95rem; }
+
+        .versions {
+            text-align: center;
+            padding: 60px 20px;
+            background: #12121a;
+            border-top: 1px solid #1a1a2e;
+            border-bottom: 1px solid #1a1a2e;
+        }
+        .versions h2 { margin-bottom: 24px; }
+        .version-badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .badge {
+            background: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #a29bfe;
+        }
+
+        .install { text-align: center; }
+        .install code {
+            display: block;
+            background: #12121a;
+            border: 1px solid #1a1a2e;
+            border-radius: 8px;
+            padding: 20px 32px;
+            font-size: 1rem;
+            color: #a29bfe;
+            margin: 24px auto;
+            max-width: 500px;
+            text-align: left;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #555;
+            font-size: 0.85rem;
+            border-top: 1px solid #1a1a2e;
+        }
+
+        .checks-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 32px;
+        }
+        .checks-table th, .checks-table td {
+            padding: 10px 16px;
+            text-align: left;
+            border-bottom: 1px solid #1a1a2e;
+        }
+        .checks-table th { color: #a29bfe; font-weight: 600; }
+        .checks-table td { color: #8a8a9a; }
+        .check-tag {
+            display: inline-block;
+            background: #1a1a2e;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #6c5ce7;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <div class="container">
+            <h1>Windfall</h1>
+            <p>Free, open-source Minecraft anti-cheat. Detects movement, combat, and inventory exploits across 33 checks — from 1.7 to the latest MC versions.</p>
+            <div class="hero-buttons">
+                <a href="https://github.com/enis1enis2/Windfall-AntiCheat/releases" class="btn btn-primary">Download Latest</a>
+                <a href="https://github.com/enis1enis2/Windfall-AntiCheat" class="btn btn-secondary">View on GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="versions">
+        <div class="container">
+            <h2>Supports Every Major Version</h2>
+            <div class="version-badges">
+                <span class="badge">1.7 — 1.8</span>
+                <span class="badge">1.9 — 1.12</span>
+                <span class="badge">1.13 — 1.16</span>
+                <span class="badge">1.17 — 1.21.5</span>
+                <span class="badge">26.x — 26.2</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="container">
+            <h2>Why Windfall?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Free &amp; Open Source</h3>
+                    <p>MIT licensed. Full source code available on GitHub. No hidden costs, no paywalls.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>33 Checks</h3>
+                    <p>Comprehensive detection covering movement, combat, inventory, and packet exploits.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Low Impact</h3>
+                    <p>Async processing and optimized packet listeners keep your TPS high and latency low.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Modern MC Versions</h3>
+                    <p>Updated for Mojang's year-based versioning. Supports 26.x through 26.2 out of the box.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Simple Setup</h3>
+                    <p>Drop the JAR in, add PacketEvents, and you're running. No database required.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Paper &amp; Spigot</h3>
+                    <p>Works on both Paper and Spigot servers with no extra configuration needed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="container install">
+            <h2>Quick Start</h2>
+            <ol style="display:inline-block; text-align:left; color:#8a8a9a; margin-bottom: 24px;">
+                <li>Download the latest <a href="https://github.com/enis1enis2/Windfall-AntiCheat/releases">release</a></li>
+                <li>Install <a href="https://ci.codemc.io/job/petrex/job/PacketEvents2/lastBuild/">PacketEvents 2.13.0</a> as a separate plugin</li>
+                <li>Drop both JARs into your <code style="display:inline;padding:2px 8px;">plugins/</code> folder</li>
+                <li>Restart your server</li>
+            </ol>
+            <code>/windfall reload</code>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="container">
+            <h2>Checks</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Movement</h3>
+                    <p>
+                        <span class="check-tag">Speed</span>
+                        <span class="check-tag">Fly</span>
+                        <span class="check-tag">Timer</span>
+                        <span class="check-tag">NoFall</span>
+                        <span class="check-tag">Step</span>
+                        <span class="check-tag">Glide</span>
+                        <span class="check-tag">Jesus</span>
+                        <span class="check-tag">Phase</span>
+                        <span class="check-tag">Elevator</span>
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <h3>Combat</h3>
+                    <p>
+                        <span class="check-tag">KillAura</span>
+                        <span class="check-tag">Reach</span>
+                        <span class="check-tag">AutoClicker</span>
+                        <span class="check-tag">CPS</span>
+                        <span class="check-tag">Aim</span>
+                        <span class="check-tag">SwordBlock</span>
+                        <span class="check-tag">FastHeal</span>
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <h3>Inventory &amp; Packets</h3>
+                    <p>
+                        <span class="check-tag">AutoArmor</span>
+                        <span class="check-tag">AutoTotem</span>
+                        <span class="check-tag">AutoEat</span>
+                        <span class="check-tag">AutoSwap</span>
+                        <span class="check-tag">Packet</span>
+                        <span class="check-tag">FastPlace</span>
+                        <span class="check-tag">FastBreak</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Windfall Anti-Cheat &mdash; MIT License &copy; 2026 Enis Polat</p>
+    </div>
+
+</body>
+</html>
