@@ -93,11 +93,19 @@ public class WindfallConfig {
             "windfall.movement.velocity", "windfall.movement.timer",
             "windfall.movement.nofall", "windfall.movement.step",
             "windfall.movement.scaffold", "windfall.movement.elytra",
+            "windfall.movement.baritone", "windfall.movement.groundspoof",
+            "windfall.movement.phase", "windfall.movement.simulation",
+            "windfall.movement.noslow", "windfall.movement.motion",
             "windfall.combat.reach", "windfall.combat.aim",
             "windfall.combat.killaura", "windfall.combat.criticals",
             "windfall.combat.fastheal", "windfall.combat.swordblock",
+            "windfall.combat.autoclicker", "windfall.combat.backtrack",
+            "windfall.combat.hitboxes", "windfall.combat.multiinteract",
+            "windfall.combat.selfinteract",
             "windfall.packet.bad", "windfall.packet.cheststealer",
-            "windfall.packet.creative"
+            "windfall.packet.creative", "windfall.packet.order",
+            "windfall.packet.chat", "windfall.packet.crash",
+            "windfall.packet.sprint", "windfall.packet.exploit"
         };
         for (String key : allChecks) {
             config.addDefault("checks." + key + ".enabled", true);

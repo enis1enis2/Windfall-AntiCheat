@@ -4,6 +4,11 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.check.impl.combat.AimCheck;
+import io.windfall.anticheat.core.check.impl.combat.AutoclickerCheck;
+import io.windfall.anticheat.core.check.impl.combat.BacktrackCheck;
+import io.windfall.anticheat.core.check.impl.combat.HitboxesCheck;
+import io.windfall.anticheat.core.check.impl.combat.MultiInteractCheck;
+import io.windfall.anticheat.core.check.impl.combat.SelfInteractCheck;
 import io.windfall.anticheat.core.check.impl.combat.ReachCheck;
 import io.windfall.anticheat.core.check.impl.combat.CriticalsCheck;
 import io.windfall.anticheat.core.check.impl.combat.KillAuraCheck;
@@ -17,9 +22,20 @@ import io.windfall.anticheat.core.check.impl.movement.NoFallCheck;
 import io.windfall.anticheat.core.check.impl.movement.StepCheck;
 import io.windfall.anticheat.core.check.impl.movement.ScaffoldCheck;
 import io.windfall.anticheat.core.check.impl.movement.ElytraCheck;
+import io.windfall.anticheat.core.check.impl.movement.BaritoneCheck;
+import io.windfall.anticheat.core.check.impl.movement.GroundSpoofCheck;
+import io.windfall.anticheat.core.check.impl.movement.PhaseCheck;
+import io.windfall.anticheat.core.check.impl.movement.SimulationCheck;
+import io.windfall.anticheat.core.check.impl.movement.NoSlowCheck;
+import io.windfall.anticheat.core.check.impl.movement.MotionCheck;
 import io.windfall.anticheat.core.check.impl.packet.BadPacketsCheck;
 import io.windfall.anticheat.core.check.impl.packet.ChestStealerCheck;
 import io.windfall.anticheat.core.check.impl.packet.CreativeCheck;
+import io.windfall.anticheat.core.check.impl.packet.PacketOrderCheck;
+import io.windfall.anticheat.core.check.impl.packet.ChatCheck;
+import io.windfall.anticheat.core.check.impl.packet.CrashCheck;
+import io.windfall.anticheat.core.check.impl.packet.SprintCheck;
+import io.windfall.anticheat.core.check.impl.packet.ExploitCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +59,11 @@ public class CheckManager {
     private void registerChecks() {
         List<Check> allChecks = new ArrayList<>();
         allChecks.add(new AimCheck());
+        allChecks.add(new AutoclickerCheck());
+        allChecks.add(new BacktrackCheck());
+        allChecks.add(new HitboxesCheck());
+        allChecks.add(new MultiInteractCheck());
+        allChecks.add(new SelfInteractCheck());
         allChecks.add(new ReachCheck());
         allChecks.add(new CriticalsCheck());
         allChecks.add(new KillAuraCheck());
@@ -56,9 +77,20 @@ public class CheckManager {
         allChecks.add(new StepCheck());
         allChecks.add(new ScaffoldCheck());
         allChecks.add(new ElytraCheck());
+        allChecks.add(new BaritoneCheck());
+        allChecks.add(new GroundSpoofCheck());
+        allChecks.add(new PhaseCheck());
+        allChecks.add(new SimulationCheck());
+        allChecks.add(new NoSlowCheck());
+        allChecks.add(new MotionCheck());
         allChecks.add(new BadPacketsCheck());
         allChecks.add(new ChestStealerCheck());
         allChecks.add(new CreativeCheck());
+        allChecks.add(new PacketOrderCheck());
+        allChecks.add(new ChatCheck());
+        allChecks.add(new CrashCheck());
+        allChecks.add(new SprintCheck());
+        allChecks.add(new ExploitCheck());
 
         // Version filter: checks outside server protocol range are never registered
         for (Check check : allChecks) {
