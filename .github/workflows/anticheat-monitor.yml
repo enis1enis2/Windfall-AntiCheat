@@ -91,10 +91,11 @@ jobs:
             for (const [name, data] of Object.entries(diff)) {
               if (!data.new_checks || data.new_checks.length === 0) continue;
 
-              // Deduplicate: group by base name (strip trailing letter)
+              // Deduplicate: group by base name (strip trailing variant letter like FooBarA → FooBar)
               const grouped = {};
               for (const check of data.new_checks) {
-                const base = check.raw_name.replace(/[a-z]$/, '').trim() || check.raw_name;
+                // Strip trailing uppercase letter that follows a lowercase letter (e.g. PositionBreakA → PositionBreak)
+                const base = check.raw_name.replace(/([a-z])([A-Z])$/, '$1').trim() || check.raw_name;
                 if (!grouped[base]) grouped[base] = [];
                 grouped[base].push(check);
               }
