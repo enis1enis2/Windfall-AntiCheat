@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.physics.PredictionContext;
 import io.windfall.anticheat.core.physics.PredictionEngine;
@@ -11,7 +12,7 @@ import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@CheckData(name = "Fly A", stableKey = "windfall.movement.fly", decay = 0.01, setbackVl = 15)
+@CheckData(name = "Fly A", stableKey = "windfall.movement.fly", decay = 0.01, setbackVl = 15, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3)
 public class FlightCheck extends Check implements PacketCheck {
 
     private static final double JUMP_MOMENTUM = 0.42;

@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.physics.PredictionContext;
 import io.windfall.anticheat.core.physics.PredictionEngine;
@@ -11,7 +12,7 @@ import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@CheckData(name = "Ground Spoof A", stableKey = "windfall.movement.groundspoof", decay = 0.01, setbackVl = 20)
+@CheckData(name = "Ground Spoof A", stableKey = "windfall.movement.groundspoof", decay = 0.01, setbackVl = 20, compat = {CompatFlag.PAPER_CHUNK_DEPENDENT, CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3)
 public class GroundSpoofCheck extends Check implements PacketCheck {
 
     private static final double MIN_AIR_TIME_FOR_GROUND = 3.0;

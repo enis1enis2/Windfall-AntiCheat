@@ -6,11 +6,12 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayDeque;
 
-@CheckData(name = "Chat A", stableKey = "windfall.packet.chat", decay = 0.01, setbackVl = 15)
+@CheckData(name = "Chat A", stableKey = "windfall.packet.chat", decay = 0.01, setbackVl = 15, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
 public class ChatCheck extends Check implements PacketCheck {
 
     private static final int MAX_CHAT_PER_SECOND = 5;

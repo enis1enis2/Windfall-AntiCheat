@@ -5,22 +5,33 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity;
+import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
+import io.windfall.anticheat.core.config.WindfallConfig;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.version.VersionBracket;
 import java.util.ArrayDeque;
 
-@CheckData(name = "Autoclicker A", stableKey = "windfall.combat.autoclicker", decay = 0.01, setbackVl = 20)
+@CheckData(name = "Autoclicker A", stableKey = "windfall.combat.autoclicker", decay = 0.01, setbackVl = 20,
+    compat = {CompatFlag.RELAX_ON_MISMATCH},
+    relaxMultiplier = 1.5)
 public class AutoclickerCheck extends Check implements PacketCheck {
 
     private static final int MIN_CLICKS_FOR_EVAL = 20;
     private static final long CLICK_WINDOW_MS = 3000;
-    // Perfectly consistent click intervals (low standard deviation) = autoclicker
-    private static final double LOW_CPS = 4.0;
-    private static final double HIGH_CPS = 16.0;
+
+    // Pre-1.9: no cooldown, high CPS is normal
+    private static final double LOW_CPS_LEGACY = 6.0;
+    private static final double HIGH_CPS_LEGACY = 20.0;
+
+    // 1.9+: cooldown limits valid CPS to ~2-4
+    private static final double LOW_CPS_MODERN = 1.0;
+    private static final double HIGH_CPS_MODERN = 8.0;
+
     private static final double STD_DEV_AUTOCLICKER_THRESHOLD = 3.0;
-    // Any human has at least 15ms variance between clicks
     private static final double MIN_HUMAN_STD_DEV = 15.0;
 
     private final ArrayDeque<Long> clickTimestamps = new ArrayDeque<>();
@@ -41,15 +52,35 @@ public class AutoclickerCheck extends Check implements PacketCheck {
 
         if (clickTimestamps.size() < MIN_CLICKS_FOR_EVAL) return;
 
+        int protocol = player.getProtocolVersion();
+        VersionBracket bracket = VersionBracket.fromProtocol(protocol);
+
+        double lowCPS, highCPS;
+
+        // Bedrock override: use config CPS limit
+        if (player.isBedrock()) {
+            WindfallConfig cfg = WindfallPlugin.getInstance().getWindfallConfig();
+            lowCPS = LOW_CPS_MODERN;
+            highCPS = cfg.getBedrockCpsLimit();
+        } else if (bracket == VersionBracket.LEGACY) {
+            // Pre-1.9: unlimited CPS is normal, only flag very low consistency
+            lowCPS = LOW_CPS_LEGACY;
+            highCPS = HIGH_CPS_LEGACY;
+        } else {
+            // 1.9+: cooldown means lower valid CPS range
+            lowCPS = LOW_CPS_MODERN;
+            highCPS = HIGH_CPS_MODERN;
+        }
+
         double cps = clickTimestamps.size() / (CLICK_WINDOW_MS / 1000.0);
-        if (cps < LOW_CPS || cps > HIGH_CPS) {
+        if (cps < lowCPS || cps > highCPS) {
             decreaseBuffer(player, 0.2);
             return;
         }
 
         double stdDev = calculateStdDev();
-        // High CPS with low variance = autoclicker; humans have at least 15ms std dev
-        if (stdDev < STD_DEV_AUTOCLICKER_THRESHOLD && cps > LOW_CPS) {
+
+        if (stdDev < STD_DEV_AUTOCLICKER_THRESHOLD && cps > lowCPS) {
             increaseBuffer(player, 1.5);
             if (getBuffer(player) > 4.0) {
                 flag(player);

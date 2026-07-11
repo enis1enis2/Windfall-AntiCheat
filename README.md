@@ -15,9 +15,19 @@ Windfall intercepts incoming packets via [PacketEvents 2](https://github.com/ret
 | **Packet** (10) | Bad Packets, Chat, Chest Stealer, Client Brand, Crash, Creative, Exploit, Packet Order, Sprint, Vehicle |
 | **Inventory** (1) | Inventory |
 
-### Version-Aware Registration
+### 5-Layer Compatibility System (v1.5.0)
 
-Each check declares a `minVersion` / `maxVersion` (Minecraft protocol version). On startup `CheckManager` reads the server's protocol and only registers checks that apply — legacy-only checks (Fast Heal, Sword Block) are automatically skipped on modern servers and vice-versa.
+Windfall uses a 5-layer compatibility system to adapt checks across all supported MC versions and server forks:
+
+| Layer | What it does |
+|-------|-------------|
+| **Version Range** | `minVersion` / `maxVersion` — checks only load when the server protocol is in range |
+| **Fork Detection** | `ServerFork` detects Folia / Purpur / Paper / Spigot / Bukkit via reflection; checks can declare `disableOnFolia`, `disableOnPurpur` |
+| **Plugin Detection** | `PluginDetector` finds ViaVersion, ViaBackwards, ViaRewind, Geyser, OldCombatMechanics at runtime |
+| **Player Profile** | Per-player: protocol version, Bedrock status, ViaVersion version gap → tolerance multipliers applied |
+| **Config Override** | Server admins can manually disable any check via `config.yml` compatibility section |
+
+Checks also declare `@CheckData(compat = {...})` flags (e.g. `VIAVERSION_SENSITIVE`, `PURPUR_KB_DEPENDENT`) that control whether the check is **disabled** or **relaxed** (higher thresholds) when conditions don't match.
 
 ---
 
@@ -63,9 +73,10 @@ On first run Windfall generates `plugins/Windfall/config.yml`. All checks, thres
 |----------|-----------|
 | Spigot 1.8+ | Yes |
 | Paper 1.13+ | Yes |
-| Folia | Yes |
-| ViaVersion / ViaBackwards | Yes |
-| Geyser / Floodgate (Bedrock) | Yes (optional) |
+| Folia (1.21.2+) | Yes |
+| Purpur | Yes (custom KB detection) |
+| ViaVersion / ViaBackwards | Yes (version gap tolerance) |
+| Geyser / Floodgate (Bedrock) | Yes (with Bedrock-specific tolerances) |
 
 ---
 

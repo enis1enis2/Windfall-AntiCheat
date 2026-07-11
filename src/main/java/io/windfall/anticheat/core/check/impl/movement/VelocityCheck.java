@@ -5,29 +5,33 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityVelocity;
+import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
+import io.windfall.anticheat.core.platform.PurpurCompat;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.physics.PhysicsConstants;
+import io.windfall.anticheat.core.version.VersionBracket;
 import java.util.ArrayDeque;
 
-@CheckData(name = "Velocity A", stableKey = "windfall.movement.velocity", decay = 0.01, setbackVl = 30)
+@CheckData(name = "Velocity A", stableKey = "windfall.movement.velocity", decay = 0.01, setbackVl = 30,
+    compat = {CompatFlag.PURPUR_KB_DEPENDENT,CompatFlag.RELAX_ON_MISMATCH},
+    relaxMultiplier = 1.3)
 public class VelocityCheck extends Check implements PacketCheck {
 
-    private static final double VELOCITY_DRAG_HORIZONTAL = 0.91;
-    private static final double VELOCITY_DRAG_VERTICAL = 0.98;
-    private static final double GRAVITY = 0.08;
     private static final double MIN_VELOCITY_THRESHOLD = 0.005;
     private static final int MAX_PENDING_VELOCITIES = 5;
 
-    private static final double GROUND_FRICTION = 0.91;
-    private static final double WEB_FRICTION = 0.25;
-    private static final double WATER_FRICTION = 0.8;
-    private static final double LAVA_FRICTION = 0.5;
-    private static final double ICE_FRICTION = 0.98;
-    private static final double SOUL_SAND_FRICTION = 0.6;
-    private static final double HONEY_FRICTION = 0.4;
-    private static final double LADDER_FRICTION = 0.2;
+    // Pre-1.9 knockback: full KB applies to airborne entities
+    private static final double KB_HORIZONTAL_PRE_1_9 = 0.4;
+    // 1.9+: airborne horizontal KB reduced
+    private static final double KB_HORIZONTAL_1_9_AIRBORNE = 0.28;
+    // Sprint multiplier
+    private static final double KB_SPRINT_MULTIPLIER = 1.5;
+    // Vertical knockback
+    private static final double KB_VERTICAL = 0.4;
 
     private final ArrayDeque<PendingVelocity> pendingVelocities = new ArrayDeque<>();
 
@@ -35,9 +39,6 @@ public class VelocityCheck extends Check implements PacketCheck {
     private double expectedDeltaX;
     private double expectedDeltaY;
     private double expectedDeltaZ;
-    private double rawVelocityX;
-    private double rawVelocityY;
-    private double rawVelocityZ;
     private int velocityAge;
 
     @Override
@@ -51,7 +52,6 @@ public class VelocityCheck extends Check implements PacketCheck {
         if (targetEntityId != selfEntityId) return;
 
         com.github.retrooper.packetevents.util.Vector3d vel = wrapper.getVelocity();
-        // MC sends velocity in fixed-point: actual = value / 8000.0
         double velX = vel.x / 8000.0;
         double velY = vel.y / 8000.0;
         double velZ = vel.z / 8000.0;
@@ -62,7 +62,6 @@ public class VelocityCheck extends Check implements PacketCheck {
             return;
         }
 
-        // Queue up to 5 velocity packets to handle race conditions with lag
         while (pendingVelocities.size() >= MAX_PENDING_VELOCITIES) {
             pendingVelocities.removeFirst();
         }
@@ -78,7 +77,6 @@ public class VelocityCheck extends Check implements PacketCheck {
             if (pv == null) return;
 
             long age = System.currentTimeMillis() - pv.receivedAt;
-            // Give player ping + 500ms to respond before flagging
             long timeout = 500L + player.getTransactionPing();
             if (age > timeout) {
                 pendingVelocities.removeFirst();
@@ -86,12 +84,9 @@ public class VelocityCheck extends Check implements PacketCheck {
             }
 
             velocityActive = true;
-            rawVelocityX = pv.velX;
-            rawVelocityY = pv.velY;
-            rawVelocityZ = pv.velZ;
             pendingVelocities.removeFirst();
 
-            double[] postDrag = applyPostVelocityPhysics(rawVelocityX, rawVelocityY, rawVelocityZ, player);
+            double[] postDrag = applyVersionAwarePostVelocityPhysics(pv.velX, pv.velY, pv.velZ, player);
             expectedDeltaX = postDrag[0];
             expectedDeltaY = postDrag[1];
             expectedDeltaZ = postDrag[2];
@@ -130,7 +125,6 @@ public class VelocityCheck extends Check implements PacketCheck {
             verticalRatio = Math.abs(actualDeltaY) < MIN_VELOCITY_THRESHOLD ? 1.0 : 0.0;
         }
 
-        // Average horizontal + vertical ratios for pure-cancel detection
         double combinedRatio = (horizontalRatio + verticalRatio) / 2.0;
 
         velocityActive = false;
@@ -140,13 +134,27 @@ public class VelocityCheck extends Check implements PacketCheck {
             return;
         }
 
-        if (combinedRatio < 0.5) {
+        // Version-aware tolerance: Bedrock gets wider tolerance, version gap gets wider tolerance
+        double tolerance = 1.0;
+        if (player.isBedrock()) {
+            tolerance = 1.10;
+        }
+        int protocol = player.getProtocolVersion();
+        VersionBracket bracket = VersionBracket.fromProtocol(protocol);
+        if (bracket == VersionBracket.LEGACY) {
+            tolerance *= 1.2; // 1.8 KB formula differs significantly
+        }
+
+        double adjustedThreshold05 = 0.5 / tolerance;
+        double adjustedThreshold08 = 0.8 / tolerance;
+
+        if (combinedRatio < adjustedThreshold05) {
             increaseBuffer(player, 1.0);
             if (getBuffer(player) > 2.0) {
                 flag(player);
                 resetBuffer(player);
             }
-        } else if (combinedRatio < 0.8) {
+        } else if (combinedRatio < adjustedThreshold08) {
             increaseBuffer(player, 0.3);
             if (getBuffer(player) > 5.0) {
                 flag(player);
@@ -157,26 +165,34 @@ public class VelocityCheck extends Check implements PacketCheck {
         }
     }
 
-    // Simulates one tick of post-velocity physics to predict expected movement
-    private double[] applyPostVelocityPhysics(double velX, double velY, double velZ, WindfallPlayer player) {
-        double horizontalFriction = getEffectiveHorizontalFriction(player);
-        double verticalFriction = VELOCITY_DRAG_VERTICAL;
+    private double[] applyVersionAwarePostVelocityPhysics(double velX, double velY, double velZ, WindfallPlayer player) {
+        int protocol = player.getProtocolVersion();
+        double gravity = PhysicsConstants.GRAVITY;
+        double airDrag = PhysicsConstants.AIR_DRAG;
+        double groundFriction = PhysicsConstants.GROUND_FRICTION;
 
-        double newDeltaX = velX * horizontalFriction;
-        double newDeltaZ = velZ * horizontalFriction;
+        // Purpur custom knockback adjustment
+        PurpurCompat purpur = WindfallPlugin.getInstance().getPurpurCompat();
+        if (purpur.isCustomKnockbackEnabled()) {
+            velX = purpur.adjustHorizontalKB(velX);
+            velZ = purpur.adjustVerticalKB(velZ);
+        }
+
+        double newDeltaX = velX * groundFriction;
+        double newDeltaZ = velZ * groundFriction;
 
         double newDeltaY;
         if (player.isSwimming()) {
-            newDeltaY = velY * WATER_FRICTION - 0.02;
+            double waterDrag = protocol >= 393 ? PhysicsConstants.WATER_DRAG : 0.8;
+            newDeltaY = velY * waterDrag - 0.02;
         } else if (player.isClimbing()) {
             newDeltaY = Math.max(velY, -0.15);
-            newDeltaX *= LADDER_FRICTION;
-            newDeltaZ *= LADDER_FRICTION;
+            newDeltaX *= 0.2;
+            newDeltaZ *= 0.2;
         } else {
-            newDeltaY = (velY - GRAVITY) * verticalFriction;
+            newDeltaY = (velY - gravity) * airDrag;
         }
 
-        // Small air-strafe prevents W-tap false positives after velocity
         double airAcceleration = player.getHorizontalSpeed() * 0.026;
         if (!player.isOnGround()) {
             double maxPostVelHorizontal = Math.sqrt(newDeltaX * newDeltaX + newDeltaZ * newDeltaZ);
@@ -188,13 +204,6 @@ public class VelocityCheck extends Check implements PacketCheck {
         }
 
         return new double[]{newDeltaX, newDeltaY, newDeltaZ};
-    }
-
-    private double getEffectiveHorizontalFriction(WindfallPlayer player) {
-        if (player.isOnGround()) {
-            return GROUND_FRICTION;
-        }
-        return VELOCITY_DRAG_HORIZONTAL;
     }
 
     private boolean isMovementPacket(PacketReceiveEvent event) {

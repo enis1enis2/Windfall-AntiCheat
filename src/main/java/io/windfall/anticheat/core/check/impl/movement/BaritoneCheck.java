@@ -6,10 +6,11 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 
-@CheckData(name = "Baritone A", stableKey = "windfall.movement.baritone", decay = 0.01, setbackVl = 20)
+@CheckData(name = "Baritone A", stableKey = "windfall.movement.baritone", decay = 0.01, setbackVl = 20, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
 public class BaritoneCheck extends Check implements PacketCheck {
 
     private static final double STRAIGHT_LINE_TOLERANCE = 0.02;

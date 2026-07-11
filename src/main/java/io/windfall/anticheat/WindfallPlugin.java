@@ -10,9 +10,13 @@ import io.windfall.anticheat.core.command.CommandManager;
 import io.windfall.anticheat.core.config.WindfallConfig;
 import io.windfall.anticheat.core.network.PacketListener;
 import io.windfall.anticheat.core.player.PlayerManager;
+import io.windfall.anticheat.core.platform.FoliaCompat;
+import io.windfall.anticheat.core.platform.PurpurCompat;
+import io.windfall.anticheat.core.plugin.PluginDetector;
 import io.windfall.anticheat.core.punishment.PunishmentEngine;
 import io.windfall.anticheat.core.scheduler.PlatformScheduler;
 import io.windfall.anticheat.core.severity.SeverityManager;
+import io.windfall.anticheat.core.version.ServerFork;
 import io.windfall.anticheat.core.version.VersionManager;
 import io.windfall.anticheat.core.compensation.TransactionManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -33,9 +37,12 @@ public final class WindfallPlugin extends JavaPlugin {
     private PunishmentEngine punishmentEngine;
     private SeverityManager severityManager;
     private ChecklistGUI checklistGUI;
+    private ServerFork serverFork;
+    private PluginDetector pluginDetector;
+    private FoliaCompat foliaCompat;
+    private PurpurCompat purpurCompat;
     private volatile boolean running;
 
-    // PacketEvents must init in onLoad so it's ready before other plugins register listeners
     @Override
     public void onLoad() {
         instance = this;
@@ -43,14 +50,20 @@ public final class WindfallPlugin extends JavaPlugin {
         PacketEvents.getAPI().load();
     }
 
-    // Init order matters: config → version → scheduler → players → checks → commands → network
     @Override
     public void onEnable() {
         long start = System.nanoTime();
 
         this.config = new WindfallConfig(this);
         this.versionManager = new VersionManager();
+        this.serverFork = ServerFork.detect(getLogger());
+        this.pluginDetector = new PluginDetector();
+        this.pluginDetector.init(this);
         this.scheduler = new PlatformScheduler(this);
+        this.foliaCompat = new FoliaCompat(serverFork.isFolia());
+        this.foliaCompat.init(getLogger());
+        this.purpurCompat = new PurpurCompat();
+        this.purpurCompat.init(serverFork, getLogger());
         this.playerManager = new PlayerManager();
         this.transactionManager = new TransactionManager(this);
         this.geyserManager = GeyserManager.init(this);
@@ -68,7 +81,8 @@ public final class WindfallPlugin extends JavaPlugin {
         this.scheduler.startGlobalTick();
 
         long elapsed = (System.nanoTime() - start) / 1_000_000;
-        getLogger().info("Windfall v" + getDescription().getVersion() + " enabled in " + elapsed + "ms (" + versionManager.getServerVersion() + ")");
+        getLogger().info("Windfall v" + getDescription().getVersion() + " enabled in " + elapsed + "ms ("
+            + versionManager.getServerVersion() + ", " + serverFork.getDisplayName() + ")");
     }
 
     @Override
@@ -92,4 +106,8 @@ public final class WindfallPlugin extends JavaPlugin {
     public SeverityManager getSeverityManager() { return severityManager; }
     public ChecklistGUI getChecklistGUI() { return checklistGUI; }
     public boolean isRunning() { return running; }
+    public ServerFork getServerFork() { return serverFork; }
+    public PluginDetector getPluginDetector() { return pluginDetector; }
+    public FoliaCompat getFoliaCompat() { return foliaCompat; }
+    public PurpurCompat getPurpurCompat() { return purpurCompat; }
 }

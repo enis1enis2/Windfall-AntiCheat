@@ -8,12 +8,13 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientCr
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientClickWindow;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@CheckData(name = "Inventory A", stableKey = "windfall.inventory.inventory", decay = 0.02, setbackVl = 15)
+@CheckData(name = "Inventory A", stableKey = "windfall.inventory.inventory", decay = 0.02, setbackVl = 15, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3)
 public class InventoryCheck extends Check implements PacketCheck {
 
     private static final int MAX_CLICKS_PER_SECOND = 20;

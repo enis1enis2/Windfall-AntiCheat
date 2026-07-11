@@ -6,11 +6,12 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayDeque;
 
-@CheckData(name = "Packet Order A", stableKey = "windfall.packet.order", decay = 0.01, setbackVl = 15)
+@CheckData(name = "Packet Order A", stableKey = "windfall.packet.order", decay = 0.01, setbackVl = 15, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
 public class PacketOrderCheck extends Check implements PacketCheck {
 
     // Client must send at least one movement packet between login and any interaction

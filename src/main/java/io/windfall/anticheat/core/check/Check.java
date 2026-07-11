@@ -20,6 +20,10 @@ public abstract class Check {
     protected int setbackVl;
     protected int minVersion;
     protected int maxVersion;
+    protected final CompatFlag[] compatFlags;
+    protected final double relaxMultiplier;
+    protected final boolean disableOnFolia;
+    protected final boolean disableOnPurpur;
 
     public Check() {
         // Every check class must declare @CheckData or the server crashes at startup
@@ -34,6 +38,10 @@ public abstract class Check {
         this.setbackVl = data.setbackVl();
         this.minVersion = data.minVersion();
         this.maxVersion = data.maxVersion();
+        this.compatFlags = data.compat();
+        this.relaxMultiplier = data.relaxMultiplier();
+        this.disableOnFolia = data.disableOnFolia();
+        this.disableOnPurpur = data.disableOnPurpur();
 
         WindfallConfig cfg = WindfallPlugin.getInstance().getWindfallConfig();
         this.enabled = cfg.isCheckEnabled(stableKey);
@@ -167,4 +175,27 @@ public abstract class Check {
     public int getSetbackVl() { return setbackVl; }
     public int getMinVersion() { return minVersion; }
     public int getMaxVersion() { return maxVersion; }
+    public CompatFlag[] getCompatFlags() { return compatFlags; }
+    public double getRelaxMultiplier() { return relaxMultiplier; }
+    public boolean isDisableOnFolia() { return disableOnFolia; }
+    public boolean isDisableOnPurpur() { return disableOnPurpur; }
+
+    public boolean hasCompatFlag(CompatFlag flag) {
+        for (CompatFlag f : compatFlags) {
+            if (f == flag) return true;
+        }
+        return false;
+    }
+
+    public void flagIfAboveThreshold(WindfallPlayer player, double value, double threshold) {
+        if (value > threshold) {
+            increaseBuffer(player, (value - threshold) / threshold);
+            if (getBuffer(player) > 2.0) {
+                flag(player);
+                resetBuffer(player);
+            }
+        } else {
+            decreaseBuffer(player, 0.1);
+        }
+    }
 }

@@ -1,0 +1,20 @@
+package io.windfall.anticheat.core.check;
+
+public enum CompatFlag {
+
+    VERSION_LEGACY,
+    VERSION_COMBAT,
+    VERSION_FLAT,
+    VERSION_WORLD,
+    VERSION_MODERN,
+    VERSION_LATEST,
+
+    FOLIA_UNSAFE,
+    PURPUR_KB_DEPENDENT,
+    PAPER_CHUNK_DEPENDENT,
+    VIAVERSION_SENSITIVE,
+    GEYSEIR_SENSITIVE,
+
+    DISABLE_ON_MISMATCH,
+    RELAX_ON_MISMATCH
+}

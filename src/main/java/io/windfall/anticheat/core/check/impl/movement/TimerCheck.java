@@ -6,12 +6,13 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 
-@CheckData(name = "Timer A", stableKey = "windfall.movement.timer", decay = 0.005, setbackVl = 25)
+@CheckData(name = "Timer A", stableKey = "windfall.movement.timer", decay = 0.005, setbackVl = 25, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
 public class TimerCheck extends Check implements PacketCheck {
 
     private static final int NORMAL_PACKETS_PER_TICK_MIN = 1;

@@ -63,6 +63,29 @@ punishments:
   tempban-reason: "[Windfall] Temporarily banned for cheating."
   permban-reason: "[Windfall] Permanently banned for cheating."
 
+# === Version Compatibility ===
+# Auto-detect server fork, ViaVersion, Geyser and adapt checks accordingly.
+compatibility:
+  auto-adapt: true
+  
+  # Bedrock tolerance multipliers (applied per-player when Geyser is present)
+  bedrock:
+    reach-multiplier: 1.5
+    speed-tolerance: 1.15
+    scaffold-threshold: 0.8
+    aim-snap-threshold: 200.0
+    controller-aim-snap: 185.0
+    touch-aim-snap: 200.0
+    cps-limit: 20
+    tolerance: 1.10
+
+  # Folia-specific settings
+  folia:
+    # Use EntityScheduler for cross-region entity access (slight 1-tick delay)
+    use-entity-scheduler: true
+    # Extra ticks of tolerance for timing-based checks
+    packet-delay-tolerance: 1
+
 # === Checks ===
 # Each check has: enabled, max-vl, setback-vl, punishable
 # - enabled: whether the check runs at all

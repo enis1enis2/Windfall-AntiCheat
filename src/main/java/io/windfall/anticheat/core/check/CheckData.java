@@ -15,4 +15,9 @@ public @interface CheckData {
     int setbackVl() default 20;
     int minVersion() default 4;
     int maxVersion() default 99999;
+
+    CompatFlag[] compat() default {};
+    double relaxMultiplier() default 1.0;
+    boolean disableOnFolia() default false;
+    boolean disableOnPurpur() default false;
 }

@@ -7,18 +7,24 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.version.VersionBracket;
 import java.util.ArrayDeque;
 
-@CheckData(name = "Kill Aura A", stableKey = "windfall.combat.killaura", decay = 0.005, setbackVl = 25)
+@CheckData(name = "Kill Aura A", stableKey = "windfall.combat.killaura", decay = 0.005, setbackVl = 25,
+    compat = {CompatFlag.VIAVERSION_SENSITIVE, CompatFlag.RELAX_ON_MISMATCH},
+    relaxMultiplier = 1.2)
 public class KillAuraCheck extends Check implements PacketCheck {
 
-    private static final int MAX_TARGETS_PER_SECOND = 4;
+    // Pre-1.9: unlimited CPS, more targets is normal
+    private static final int MAX_TARGETS_PER_SECOND_LEGACY = 6;
+    // 1.9+: cooldown limits valid CPS
+    private static final int MAX_TARGETS_PER_SECOND_MODERN = 4;
     private static final int SWING_WINDOW_MS = 1000;
     private static final double SNAP_TO_TARGET_THRESHOLD = 60.0;
     private static final int MIN_SNAP_COUNT = 3;
-    // Human aim is asymmetric; ratio > 0.95 means mathematically generated rotations
     private static final double BOT_ROTATION_SYMMETRY_THRESHOLD = 0.95;
 
     private final ArrayDeque<TargetEvent> recentTargets = new ArrayDeque<>();
@@ -59,7 +65,6 @@ public class KillAuraCheck extends Check implements PacketCheck {
 
         totalAttacks++;
 
-        // Evaluate multi-target every 20 attacks to avoid single-target false positives
         if (totalAttacks > 0 && totalAttacks % 20 == 0) {
             checkMultiAura(player);
         }
@@ -100,7 +105,16 @@ public class KillAuraCheck extends Check implements PacketCheck {
                 .distinct()
                 .count();
 
-        if (uniqueTargets > MAX_TARGETS_PER_SECOND) {
+        // Version-aware: 1.8 unlimited CPS = more targets normal
+        int protocol = player.getProtocolVersion();
+        int maxTargets = protocol < 107 ? MAX_TARGETS_PER_SECOND_LEGACY : MAX_TARGETS_PER_SECOND_MODERN;
+
+        // Bedrock: wider tolerance for touch/controller input
+        if (player.isBedrock()) {
+            maxTargets += 2;
+        }
+
+        if (uniqueTargets > maxTargets) {
             increaseBuffer(player, 2.0);
             if (getBuffer(player) > 5.0) {
                 flag(player);
@@ -119,10 +133,15 @@ public class KillAuraCheck extends Check implements PacketCheck {
 
         if (total < 10) return;
 
-        // min(positive, negative) / total measures how balanced the direction changes are
         double symmetryRatio = Math.min(positiveCount, negativeCount) / (double) total;
 
-        if (symmetryRatio > BOT_ROTATION_SYMMETRY_THRESHOLD) {
+        // Bedrock: rotation wrapping differences reduce symmetry detection accuracy
+        double threshold = BOT_ROTATION_SYMMETRY_THRESHOLD;
+        if (player.isBedrock()) {
+            threshold = 0.98;
+        }
+
+        if (symmetryRatio > threshold) {
             increaseBuffer(player, 1.5);
             if (getBuffer(player) > 4.0) {
                 flag(player);
@@ -133,7 +152,6 @@ public class KillAuraCheck extends Check implements PacketCheck {
             decreaseBuffer(player, 0.2);
         }
 
-        // Prevent snap counter from growing unbounded
         if (snapCount > MIN_SNAP_COUNT * 3) {
             snapCount = 0;
         }

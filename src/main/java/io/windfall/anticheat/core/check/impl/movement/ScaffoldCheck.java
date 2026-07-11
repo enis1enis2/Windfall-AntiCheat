@@ -8,10 +8,11 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientIn
 import io.windfall.anticheat.core.bedrock.BedrockInfo;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
+import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 
-@CheckData(name = "Scaffold A", stableKey = "windfall.movement.scaffold", decay = 0.005, setbackVl = 30)
+@CheckData(name = "Scaffold A", stableKey = "windfall.movement.scaffold", decay = 0.005, setbackVl = 30, compat = {CompatFlag.FOLIA_UNSAFE, CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3, disableOnFolia = false)
 public class ScaffoldCheck extends Check implements PacketCheck {
 
     // Touch/keyboard/controller have different max placement rates — Bedrock-specific thresholds

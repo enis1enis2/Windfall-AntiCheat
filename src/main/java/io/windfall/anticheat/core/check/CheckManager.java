@@ -56,6 +56,11 @@ import io.windfall.anticheat.core.check.impl.packet.ClientBrandCheck;
 import io.windfall.anticheat.core.check.impl.packet.VehicleCheck;
 import io.windfall.anticheat.core.check.impl.inventory.InventoryCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.plugin.PluginDetector;
+import io.windfall.anticheat.core.platform.FoliaCompat;
+import io.windfall.anticheat.core.platform.PurpurCompat;
+import io.windfall.anticheat.core.version.ServerFork;
+import io.windfall.anticheat.core.version.VersionBracket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -66,12 +71,19 @@ public class CheckManager {
     private final WindfallPlugin plugin;
     private final List<Check> checks = new ArrayList<>();
     private final Map<String, Check> checkByKey = new ConcurrentHashMap<>();
-    // Captured once at startup — server protocol never changes mid-session
     private final int serverProtocol;
+    private final ServerFork serverFork;
+    private final PluginDetector pluginDetector;
+    private final FoliaCompat foliaCompat;
+    private final PurpurCompat purpurCompat;
 
     public CheckManager(WindfallPlugin plugin) {
         this.plugin = plugin;
         this.serverProtocol = plugin.getVersionManager().getProtocolVersion();
+        this.serverFork = plugin.getServerFork();
+        this.pluginDetector = plugin.getPluginDetector();
+        this.foliaCompat = plugin.getFoliaCompat();
+        this.purpurCompat = plugin.getPurpurCompat();
         registerChecks();
     }
 
@@ -130,20 +142,56 @@ public class CheckManager {
         allChecks.add(new VehicleCheck());
         allChecks.add(new InventoryCheck());
 
-        // Version filter: checks outside server protocol range are never registered
+        int skippedVersion = 0;
+        int skippedFork = 0;
+        int skippedPlugin = 0;
+
         for (Check check : allChecks) {
-            if (serverProtocol >= check.getMinVersion() && serverProtocol <= check.getMaxVersion()) {
-                checks.add(check);
-                checkByKey.put(check.getStableKey(), check);
-            } else {
-                plugin.getLogger().info("[Windfall] Skipping " + check.getName()
-                    + " (requires " + check.getMinVersion() + "-" + check.getMaxVersion()
-                    + ", server=" + serverProtocol + ")");
+            String skipReason = getSkipReason(check);
+            if (skipReason != null) {
+                plugin.getLogger().info("[Windfall] Skipping " + check.getName() + " (" + skipReason + ")");
+                if (skipReason.startsWith("version")) skippedVersion++;
+                else if (skipReason.startsWith("fork")) skippedFork++;
+                else skippedPlugin++;
+                continue;
             }
+
+            checks.add(check);
+            checkByKey.put(check.getStableKey(), check);
         }
 
         plugin.getLogger().info("[Windfall] Registered " + checks.size() + "/" + allChecks.size()
-            + " checks for protocol " + serverProtocol);
+            + " checks for protocol " + serverProtocol + " (" + serverFork.getDisplayName() + ")");
+        if (skippedVersion + skippedFork + skippedPlugin > 0) {
+            plugin.getLogger().info("[Windfall] Skipped: " + skippedVersion + " version, "
+                + skippedFork + " fork, " + skippedPlugin + " plugin");
+        }
+    }
+
+    private String getSkipReason(Check check) {
+        // Layer 1: Version range
+        if (serverProtocol < check.getMinVersion() || serverProtocol > check.getMaxVersion()) {
+            return "version: requires " + check.getMinVersion() + "-" + check.getMaxVersion()
+                + ", server=" + serverProtocol;
+        }
+
+        // Layer 2: Fork detection
+        if (check.isDisableOnFolia() && serverFork.isFolia()) {
+            return "fork: disabled on Folia";
+        }
+        if (check.isDisableOnPurpur() && serverFork.isPurpur()) {
+            return "fork: disabled on Purpur";
+        }
+
+        // Layer 3: Plugin detection
+        if (check.hasCompatFlag(CompatFlag.VERSION_LEGACY)
+            && serverProtocol < 107
+            && pluginDetector.isOldCombatMechanicsInstalled()) {
+            // OldCombatMechanics re-enables pre-1.9 combat — keep SwordBlock active
+            return null;
+        }
+
+        return null;
     }
 
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
@@ -168,12 +216,10 @@ public class CheckManager {
         }
     }
 
-    // Runs every 50ms via PlatformScheduler — reward before decay is intentional
     public void onTick() {
         io.windfall.anticheat.core.punishment.PunishmentEngine pe = plugin.getPunishmentEngine();
         for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
             if (!player.isValid()) continue;
-            // Must run before checks so lastOnGround reflects previous tick
             player.resetTickState();
             for (Check check : checks) {
                 if (!check.isEnabled()) continue;
@@ -200,4 +246,10 @@ public class CheckManager {
     public List<Check> getChecks() {
         return checks;
     }
+
+    public int getServerProtocol() { return serverProtocol; }
+    public ServerFork getServerFork() { return serverFork; }
+    public PluginDetector getPluginDetector() { return pluginDetector; }
+    public FoliaCompat getFoliaCompat() { return foliaCompat; }
+    public PurpurCompat getPurpurCompat() { return purpurCompat; }
 }
