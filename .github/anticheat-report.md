@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-07-11 18:19:37 UTC
+**Generated:** 2026-07-11 18:30:09 UTC
 
 ---
 
@@ -71,26 +71,7 @@
 
 ### Grim
 
-**Missing from Windfall (7 checks):**
-
-- `packet` **MultiActionsG** → `windfall.packet.multi actions g`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/multiactions/MultiActionsG.java`
-  - `ACTION_INTERACT = 0`
-  - `ACTION_ATTACK = 1`
-  - `ACTION_SPECTATE_ENTITY = 2`
-- `packet` **CrashE** → `windfall.packet.crash e`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashE.java`
-- `packet` **CrashG** → `windfall.packet.crash g`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashG.java`
-- `packet` **CrashB** → `windfall.packet.crash b`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashB.java`
-- `packet` **CrashF** → `windfall.packet.crash f`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashF.java`
-- `packet` **CrashC** → `windfall.packet.crash c`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/crash/CrashC.java`
-- `packet` **Post** → `windfall.packet.post`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/misc/Post.java`
-  - `isExemptFromSwingingCheck = Integer.MIN_VALUE`
+**No new checks detected.**
 
 **Matched with existing Windfall checks:**
 
@@ -133,6 +114,7 @@
 - `ElytraD` → `Elytra A`
 - `ElytraC` → `Elytra A`
 - `MultiActionsA` → `Multi Interact A`
+- `MultiActionsG` → `Multi Interact A`
 - `MultiActionsC` → `Multi Interact A`
 - `MultiActionsB` → `Multi Interact A`
 - `MultiActionsD` → `Multi Interact A`
@@ -174,7 +156,12 @@
 - `CrashH` → `Crash A`
 - `CrashD` → `Crash A`
 - `CrashI` → `Crash A`
+- `CrashE` → `Crash A`
+- `CrashG` → `Crash A`
+- `CrashB` → `Crash A`
+- `CrashF` → `Crash A`
 - `CrashA` → `Crash A`
+- `CrashC` → `Crash A`
 - `FabricatedPlace` → `Invalid Place A`
 - `AirLiquidPlace` → `Air Liquid Place`
 - `InvalidPlaceA` → `Invalid Place A`
@@ -184,14 +171,13 @@
 - `PositionPlace` → `Position Place`
 - `FarPlace` → `Far Place A`
 - `MultiPlace` → `Multi Place`
+- `Post` → `No Swing A`
 - `ClientBrand` → `Client Brand A`
 
 ### TruthfulAC
 
-**Missing from Windfall (41 checks):**
+**Missing from Windfall (31 checks):**
 
-- `movement` **MovementCheckSupport** → `windfall.movement.movement check support`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/movement/MovementCheckSupport.java`
 - `movement` **GroundSpoofB** → `windfall.movement.ground spoof b`
   - Source: `src/main/java/ret/tawny/truthful/checks/impl/movement/spoof/GroundSpoofB.java`
 - `movement` **GroundSpoofG** → `windfall.movement.ground spoof g`
@@ -233,33 +219,6 @@
   - `ELYTRA_DRAG_XZ = 0.99D`
   - `ELYTRA_DRAG_Y = 0.98D`
   - `GRAVITY = 0.08D`
-- `packet` **RaycastA** → `windfall.packet.raycast a`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/raycast/RaycastA.java`
-- `combat` **AnchorAuraA** → `windfall.combat.anchor aura a`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/anchor/AnchorAuraA.java`
-- `combat` **CrystalAuraA** → `windfall.combat.crystal aura a`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/crystal/CrystalAuraA.java`
-  - `lastCleanup = System.currentTimeMillis()`
-- `combat` **AimH** → `windfall.combat.aim h`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimH.java`
-  - `SAMPLE_SIZE = 20`
-  - `OSCILLATION_THRESHOLD = 0.7`
-- `combat` **AimL** → `windfall.combat.aim l`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimL.java`
-  - `MIN_AXIS_LOCK_YAW = 4.0f`
-  - `MAX_AXIS_LOCK_PITCH = 0.01f`
-  - `MIN_LINEAR_DELTA = 1.0f`
-- `combat` **AimF** → `windfall.combat.aim f`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimF.java`
-  - `SAMPLE_SIZE = 25`
-- `combat` **AimD** → `windfall.combat.aim d`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimD.java`
-  - `deltaYaw = Math.abs(playerData.getDeltaYaw())`
-  - `deltaPitch = Math.abs(playerData.getDeltaPitch())`
-  - `yawAccel = Math.abs(deltaYaw - Math.abs(playerData.getLastDeltaYaw()))`
-- `combat` **AimG** → `windfall.combat.aim g`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimG.java`
-  - `SAMPLE_SIZE = 12`
 - `combat` **AimK** → `windfall.combat.aim k`
   - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/aim/AimK.java`
   - `MIN_DELTA = 0.35`
@@ -317,14 +276,10 @@
   - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/autoclicker/AutoClickerE.java`
 - `combat` **AutoClickerD** → `windfall.combat.auto clicker d`
   - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/autoclicker/AutoClickerD.java`
-- `packet` **CrasherA** → `windfall.packet.crasher a`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/crasher/CrasherA.java`
-  - `MAX_CHANNEL_LENGTH = 32`
-  - `MAX_PAYLOAD_SIZE = 32767`
-  - `SUSPICIOUS_PAYLOAD_SIZE = 30000`
 
 **Matched with existing Windfall checks:**
 
+- `MovementCheckSupport` → `Phase A`
 - `VelocityA` → `Velocity A`
 - `BaritoneA` → `Baritone A`
 - `InventoryA` → `Inventory A`
@@ -332,12 +287,21 @@
 - `ScaffoldA` → `Scaffold A`
 - `FastBreakA` → `Fast Break A`
 - `PhaseA` → `Phase A`
+- `RaycastA` → `Reach A`
 - `BReachA` → `Reach A`
 - `BSpeedA` → `Speed A`
 - `BFlyA` → `Fly A`
+- `AnchorAuraA` → `Kill Aura A`
+- `CrystalAuraA` → `Kill Aura A`
+- `AimH` → `Aim A`
+- `AimL` → `Aim A`
+- `AimF` → `Aim A`
+- `AimD` → `Aim A`
+- `AimG` → `Aim A`
 - `AimA` → `Aim A`
 - `ReachA` → `Reach A`
 - `AutoClickerA` → `Autoclicker A`
+- `CrasherA` → `Crash A`
 - `SprintA` → `Sprint A`
 - `SprintB` → `Sprint A`
 - `InvalidA` → `Invalid Place A`
@@ -367,17 +331,8 @@
 
 ### Arrow
 
-**Missing from Windfall (31 checks):**
+**Missing from Windfall (22 checks):**
 
-- `movement` **GroundA** → `windfall.movement.ground a`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/ground/GroundA.java`
-- `movement` **GroundB** → `windfall.movement.ground b`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/ground/GroundB.java`
-  - `AIR_ICE_INCREMENT_PER_TICK = 0.1225`
-  - `AIR_ICE_INCREMENT_PER_TICK_SMALLER = 0.0625`
-  - `AIR_MAX_ICE_SPEED_BOOST = 6.25`
-- `movement` **GroundC** → `windfall.movement.ground c`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/ground/GroundC.java`
 - `movement` **MotionB** → `windfall.movement.motion b`
   - Source: `src/main/java/me/arrow/checks/impl/movement/motion/MotionB.java`
 - `movement` **MotionF** → `windfall.movement.motion f`
@@ -388,11 +343,6 @@
   - Source: `src/main/java/me/arrow/checks/impl/movement/motion/MotionD.java`
 - `movement` **MotionE** → `windfall.movement.motion e`
   - Source: `src/main/java/me/arrow/checks/impl/movement/motion/MotionE.java`
-- `movement` **IllegalMoveB** → `windfall.movement.illegal move b`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/illegalmove/IllegalMoveB.java`
-  - `strafeBuffer = 0`
-  - `predictedX = lastDeltaX * 0.9100000262260437`
-  - `predictedZ = lastDeltaZ * 0.9100000262260437`
 - `movement` **SpeedC** → `windfall.movement.speed c`
   - Source: `src/main/java/me/arrow/checks/impl/movement/speed/SpeedC.java`
   - `maxBuffer1 = 13`
@@ -430,32 +380,12 @@
   - `LN_2 = Math.log(2.0)`
 - `combat` **AutoClickerF** → `windfall.combat.auto clicker f`
   - Source: `src/main/java/me/arrow/checks/impl/combat/autoclicker/AutoClickerF.java`
-- `combat` **AimH** → `windfall.combat.aim h`
-  - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimH.java`
-  - `WINDOW_SIZE = 32`
-  - `ANALYZE_EVERY = 4`
-  - `COMBAT_SAMPLE_TICKS = 10`
-- `combat` **AimF** → `windfall.combat.aim f`
-  - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimF.java`
-  - `eps = 1.0E-9D`
-- `combat` **AimD** → `windfall.combat.aim d`
-  - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimD.java`
-- `combat` **AimG** → `windfall.combat.aim g`
-  - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimG.java`
-  - `WINDOW_SIZE = 20`
-  - `ANALYZE_EVERY = 4`
-  - `COMBAT_SAMPLE_TICKS = 10`
 - `combat` **AimE** → `windfall.combat.aim e`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimE.java`
 - `combat` **AimC** → `windfall.combat.aim c`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimC.java`
 - `combat` **AimB** → `windfall.combat.aim b`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimB.java`
-- `packet` **InteractD** → `windfall.packet.interact d`
-  - Source: `src/main/java/me/arrow/checks/impl/misc/interact/InteractD.java`
-  - `MAX_RAY_DISTANCE = 6.0D`
-  - `MAX_TARGET_HISTORY = 40`
-  - `MAX_TRACKED_BLOCKS = 32`
 - `movement` **ScaffoldB** → `windfall.movement.scaffold b`
   - Source: `src/main/java/me/arrow/checks/impl/misc/scaffold/ScaffoldB.java`
   - `MAX_SAMPLES = 80`
@@ -472,7 +402,11 @@
 
 **Matched with existing Windfall checks:**
 
+- `GroundA` → `Ground Spoof A`
+- `GroundB` → `Ground Spoof A`
+- `GroundC` → `Ground Spoof A`
 - `MotionA` → `Motion A`
+- `IllegalMoveB` → `Phase A`
 - `SpeedA` → `Speed A`
 - `OmniSprintA` → `Sprint A`
 - `ElytraA` → `Elytra A`
@@ -482,8 +416,13 @@
 - `ReachA` → `Reach A`
 - `KillauraA` → `Kill Aura A`
 - `MacroA` → `Macro A`
+- `AimH` → `Aim A`
+- `AimF` → `Aim A`
+- `AimD` → `Aim A`
+- `AimG` → `Aim A`
 - `AimA` → `Aim A`
 - `InteractC` → `Self Interact A`
+- `InteractD` → `Reach A`
 - `InteractA` → `Self Interact A`
 - `ScaffoldA` → `Scaffold A`
 - `VehicleA` → `Vehicle A`
@@ -497,7 +436,7 @@
 ## Summary
 
 - Windfall has **52 checks**
-- Found **80 new checks** across competitors that Windfall doesn't have
+- Found **54 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 
