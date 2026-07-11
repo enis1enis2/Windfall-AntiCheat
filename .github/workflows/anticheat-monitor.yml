@@ -91,9 +91,16 @@ jobs:
             for (const [name, data] of Object.entries(diff)) {
               if (data.new_checks && data.new_checks.length > 0) {
                 totalNew += data.new_checks.length;
-                body += `### ${name}\n`;
+                body += `### ${name}\n\n`;
                 for (const check of data.new_checks) {
+                  const filePath = check.file_path || 'unknown';
+                  const constants = check.constants && Object.keys(check.constants).length > 0
+                    ? Object.entries(check.constants).slice(0, 3).map(([k, v]) => `\`${k} = ${v}\``).join(', ')
+                    : '';
                   body += `- **${check.raw_name}** (\`${check.category}\`) → \`${check.stable_key}\`\n`;
+                  body += `  - Source: \`${filePath}\``;
+                  if (constants) body += ` | Constants: ${constants}`;
+                  body += '\n';
                 }
                 body += '\n';
               }
@@ -102,8 +109,13 @@ jobs:
             if (totalNew === 0) return;
 
             body += `**Total: ${totalNew} new checks** found across competitors.\n\n`;
-            body += 'Review the full report in `.github/anticheat-report.md` and diff in `.github/anticheat-diff.json`.\n';
-            body += 'Implement detection logic as needed and test before enabling.\n';
+            body += '### Implementation Guide\n\n';
+            body += '1. Review each check\'s source file above to understand the detection logic\n';
+            body += '2. Create a new check class following Windfall conventions (see existing checks)\n';
+            body += '3. Register in `CheckManager.java` with version gating\n';
+            body += '4. Tune thresholds and buffer values\n';
+            body += '5. Test on live server before enabling punishable mode\n\n';
+            body += 'Full report: `.github/anticheat-report.md` | Diff data: `.github/anticheat-diff.json`\n';
 
             // Check for existing open issues to avoid duplicates
             const existingIssues = await github.request('GET /repos/{owner}/{repo}/issues', {

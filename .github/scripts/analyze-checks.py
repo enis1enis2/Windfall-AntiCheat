@@ -472,6 +472,7 @@ def generate_report(
             lines.append("")
             for nc in diff.new_checks:
                 lines.append(f"- `{nc.category}` **{nc.raw_name}** → `{nc.stable_key}`")
+                lines.append(f"  - Source: `{nc.file_path}`")
                 if nc.constants:
                     for k, v in list(nc.constants.items())[:3]:
                         lines.append(f"  - `{k} = {v}`")

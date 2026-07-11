@@ -14,6 +14,7 @@ import io.windfall.anticheat.core.check.impl.combat.CriticalsCheck;
 import io.windfall.anticheat.core.check.impl.combat.KillAuraCheck;
 import io.windfall.anticheat.core.check.impl.combat.FastHealCheck;
 import io.windfall.anticheat.core.check.impl.combat.SwordBlockCheck;
+import io.windfall.anticheat.core.check.impl.combat.MacroCheck;
 import io.windfall.anticheat.core.check.impl.movement.SpeedCheck;
 import io.windfall.anticheat.core.check.impl.movement.FlightCheck;
 import io.windfall.anticheat.core.check.impl.movement.VelocityCheck;
@@ -28,6 +29,13 @@ import io.windfall.anticheat.core.check.impl.movement.PhaseCheck;
 import io.windfall.anticheat.core.check.impl.movement.SimulationCheck;
 import io.windfall.anticheat.core.check.impl.movement.NoSlowCheck;
 import io.windfall.anticheat.core.check.impl.movement.MotionCheck;
+import io.windfall.anticheat.core.check.impl.movement.FastBreakCheck;
+import io.windfall.anticheat.core.check.impl.movement.FarBreakCheck;
+import io.windfall.anticheat.core.check.impl.movement.FarPlaceCheck;
+import io.windfall.anticheat.core.check.impl.movement.InvalidBreakCheck;
+import io.windfall.anticheat.core.check.impl.movement.InvalidPlaceCheck;
+import io.windfall.anticheat.core.check.impl.movement.NoSwingCheck;
+import io.windfall.anticheat.core.check.impl.movement.RotationBreakCheck;
 import io.windfall.anticheat.core.check.impl.packet.BadPacketsCheck;
 import io.windfall.anticheat.core.check.impl.packet.ChestStealerCheck;
 import io.windfall.anticheat.core.check.impl.packet.CreativeCheck;
@@ -36,6 +44,9 @@ import io.windfall.anticheat.core.check.impl.packet.ChatCheck;
 import io.windfall.anticheat.core.check.impl.packet.CrashCheck;
 import io.windfall.anticheat.core.check.impl.packet.SprintCheck;
 import io.windfall.anticheat.core.check.impl.packet.ExploitCheck;
+import io.windfall.anticheat.core.check.impl.packet.ClientBrandCheck;
+import io.windfall.anticheat.core.check.impl.packet.VehicleCheck;
+import io.windfall.anticheat.core.check.impl.inventory.InventoryCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +80,7 @@ public class CheckManager {
         allChecks.add(new KillAuraCheck());
         allChecks.add(new FastHealCheck());
         allChecks.add(new SwordBlockCheck());
+        allChecks.add(new MacroCheck());
         allChecks.add(new SpeedCheck());
         allChecks.add(new FlightCheck());
         allChecks.add(new VelocityCheck());
@@ -83,6 +95,13 @@ public class CheckManager {
         allChecks.add(new SimulationCheck());
         allChecks.add(new NoSlowCheck());
         allChecks.add(new MotionCheck());
+        allChecks.add(new FastBreakCheck());
+        allChecks.add(new FarBreakCheck());
+        allChecks.add(new FarPlaceCheck());
+        allChecks.add(new InvalidBreakCheck());
+        allChecks.add(new InvalidPlaceCheck());
+        allChecks.add(new NoSwingCheck());
+        allChecks.add(new RotationBreakCheck());
         allChecks.add(new BadPacketsCheck());
         allChecks.add(new ChestStealerCheck());
         allChecks.add(new CreativeCheck());
@@ -91,6 +110,9 @@ public class CheckManager {
         allChecks.add(new CrashCheck());
         allChecks.add(new SprintCheck());
         allChecks.add(new ExploitCheck());
+        allChecks.add(new ClientBrandCheck());
+        allChecks.add(new VehicleCheck());
+        allChecks.add(new InventoryCheck());
 
         // Version filter: checks outside server protocol range are never registered
         for (Check check : allChecks) {
