@@ -89,21 +89,40 @@ jobs:
             let body = '## Anti-Cheat Monitor: New Checks Detected\n\n';
 
             for (const [name, data] of Object.entries(diff)) {
-              if (data.new_checks && data.new_checks.length > 0) {
-                totalNew += data.new_checks.length;
-                body += `### ${name}\n\n`;
-                for (const check of data.new_checks) {
-                  const filePath = check.file_path || 'unknown';
-                  const constants = check.constants && Object.keys(check.constants).length > 0
-                    ? Object.entries(check.constants).slice(0, 3).map(([k, v]) => `\`${k} = ${v}\``).join(', ')
+              if (!data.new_checks || data.new_checks.length === 0) continue;
+
+              // Deduplicate: group by base name (strip trailing letter)
+              const grouped = {};
+              for (const check of data.new_checks) {
+                const base = check.raw_name.replace(/[a-z]$/, '').trim() || check.raw_name;
+                if (!grouped[base]) grouped[base] = [];
+                grouped[base].push(check);
+              }
+
+              totalNew += Object.keys(grouped).length;
+              body += `### ${name}\n\n`;
+
+              for (const [base, checks] of Object.entries(grouped)) {
+                if (checks.length === 1) {
+                  const c = checks[0];
+                  const filePath = c.file_path || 'unknown';
+                  const constants = c.constants && Object.keys(c.constants).length > 0
+                    ? Object.entries(c.constants).slice(0, 3).map(([k, v]) => `\`${k} = ${v}\``).join(', ')
                     : '';
-                  body += `- **${check.raw_name}** (\`${check.category}\`) → \`${check.stable_key}\`\n`;
+                  body += `- **${c.raw_name}** (\`${c.category}\`) → \`${c.stable_key}\`\n`;
                   body += `  - Source: \`${filePath}\``;
                   if (constants) body += ` | Constants: ${constants}`;
                   body += '\n';
+                } else {
+                  const c = checks[0];
+                  body += `- **${base}** (\`${c.category}\`) — ${checks.length} variants\n`;
+                  body += `  - Examples: ${checks.slice(0, 3).map(x => x.raw_name).join(', ')}`;
+                  if (checks.length > 3) body += ` +${checks.length - 3} more`;
+                  body += '\n';
+                  body += `  - Source: \`${c.file_path || 'unknown'}\`\n`;
                 }
-                body += '\n';
               }
+              body += '\n';
             }
 
             if (totalNew === 0) return;
