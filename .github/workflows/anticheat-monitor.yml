@@ -117,18 +117,81 @@ jobs:
             body += '5. Test on live server before enabling punishable mode\n\n';
             body += 'Full report: `.github/anticheat-report.md` | Diff data: `.github/anticheat-diff.json`\n';
 
-            // Check for existing open issues to avoid duplicates
+            // Find existing open monitor issues
             const existingIssues = await github.request('GET /repos/{owner}/{repo}/issues', {
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
               labels: 'monitor',
-              per_page: 5,
+              per_page: 10,
               headers: { 'X-GitHub-Api-Version': '2022-11-28' },
             });
 
-            // Only create if no open monitor issue exists
-            if (existingIssues.data.length === 0) {
+            // Resolve each old issue: comment implementation status then close
+            for (const issue of existingIssues.data) {
+              const issueBody = issue.body || '';
+              // Extract stable_keys from old issue body
+              const keyMatches = [...issueBody.matchAll(/`(windfall\.\w+\.\w+)`/g)];
+              const oldKeys = [...new Set(keyMatches.map(m => m[1]))];
+
+              // Check which keys now have check classes in CheckManager
+              const checkManagerSrc = fs.readFileSync(
+                'src/main/java/io/windfall/anticheat/core/check/CheckManager.java', 'utf8'
+              );
+
+              let implemented = 0;
+              let notImplemented = 0;
+              const statusLines = [];
+
+              for (const key of oldKeys) {
+                const keyParts = key.split('.');
+                const className = keyParts[keyParts.length - 1];
+                const classRegex = new RegExp(`class\\s+\\w*${className}\\w*\\s+extends`, 'i');
+                if (classRegex.test(checkManagerSrc)) {
+                  implemented++;
+                  statusLines.push(`- ✅ \`${key}\` — implemented`);
+                } else {
+                  notImplemented++;
+                  statusLines.push(`- ⬜ \`${key}\` — not yet implemented`);
+                }
+              }
+
+              const comment = `## Monitor Status Update\n\n` +
+                `**Scan ran:** ${new Date().toISOString().slice(0, 10)}\n\n` +
+                (statusLines.length > 0
+                  ? `### Implementation Progress (${implemented}/${oldKeys.length})\n\n` +
+                    statusLines.join('\n') + '\n\n'
+                  : '') +
+                (notImplemented === 0 && oldKeys.length > 0
+                  ? `🎉 All checks from this issue are now implemented.\n\n`
+                  : notImplemented > 0
+                    ? `${notImplemented} check(s) still need implementation.\n\n`
+                    : '') +
+                `---\n*Closing this issue as a new scan has run. See the latest issue for current findings.*`;
+
+              // Post status comment
+              await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: comment,
+                headers: { 'X-GitHub-Api-Version': '2022-11-28' },
+              });
+
+              // Close the old issue
+              await github.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                headers: { 'X-GitHub-Api-Version': '2022-11-28' },
+              });
+
+              console.log(`Closed monitor issue #${issue.number} with status update`);
+            }
+
+            // Create new issue if there are new checks
+            if (totalNew > 0) {
               await github.request('POST /repos/{owner}/{repo}/issues', {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
