@@ -148,13 +148,65 @@ def load_windfall_checks() -> List[WindfallCheck]:
     return checks
 
 
+# Synonym map: competitor concept → windfall concept
+SYNONYM_MAP = {
+    "flight": "fly",
+    "fastbreak": "fastbreak",
+    "noswingbreak": "noswing",
+    "invalidbreak": "invalidbreak",
+    "invalidplace": "invalidplace",
+    "fabricatedplace": "invalidplace",
+    "positionbreak": "positionbreak",
+    "positionplace": "positionplace",
+    "rotationbreak": "rotationbreak",
+    "rotationplace": "rotationplace",
+    "duplicaterotplace": "rotationplace",
+    "multibreak": "multibreak",
+    "multiplace": "multiplace",
+    "abilties": "abilities",
+    "badpacketa": "bad",
+    "badpacketc": "bad",
+    "badpacketd": "bad",
+    "badpackete": "bad",
+    "badpacketg": "bad",
+    "badpacketh": "bad",
+    "badpacketi": "bad",
+    "badpacketj": "bad",
+    "badpacketk": "bad",
+    "clientbrand": "brand",
+    "vehiclea": "vehicle",
+    "vehicleb": "vehicle",
+    "vehicled": "vehicle",
+    "vehiclee": "vehicle",
+    "vehiclef": "vehicle",
+    "multiinteracta": "multiinteract",
+    "multiinteractb": "multiinteract",
+    "selfinteract": "selfinteract",
+    "interacta": "interact",
+    "interactc": "interact",
+    "inventorya": "inventory",
+    "inventoryb": "inventory",
+    "macroa": "macro",
+    "illegalmoveb": "illegalmove",
+    "raycasta": "raycast",
+    "invalida": "invalid",
+}
+
+
+def flatten_name(name: str) -> str:
+    """Convert to lowercase, strip spaces and underscores for comparison."""
+    return re.sub(r'[\s_]', '', name).lower()
+
+
 def normalize_check_name(name: str) -> str:
-    """Strip suffixes like A, B, C and prefixes like Check, Detection."""
+    """Strip suffixes like A, B, C, split camelCase, lowercase."""
     base = name.strip()
     for pattern in STRIP_PATTERNS:
         base = re.sub(pattern, "", base).strip()
     if not base:
         base = name
+    # Split camelCase: MultiInteract → Multi Interact
+    base = re.sub(r'([a-z])([A-Z])', r'\1 \2', base)
     return base.lower()
 
 
@@ -302,38 +354,53 @@ def match_competitor_to_windfall(
     """Match competitor checks against Windfall's existing checks.
     Returns (unmatched_new, matched_pairs)."""
 
-    windfall_names = {}
-    windfall_keys = {}
+    # Build lookup by flattened name and by stable_key
+    windfall_by_flat = {}
+    windfall_by_key = {}
     for wc in windfall_checks:
-        norm = normalize_check_name(wc.name)
-        windfall_names[norm] = wc
-        windfall_keys[wc.stable_key] = wc
+        flat = flatten_name(wc.name)
+        windfall_by_flat[flat] = wc
+        windfall_by_key[wc.stable_key] = wc
 
     new_checks = []
     matches = {}
 
     for cc in competitor_checks:
-        # Direct name match
-        if cc.name in windfall_names:
-            matches[cc.raw_name] = windfall_names[cc.name].name
+        matched = False
+
+        # 1. Direct stable_key match (most reliable)
+        if cc.stable_key in windfall_by_key:
+            matches[cc.raw_name] = windfall_by_key[cc.stable_key].name
             continue
 
-        # Reverse match: windfall name contains competitor name or vice versa
-        matched = False
-        for norm, wc in windfall_names.items():
-            if cc.name in norm or norm in cc.name:
-                matches[cc.raw_name] = wc.name
-                matched = True
-                break
-            # Category match on same detection concept
-            if cc.category == wc.category:
-                # Both are speed checks, both are reach checks, etc.
-                for kw in CHECK_CATEGORIES.get(cc.category, []):
-                    if kw in cc.name and kw in norm:
+        # 2. Flattened name match
+        comp_flat = flatten_name(cc.name)
+        if comp_flat in windfall_by_flat:
+            matches[cc.raw_name] = windfall_by_flat[comp_flat].name
+            continue
+
+        # 3. Synonym match: check if competitor's normalized name maps to a windfall concept
+        comp_flat_stripped = re.sub(r'[a-z]$', '', comp_flat).strip()
+        for syn_key, syn_val in SYNONYM_MAP.items():
+            if comp_flat == syn_key or comp_flat_stripped == syn_key:
+                # Find windfall check that matches the synonym value
+                for wf_flat, wc in windfall_by_flat.items():
+                    if syn_val in wf_flat:
                         matches[cc.raw_name] = wc.name
                         matched = True
                         break
                 if matched:
+                    break
+
+        if matched:
+            continue
+
+        # 4. Substring match on flattened names
+        for wf_flat, wc in windfall_by_flat.items():
+            if len(comp_flat) >= 4 and len(wf_flat) >= 4:
+                if comp_flat in wf_flat or wf_flat in comp_flat:
+                    matches[cc.raw_name] = wc.name
+                    matched = True
                     break
 
         if not matched:
