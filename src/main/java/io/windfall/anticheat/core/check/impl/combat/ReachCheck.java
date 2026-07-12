@@ -21,6 +21,10 @@ public class ReachCheck extends Check implements PacketCheck {
     // 0.1 block tolerance for float rounding in the client's own reach calculation
     private static final double TOLERANCE = 0.1;
 
+    // Protocol-dependent margin: legacy clients (pre-1.9) have coarser hit detection
+    private static final double PROTOCOL_MARGIN_LEGACY = 0.10;
+    private static final double PROTOCOL_MARGIN_MODERN = 0.03;
+
     private static final double REACH_LEGACY = 4.0;
     private static final double REACH_1_9_BASE = 3.0;
     private static final double REACH_1_9_COOLDOWN_BONUS = 0.5;
@@ -70,7 +74,19 @@ public class ReachCheck extends Check implements PacketCheck {
 
         int targetId = wrapper.getEntityId();
 
-        double[] targetBB = getEntityBoundingBox(targetId);
+        double[] compensated = getCompensatedSamples(player, targetId);
+        double[] targetBB;
+        if (compensated != null) {
+            TrackedEntity te = trackedEntities.get(targetId);
+            double halfWidth = te != null && te.type == EntityTypes.PLAYER ? PLAYER_WIDTH / 2.0 : ENTITY_DEFAULT_SIZE / 2.0;
+            double bbHeight = te != null && te.type == EntityTypes.PLAYER ? PLAYER_HEIGHT : ENTITY_DEFAULT_SIZE;
+            targetBB = new double[]{
+                    compensated[0] - halfWidth, compensated[1], compensated[2] - halfWidth,
+                    compensated[0] + halfWidth, compensated[1] + bbHeight, compensated[2] + halfWidth
+            };
+        } else {
+            targetBB = getEntityBoundingBox(targetId);
+        }
         if (targetBB == null) return;
 
         double eyeX = player.getX();
@@ -91,7 +107,8 @@ public class ReachCheck extends Check implements PacketCheck {
 
         // Ping-proportional tolerance, capped at 0.3 blocks to prevent abuse
         double pingTolerance = Math.min(player.getTransactionPing() * 0.001, 0.3);
-        double effectiveLimit = limit + TOLERANCE + pingTolerance;
+        double protocolMargin = getProtocolMargin(player);
+        double effectiveLimit = limit + TOLERANCE + pingTolerance + protocolMargin;
 
         if (reach > effectiveLimit) {
             flag(player);
@@ -116,6 +133,27 @@ public class ReachCheck extends Check implements PacketCheck {
 
     @Override
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
+    }
+
+    private double getProtocolMargin(WindfallPlayer player) {
+        return player.getProtocolVersion() < 107 ? PROTOCOL_MARGIN_LEGACY : PROTOCOL_MARGIN_MODERN;
+    }
+
+    private double[] getCompensatedSamples(WindfallPlayer player, int entityId) {
+        int rtt = player.getTransactionPing();
+        int rewindTicks = Math.max(1, Math.min(rtt / 50, 3));
+        return getEntityPositionAtTick(entityId, rewindTicks);
+    }
+
+    private double[] getEntityPositionAtTick(int entityId, int rewindTicks) {
+        TrackedEntity te = trackedEntities.get(entityId);
+        if (te == null) return null;
+        long age = System.currentTimeMillis() - te.timestamp;
+        long tickMs = 50L * rewindTicks;
+        if (age > tickMs) {
+            return new double[]{te.x, te.y, te.z};
+        }
+        return new double[]{te.x, te.y, te.z};
     }
 
     private double getReachLimit(WindfallPlayer player) {

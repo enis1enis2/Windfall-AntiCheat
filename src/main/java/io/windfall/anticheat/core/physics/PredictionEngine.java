@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.util.MaterialUtils;
 
 // Stateless utility methods for movement prediction shared across all movement checks.
 // All constants sourced from PhysicsConstants and VersionPhysics.
@@ -162,13 +163,8 @@ public final class PredictionEngine {
 
     public static boolean checkInWater(WindfallPlayer player) {
         try {
-            int protocol = player.getProtocolVersion();
             org.bukkit.Material mat = player.getPlayer().getLocation().getBlock().getType();
-            if (VersionPhysics.hasNewFluidSystem(protocol)) {
-                return mat == org.bukkit.Material.WATER;
-            }
-            String name = mat.name();
-            return name.contains("STATIONARY_WATER") || name.equals("WATER");
+            return MaterialUtils.isWater(mat);
         } catch (Exception e) {
             return false;
         }
@@ -176,13 +172,8 @@ public final class PredictionEngine {
 
     public static boolean checkInLava(WindfallPlayer player) {
         try {
-            int protocol = player.getProtocolVersion();
             org.bukkit.Material mat = player.getPlayer().getLocation().getBlock().getType();
-            if (VersionPhysics.hasNewFluidSystem(protocol)) {
-                return mat == org.bukkit.Material.LAVA;
-            }
-            String name = mat.name();
-            return name.contains("STATIONARY_LAVA") || name.equals("LAVA");
+            return MaterialUtils.isLava(mat);
         } catch (Exception e) {
             return false;
         }
@@ -190,9 +181,8 @@ public final class PredictionEngine {
 
     public static boolean checkOnHoney(WindfallPlayer player) {
         try {
-            org.bukkit.Material mat = org.bukkit.Material.matchMaterial("HONEY_BLOCK");
-            if (mat == null) return false;
-            return player.getPlayer().getLocation().subtract(0, 0.1, 0).getBlock().getType() == mat;
+            org.bukkit.Material mat = player.getPlayer().getLocation().subtract(0, 0.1, 0).getBlock().getType();
+            return MaterialUtils.isHoney(mat);
         } catch (Exception e) {
             return false;
         }
@@ -203,7 +193,7 @@ public final class PredictionEngine {
     public static double getSpeedPotionMultiplier(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                if (effect.getType().getName().equals(POTION_SPEED)) {
+                if (effect.getType().getName().toUpperCase().contains(POTION_SPEED)) {
                     int level = Math.min(effect.getAmplifier() + 1, SPEED_POTION_MAX_LEVEL);
                     return 1.0 + (SPEED_POTION_MULT * level);
                 }
@@ -215,8 +205,8 @@ public final class PredictionEngine {
     public static double getSlownessPotionMultiplier(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                String typeName = effect.getType().getName();
-                if (typeName.equals(POTION_SLOWNESS_OLD) || typeName.equals(POTION_SLOWNESS)) {
+                String typeName = effect.getType().getName().toUpperCase();
+                if (typeName.contains(POTION_SLOWNESS_OLD)) {
                     int level = Math.min(effect.getAmplifier() + 1, SLOWNESS_POTION_MAX_LEVEL);
                     return 1.0 - (SLOWNESS_POTION_MULT * level);
                 }
@@ -228,7 +218,7 @@ public final class PredictionEngine {
     public static boolean checkSlowFalling(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                if (effect.getType().getName().equals(POTION_SLOW_FALLING)) return true;
+                if (effect.getType().getName().toUpperCase().contains(POTION_SLOW_FALLING)) return true;
             }
         } catch (Exception ignored) {}
         return false;
@@ -237,7 +227,7 @@ public final class PredictionEngine {
     public static boolean checkLevitation(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                if (effect.getType().getName().equals(POTION_LEVITATION)) return true;
+                if (effect.getType().getName().toUpperCase().contains(POTION_LEVITATION)) return true;
             }
         } catch (Exception ignored) {}
         return false;
@@ -246,7 +236,7 @@ public final class PredictionEngine {
     public static double getLevitationAmplifier(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                if (effect.getType().getName().equals(POTION_LEVITATION)) {
+                if (effect.getType().getName().toUpperCase().contains(POTION_LEVITATION)) {
                     return effect.getAmplifier() + 1;
                 }
             }

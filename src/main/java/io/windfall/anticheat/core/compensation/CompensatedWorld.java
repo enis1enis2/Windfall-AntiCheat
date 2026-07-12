@@ -3,10 +3,12 @@ package io.windfall.anticheat.core.compensation;
 import io.windfall.anticheat.core.physics.BoundingBox;
 import io.windfall.anticheat.core.physics.PhysicsConstants;
 import io.windfall.anticheat.core.physics.VersionPhysics;
+import io.windfall.anticheat.core.util.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,77 +54,66 @@ public final class CompensatedWorld {
 
     // Friction sampled from the block below the player (y-1), matching MC movement code
     public double getBlockFriction(int x, int y, int z) {
-        Material material = getBlock(x, y, z - 1);
+        Material material = getBlock(x, y - 1, z);
         if (material == null) material = getBlock(x, y, z);
         return PhysicsConstants.getBlockFriction(material);
     }
 
     public boolean isOnClimbable(int x, int y, int z) {
         Material material = getBlock(x, y, z);
-        if (material == null) return false;
-        switch (material.name()) {
-            case "LADDER":
-            case "VINE":
-            case "TWISTING_VINES":
-            case "TWISTING_VINES_PLANT":
-            case "WEEPING_VINES":
-            case "WEEPING_VINES_PLANT":
-            case "SCULK_VEIN":
-                return true;
-            default:
-                return false;
-        }
+        return material != null && MaterialUtils.isClimbable(material);
+    }
+
+    public boolean isOnClimbable(Player player, int protocol) {
+        org.bukkit.Location loc = player.getLocation();
+        Material feet = getBlock(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+        Material eye = getBlock(loc.getBlockX(), loc.getBlockY() + 1, loc.getBlockZ());
+        return MaterialUtils.isClimbable(feet) || MaterialUtils.isClimbable(eye);
     }
 
     public boolean isInWater(int x, int y, int z) {
         Material material = getBlock(x, y, z);
-        return material != null && material.name().contains("WATER");
+        return material != null && MaterialUtils.isWater(material);
     }
 
     public boolean isInLava(int x, int y, int z) {
         Material material = getBlock(x, y, z);
-        return material != null && material.name().contains("LAVA");
+        return material != null && MaterialUtils.isLava(material);
     }
 
     public boolean isOnSlime(int x, int y, int z) {
         Material material = getBlock(x, y - 1, z);
-        return material != null && material.name().contains("SLIME");
+        return material != null && MaterialUtils.isSlime(material);
     }
 
     public boolean isOnHoney(int x, int y, int z) {
         Material material = getBlock(x, y - 1, z);
-        return material != null && material.name().contains("HONEY");
+        return material != null && MaterialUtils.isHoney(material);
     }
 
     public boolean isOnWeb(int x, int y, int z) {
         Material material = getBlock(x, y, z);
-        if (material == null) return false;
-        String name = material.name();
-        return name.contains("WEB") || name.equals("STRING");
+        return material != null && MaterialUtils.isWeb(material);
     }
 
     public boolean isOnSoulSand(int x, int y, int z) {
         Material material = getBlock(x, y - 1, z);
-        if (material == null) return false;
-        String name = material.name();
-        return name.equals("SOUL_SAND") || name.equals("SOUL_SOIL");
+        return material != null && MaterialUtils.isSoulSand(material);
     }
 
     public boolean isOnIce(int x, int y, int z) {
         Material material = getBlock(x, y - 1, z);
-        if (material == null) return false;
-        String name = material.name();
-        return name.equals("ICE") || name.equals("PACKED_ICE") || name.equals("BLUE_ICE");
+        return material != null && MaterialUtils.isIce(material);
     }
 
     public boolean isBubbleColumn(int x, int y, int z) {
         Material material = getBlock(x, y, z);
-        return material != null && material.name().contains("BUBBLE");
+        return material != null && MaterialUtils.isBubbleColumn(material);
     }
 
     public boolean isPowderSnow(int x, int y, int z) {
         Material material = getBlock(x, y, z);
-        return material != null && material.name().equals("POWDER_SNOW");
+        return material != null && MaterialUtils.isPowderSnow(material);
     }
 
     // Enumerates all solid blocks in an AABB region for collision detection

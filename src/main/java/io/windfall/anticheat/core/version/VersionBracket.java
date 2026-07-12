@@ -4,9 +4,9 @@ public enum VersionBracket {
 
     LEGACY(4, 47, "1.7-1.8", "Stance packets, legacy combat, legacy materials"),
     COMBAT(107, 340, "1.9-1.12", "New combat, elytra, no stance field"),
-    FLAT(404, 498, "1.13-1.14", "Flattening, swimming, 1.5 sneak"),
+    FLAT(393, 498, "1.13-1.14", "Flattening, swimming, 1.5 sneak"),
     WORLD(573, 758, "1.15-1.18.2", "Extended world height, collision fixes"),
-    MODERN(760, 766, "1.19-1.20.4", "Chat signing, config phase, data components"),
+    MODERN(759, 766, "1.19-1.20.4", "Chat signing, config phase, data components"),
     LATEST(767, 99999, "1.21+", "Input packets, new combat, latest mechanics");
 
     private final int minProtocol;

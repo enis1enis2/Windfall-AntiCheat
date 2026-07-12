@@ -68,6 +68,9 @@ public class WindfallPlayer {
     private boolean flying;
     private boolean swimming;
     private boolean climbing;
+    private boolean gliding;
+    private double elytraMomentum;
+    private int glideStartTick;
 
     // Ping via our own transaction system, not Bukkit API — gives sub-tick accuracy
     private int transactionPing;
@@ -113,6 +116,7 @@ public class WindfallPlayer {
     }
 
     public double getHeight() {
+        if (gliding) return 0.6; // Elytra/FALL_FLYING: hitbox compresses to ~0.6
         if (swimming || climbing) return 0.6; // Swimming/crawling halves hitbox
         if (sneaking && protocolVersion >= 477) return 1.5; // Sneak height changed in 1.14+
         return 1.8;
@@ -215,6 +219,12 @@ public class WindfallPlayer {
     public void setSwimming(boolean swimming) { this.swimming = swimming; }
     public boolean isClimbing() { return climbing; }
     public void setClimbing(boolean climbing) { this.climbing = climbing; }
+    public boolean isGliding() { return gliding; }
+    public void setGliding(boolean gliding) { this.gliding = gliding; }
+    public double getElytraMomentum() { return elytraMomentum; }
+    public void setElytraMomentum(double elytraMomentum) { this.elytraMomentum = elytraMomentum; }
+    public int getGlideStartTick() { return glideStartTick; }
+    public void setGlideStartTick(int glideStartTick) { this.glideStartTick = glideStartTick; }
 
     public int getTransactionPing() { return transactionPing; }
     public void setTransactionPing(int transactionPing) { this.transactionPing = transactionPing; }

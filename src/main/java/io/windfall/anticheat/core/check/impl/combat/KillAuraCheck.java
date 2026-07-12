@@ -30,10 +30,15 @@ public class KillAuraCheck extends Check implements PacketCheck {
     private final ArrayDeque<TargetEvent> recentTargets = new ArrayDeque<>();
     private final ArrayDeque<Float> recentYawDeltas = new ArrayDeque<>();
 
+    private static final double LEGACY_STRAFE_THRESHOLD = 0.15;
+    private static final int LEGACY_BUFFER_MULTIPLIER = 2;
+
     private float lastYaw;
     private boolean hasLastYaw;
     private int snapCount;
     private int totalAttacks;
+    private boolean legacyClient;
+    private boolean strafing;
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
@@ -54,6 +59,9 @@ public class KillAuraCheck extends Check implements PacketCheck {
     private void handleAttack(WindfallPlayer player, PacketReceiveEvent event) {
         WrapperPlayClientInteractEntity wrapper = new WrapperPlayClientInteractEntity(event);
         if (wrapper.getAction() != WrapperPlayClientInteractEntity.InteractAction.ATTACK) return;
+
+        int protocol = player.getProtocolVersion();
+        legacyClient = protocol < 107;
 
         int targetId = wrapper.getEntityId();
         long now = System.currentTimeMillis();
@@ -76,6 +84,11 @@ public class KillAuraCheck extends Check implements PacketCheck {
         com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerRotation wrapper =
                 new com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerRotation(event);
         float yaw = wrapper.getYaw();
+
+        if (legacyClient) {
+            double lateralSpeed = player.getHorizontalSpeed();
+            strafing = lateralSpeed > LEGACY_STRAFE_THRESHOLD;
+        }
 
         if (!hasLastYaw) {
             lastYaw = yaw;
@@ -115,8 +128,13 @@ public class KillAuraCheck extends Check implements PacketCheck {
         }
 
         if (uniqueTargets > maxTargets) {
-            increaseBuffer(player, 2.0);
-            if (getBuffer(player) > 5.0) {
+            double bufferIncrease = legacyClient ? 1.0 : 2.0;
+            if (legacyClient && strafing) {
+                bufferIncrease *= 0.5;
+            }
+            increaseBuffer(player, bufferIncrease);
+            double flagThreshold = legacyClient ? 7.0 : 5.0;
+            if (getBuffer(player) > flagThreshold) {
                 flag(player);
                 resetBuffer(player);
             }
@@ -142,8 +160,13 @@ public class KillAuraCheck extends Check implements PacketCheck {
         }
 
         if (symmetryRatio > threshold) {
-            increaseBuffer(player, 1.5);
-            if (getBuffer(player) > 4.0) {
+            double bufferIncrease = legacyClient ? 0.8 : 1.5;
+            if (legacyClient && strafing) {
+                bufferIncrease *= 0.5;
+            }
+            increaseBuffer(player, bufferIncrease);
+            double flagThreshold = legacyClient ? 6.0 : 4.0;
+            if (getBuffer(player) > flagThreshold) {
                 flag(player);
                 resetBuffer(player);
                 snapCount = 0;

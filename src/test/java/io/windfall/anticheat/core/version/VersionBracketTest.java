@@ -61,8 +61,8 @@ class VersionBracketTest {
     }
 
     @Test
-    void fromProtocol_justBeforeFlat_fallsToLatest() {
-        assertEquals(VersionBracket.LATEST, VersionBracket.fromProtocol(399));
+    void fromProtocol_justBeforeFlat_fallsToFlat() {
+        assertEquals(VersionBracket.FLAT, VersionBracket.fromProtocol(399));
     }
 
     @Test
@@ -156,8 +156,8 @@ class VersionBracketTest {
     }
 
     @Test
-    void contains_flatDoesNotContainGapProtocol() {
-        assertFalse(VersionBracket.FLAT.contains(393));
+    void contains_flatContainsMinProtocol() {
+        assertTrue(VersionBracket.FLAT.contains(393));
     }
 
     @Test

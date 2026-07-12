@@ -4,6 +4,7 @@ import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder
 import com.github.retrooper.packetevents.PacketEvents;
 import io.windfall.anticheat.core.alert.AlertManager;
 import io.windfall.anticheat.core.bedrock.GeyserManager;
+import io.windfall.anticheat.core.bedrock.GeysersTracker;
 import io.windfall.anticheat.core.check.CheckManager;
 import io.windfall.anticheat.core.command.ChecklistGUI;
 import io.windfall.anticheat.core.command.CommandManager;
@@ -34,6 +35,7 @@ public final class WindfallPlugin extends JavaPlugin {
     private WindfallConfig config;
     private AlertManager alertManager;
     private GeyserManager geyserManager;
+    private GeysersTracker geysersTracker;
     private PunishmentEngine punishmentEngine;
     private SeverityManager severityManager;
     private ChecklistGUI checklistGUI;
@@ -67,6 +69,7 @@ public final class WindfallPlugin extends JavaPlugin {
         this.playerManager = new PlayerManager();
         this.transactionManager = new TransactionManager(this);
         this.geyserManager = GeyserManager.init(this);
+        this.geysersTracker = new GeysersTracker();
         this.severityManager = SeverityManager.fromConfig(config);
         this.punishmentEngine = new PunishmentEngine(this);
         this.checkManager = new CheckManager(this);
@@ -102,6 +105,7 @@ public final class WindfallPlugin extends JavaPlugin {
     public WindfallConfig getWindfallConfig() { return config; }
     public AlertManager getAlertManager() { return alertManager; }
     public GeyserManager getGeyserManager() { return geyserManager; }
+    public GeysersTracker getGeysersTracker() { return geysersTracker; }
     public PunishmentEngine getPunishmentEngine() { return punishmentEngine; }
     public SeverityManager getSeverityManager() { return severityManager; }
     public ChecklistGUI getChecklistGUI() { return checklistGUI; }

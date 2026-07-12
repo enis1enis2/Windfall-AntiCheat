@@ -70,5 +70,37 @@ public final class FoliaCompat {
         player.teleport(location);
     }
 
+    public boolean isOwnedByCurrentRegion(Entity entity) {
+        if (!isFolia || entity == null) return !isFolia || Bukkit.isPrimaryThread();
+        try {
+            Method method = Bukkit.class.getMethod("isOwnedByCurrentRegion", Entity.class);
+            Object result = method.invoke(null, entity);
+            return result instanceof Boolean ? (Boolean) result : true;
+        } catch (Throwable ignored) {
+            return true;
+        }
+    }
+
+    public boolean isOwnedByCurrentRegion(Location location) {
+        if (!isFolia || location == null) return !isFolia || Bukkit.isPrimaryThread();
+        try {
+            Method method = Bukkit.class.getMethod("isOwnedByCurrentRegion", Location.class);
+            Object result = method.invoke(null, location);
+            return result instanceof Boolean ? (Boolean) result : true;
+        } catch (Throwable ignored) {
+            return true;
+        }
+    }
+
+    public Runnable runOnPlayerLater(Player player, long delayTicks, Runnable task) {
+        if (player == null) return () -> {};
+        if (!isFolia) {
+            Bukkit.getScheduler().runTaskLater(WindfallPlugin.getInstance(), task, delayTicks);
+            return task;
+        }
+        runOnEntity(player, task, task);
+        return task;
+    }
+
     public boolean isFolia() { return isFolia; }
 }

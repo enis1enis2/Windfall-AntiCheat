@@ -244,12 +244,9 @@ class PlayerProfileTest {
     }
 
     @Test
-    void bracketMapping_protocol393_fallsIntoGap() {
-        // Protocol 393 is between COMBAT (max 340) and FLAT (min 404).
-        // The fromProtocol loop doesn't match any bracket, and since
-        // 393 >= LEGACY.minProtocol (4), the fallback returns LATEST.
-        // This may indicate a gap in the version bracket definitions.
-        assertEquals(VersionBracket.LATEST, VersionBracket.fromProtocol(393));
+    void bracketMapping_protocol393_isFLAT() {
+        PlayerProfile profile = new PlayerProfile(393, 393, null, false);
+        assertEquals(VersionBracket.FLAT, profile.getClientBracket());
     }
 
     @Test

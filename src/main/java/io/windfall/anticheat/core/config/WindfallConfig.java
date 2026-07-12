@@ -1,6 +1,7 @@
 package io.windfall.anticheat.core.config;
 
 import io.windfall.anticheat.WindfallPlugin;
+import io.windfall.anticheat.core.util.MaterialUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.Collections;
@@ -360,5 +361,6 @@ public class WindfallConfig {
     public void reload() {
         plugin.reloadConfig();
         this.config = plugin.getConfig();
+        MaterialUtils.clearCaches();
     }
 }
