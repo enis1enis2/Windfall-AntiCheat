@@ -1,3 +1,7 @@
+<p align="center">
+  🇹🇷 Proudly Made in Turkey
+</p>
+
 <h1 align="center">⚔️ Windfall Anti-Cheat</h1>
 
 <p align="center">
