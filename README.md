@@ -1,8 +1,4 @@
-<p align="center">
-  <img src="docs/logo.png" alt="Windfall Anti-Cheat" width="200">
-</p>
-
-<h1 align="center">Windfall Anti-Cheat</h1>
+<h1 align="center">⚔️ Windfall Anti-Cheat</h1>
 
 <p align="center">
   <strong>Enterprise-grade packet-based anti-cheat for Minecraft 1.7 – 26.2+</strong><br>
