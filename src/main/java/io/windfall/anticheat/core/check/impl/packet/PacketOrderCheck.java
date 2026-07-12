@@ -10,33 +10,47 @@ import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayDeque;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Packet Order A", stableKey = "windfall.packet.order", decay = 0.01, setbackVl = 15, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
 public class PacketOrderCheck extends Check implements PacketCheck {
 
-    // Client must send at least one movement packet between login and any interaction
     private static final int MAX_MOVEMENT_BEFORE_LOGIN = 0;
     private static final int DUPLICATE_PACKET_THRESHOLD = 5;
     private static final long PACKET_BURST_WINDOW_MS = 100;
     private static final int MAX_PACKETS_IN_BURST = 15;
 
-    private boolean loginComplete;
-    private int movementCountBeforeLogin;
-    private int duplicatePacketCount;
-    private long lastPacketHash;
-    private final ArrayDeque<Long> packetBurst = new ArrayDeque<>();
+    private static final class PlayerState {
+        boolean loginComplete;
+        int movementCountBeforeLogin;
+        int duplicatePacketCount;
+        long lastPacketHash;
+        final ArrayDeque<Long> packetBurst = new ArrayDeque<>();
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         PacketTypeCommon type = event.getPacketType();
         long now = System.currentTimeMillis();
+        PlayerState state = getState(player);
 
-        // Track burst rate
-        packetBurst.addLast(now);
-        while (!packetBurst.isEmpty() && now - packetBurst.peekFirst() > PACKET_BURST_WINDOW_MS) {
-            packetBurst.removeFirst();
+        state.packetBurst.addLast(now);
+        while (!state.packetBurst.isEmpty() && now - state.packetBurst.peekFirst() > PACKET_BURST_WINDOW_MS) {
+            state.packetBurst.removeFirst();
         }
-        if (packetBurst.size() > MAX_PACKETS_IN_BURST) {
+        if (state.packetBurst.size() > MAX_PACKETS_IN_BURST) {
             increaseBuffer(player, 1.0);
             if (getBuffer(player) > 3.0) {
                 flag(player);
@@ -44,27 +58,26 @@ public class PacketOrderCheck extends Check implements PacketCheck {
             }
         }
 
-        // Detect duplicate packets (same type hash in sequence)
         long currentHash = type.hashCode();
-        if (currentHash == lastPacketHash && isMovementType(type)) {
-            duplicatePacketCount++;
-            if (duplicatePacketCount > DUPLICATE_PACKET_THRESHOLD) {
+        if (currentHash == state.lastPacketHash && isMovementType(type)) {
+            state.duplicatePacketCount++;
+            if (state.duplicatePacketCount > DUPLICATE_PACKET_THRESHOLD) {
                 flag(player);
-                duplicatePacketCount = 0;
+                state.duplicatePacketCount = 0;
             }
         } else {
-            duplicatePacketCount = 0;
+            state.duplicatePacketCount = 0;
         }
-        lastPacketHash = currentHash;
+        state.lastPacketHash = currentHash;
 
-        if (!loginComplete) {
+        if (!state.loginComplete) {
             if (isMovementType(type)) {
-                movementCountBeforeLogin++;
+                state.movementCountBeforeLogin++;
             }
             if (type == PacketType.Play.Client.PLAYER_POSITION
                     || type == PacketType.Play.Client.PLAYER_POSITION_AND_ROTATION) {
-                loginComplete = true;
-                if (movementCountBeforeLogin > MAX_MOVEMENT_BEFORE_LOGIN) {
+                state.loginComplete = true;
+                if (state.movementCountBeforeLogin > MAX_MOVEMENT_BEFORE_LOGIN) {
                     flag(player);
                 }
             }
@@ -76,15 +89,16 @@ public class PacketOrderCheck extends Check implements PacketCheck {
     }
 
     public void onLoginComplete(WindfallPlayer player) {
-        this.loginComplete = true;
+        getState(player).loginComplete = true;
     }
 
     public void onDisconnect(WindfallPlayer player) {
-        this.loginComplete = false;
-        this.movementCountBeforeLogin = 0;
-        this.duplicatePacketCount = 0;
-        this.lastPacketHash = 0;
-        this.packetBurst.clear();
+        PlayerState state = getState(player);
+        state.loginComplete = false;
+        state.movementCountBeforeLogin = 0;
+        state.duplicatePacketCount = 0;
+        state.lastPacketHash = 0;
+        state.packetBurst.clear();
     }
 
     private boolean isMovementType(PacketTypeCommon type) {

@@ -9,6 +9,8 @@ import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Motion A", stableKey = "windfall.movement.motion", decay = 0.01, setbackVl = 20, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
 public class MotionCheck extends Check implements PacketCheck {
@@ -19,12 +21,26 @@ public class MotionCheck extends Check implements PacketCheck {
     private static final double SPRINT_GROUND_MAX = 0.36;
     private static final int MIN_HIGH_SPEED_TICKS = 3;
 
-    private int highSpeedTicks;
+    private static final class PlayerState {
+        int highSpeedTicks;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!isMovementPacket(event)) return;
 
+        PlayerState state = getState(player);
         double deltaX = player.getDeltaX();
         double deltaY = player.getDeltaY();
         double deltaZ = player.getDeltaZ();
@@ -38,17 +54,17 @@ public class MotionCheck extends Check implements PacketCheck {
                 : MAX_PLAYER_SPEED;
 
         if (horizontalSpeed > maxHorizontal * 1.2) {
-            highSpeedTicks++;
-            if (highSpeedTicks >= MIN_HIGH_SPEED_TICKS) {
+            state.highSpeedTicks++;
+            if (state.highSpeedTicks >= MIN_HIGH_SPEED_TICKS) {
                 increaseBuffer(player, 1.0);
                 if (getBuffer(player) > 3.0) {
                     flag(player);
                     resetBuffer(player);
-                    highSpeedTicks = 0;
+                    state.highSpeedTicks = 0;
                 }
             }
         } else {
-            highSpeedTicks = Math.max(0, highSpeedTicks - 1);
+            state.highSpeedTicks = Math.max(0, state.highSpeedTicks - 1);
             decreaseBuffer(player, 0.1);
         }
 

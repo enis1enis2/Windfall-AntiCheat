@@ -10,6 +10,8 @@ import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.physics.VersionPhysics;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
     // Elytra added in 1.9 (protocol 107) — check disabled on older versions
     @CheckData(name = "Elytra A", stableKey = "windfall.movement.elytra", decay = 0.01, setbackVl = 20, minVersion = 107, maxVersion = 999, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
@@ -22,31 +24,45 @@ public class ElytraCheck extends Check implements PacketCheck {
     private static final double ELYTRA_HOVER_DELTA = 0.005;
     private static final double ELYTRA_KICKBOOST_MAX = 0.5;
 
-    private int elytraHoverTicks;
-    private boolean wasGliding;
-    private double lastElytraDeltaY;
-    private int elytraTicks;
+    private static final class PlayerState {
+        int elytraHoverTicks;
+        boolean wasGliding;
+        double lastElytraDeltaY;
+        int elytraTicks;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!isMovementPacket(event)) return;
 
+        PlayerState state = getState(player);
         boolean isGliding = checkGliding(player);
         int protocol = player.getProtocolVersion();
 
         if (!VersionPhysics.hasElytra(protocol)) return;
 
         if (isGliding) {
-            elytraTicks++;
-            handleElytraMovement(player);
-            wasGliding = true;
+            state.elytraTicks++;
+            handleElytraMovement(player, state);
+            state.wasGliding = true;
         } else {
-            if (wasGliding && elytraTicks > 0) {
-                handleElytraLanding(player);
+            if (state.wasGliding && state.elytraTicks > 0) {
+                handleElytraLanding(player, state);
             }
-            elytraTicks = 0;
-            elytraHoverTicks = 0;
-            wasGliding = false;
+            state.elytraTicks = 0;
+            state.elytraHoverTicks = 0;
+            state.wasGliding = false;
         }
     }
 
@@ -54,7 +70,7 @@ public class ElytraCheck extends Check implements PacketCheck {
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
     }
 
-    private void handleElytraMovement(WindfallPlayer player) {
+    private void handleElytraMovement(WindfallPlayer player, PlayerState state) {
         double deltaX = player.getDeltaX();
         double deltaZ = player.getDeltaZ();
         double deltaY = player.getDeltaY();
@@ -78,20 +94,19 @@ public class ElytraCheck extends Check implements PacketCheck {
         }
 
         if (Math.abs(deltaY) < ELYTRA_HOVER_DELTA) {
-            elytraHoverTicks++;
-            if (elytraHoverTicks > ELYTRA_HOVER_TICK_THRESHOLD) {
+            state.elytraHoverTicks++;
+            if (state.elytraHoverTicks > ELYTRA_HOVER_TICK_THRESHOLD) {
                 increaseBuffer(player, 0.8);
                 if (getBuffer(player) > 4.0) {
                     flag(player);
                     resetBuffer(player);
-                    elytraHoverTicks = 0;
+                    state.elytraHoverTicks = 0;
                 }
             }
         } else {
-            elytraHoverTicks = Math.max(0, elytraHoverTicks - 1);
+            state.elytraHoverTicks = Math.max(0, state.elytraHoverTicks - 1);
         }
 
-        // Some hacks boost upward at elytra start — detect suspicious lift-off
         if (deltaY > 0 && deltaY > ELYTRA_KICKBOOST_MAX && player.isOnGround()) {
             increaseBuffer(player, 0.3);
             if (getBuffer(player) > 5.0) {
@@ -100,8 +115,7 @@ public class ElytraCheck extends Check implements PacketCheck {
             }
         }
 
-        // After 5 gliding ticks, player should always descend — upward movement is suspicious
-        if (deltaY > 0 && !player.isOnGround() && elytraTicks > 5) {
+        if (deltaY > 0 && !player.isOnGround() && state.elytraTicks > 5) {
             double expectedDescent = ELYTRA_MIN_DESCENT;
             if (deltaY > Math.abs(expectedDescent) + ELYTRA_VERTICAL_TOLERANCE) {
                 increaseBuffer(player, 0.4);
@@ -112,11 +126,11 @@ public class ElytraCheck extends Check implements PacketCheck {
             }
         }
 
-        lastElytraDeltaY = deltaY;
+        state.lastElytraDeltaY = deltaY;
     }
 
-    private void handleElytraLanding(WindfallPlayer player) {
-        if (elytraTicks < 5) return;
+    private void handleElytraLanding(WindfallPlayer player, PlayerState state) {
+        if (state.elytraTicks < 5) return;
     }
 
     private boolean checkGliding(WindfallPlayer player) {

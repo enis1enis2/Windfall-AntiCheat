@@ -10,6 +10,8 @@ import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "NoFall A", stableKey = "windfall.movement.nofall", decay = 0.01, setbackVl = 15, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
 public class NoFallCheck extends Check implements PacketCheck {
@@ -18,34 +20,47 @@ public class NoFallCheck extends Check implements PacketCheck {
     private static final double MIN_FALL_DISTANCE = 2.0;
     private static final int MAX_CONSECUTIVE = 5;
 
-    private int consecutiveNoFall;
-    private double maxFallDistance;
-    private double maxFallVelocity;
+    private static final class PlayerState {
+        int consecutiveNoFall;
+        double maxFallDistance;
+        double maxFallVelocity;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!isMovementPacket(event)) return;
 
+        PlayerState state = getState(player);
+
         boolean onGround = player.isOnGround();
         double deltaY = player.getDeltaY();
         double fallDistance = player.getLastY() - player.getY();
 
-        // All three conditions must be true: fast fall + distance + claiming ground
         if (deltaY < -MIN_FALL_VELOCITY && fallDistance > MIN_FALL_DISTANCE && onGround) {
-            consecutiveNoFall++;
+            state.consecutiveNoFall++;
 
-            if (fallDistance > maxFallDistance) maxFallDistance = fallDistance;
-            if (Math.abs(deltaY) > maxFallVelocity) maxFallVelocity = Math.abs(deltaY);
+            if (fallDistance > state.maxFallDistance) state.maxFallDistance = fallDistance;
+            if (Math.abs(deltaY) > state.maxFallVelocity) state.maxFallVelocity = Math.abs(deltaY);
 
-            // Require 5 consecutive violations to avoid lag-spike false positives
-        if (consecutiveNoFall >= MAX_CONSECUTIVE) {
+            if (state.consecutiveNoFall >= MAX_CONSECUTIVE) {
                 flag(player);
-                consecutiveNoFall = 0;
-                maxFallDistance = 0;
-                maxFallVelocity = 0;
+                state.consecutiveNoFall = 0;
+                state.maxFallDistance = 0;
+                state.maxFallVelocity = 0;
             }
         } else {
-            consecutiveNoFall = Math.max(0, consecutiveNoFall - 1);
+            state.consecutiveNoFall = Math.max(0, state.consecutiveNoFall - 1);
         }
     }
 

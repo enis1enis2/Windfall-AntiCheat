@@ -20,37 +20,6 @@ public class WindfallPlayer {
         LONG_JUMPING
     }
 
-    public static final class BoundingBox {
-        public final double minX, minY, minZ, maxX, maxY, maxZ;
-
-        public BoundingBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-            this.minX = minX;
-            this.minY = minY;
-            this.minZ = minZ;
-            this.maxX = maxX;
-            this.maxY = maxY;
-            this.maxZ = maxZ;
-        }
-
-        public static BoundingBox fromPosition(double x, double y, double z, double width, double height) {
-            double half = width / 2.0;
-            return new BoundingBox(x - half, y, z - half, x + half, y + height, z + half);
-        }
-
-        public boolean collides(BoundingBox other) {
-            return this.minX < other.maxX && this.maxX > other.minX
-                && this.minY < other.maxY && this.maxY > other.minY
-                && this.minZ < other.maxZ && this.maxZ > other.minZ;
-        }
-
-        public BoundingBox expand(double x, double y, double z) {
-            return new BoundingBox(
-                minX - x, minY - y, minZ - z,
-                maxX + x, maxY + y, maxZ + z
-            );
-        }
-    }
-
     private final UUID uuid;
     private final String name;
     private final Player player;
@@ -118,6 +87,9 @@ public class WindfallPlayer {
     private BedrockInfo bedrockInfo;
     private boolean alertsEnabled = true;
 
+    // Set after RESPAWN packet to suppress false-positive flags from ViaVersion respawn desync
+    private boolean respawned;
+
     public WindfallPlayer(Player player, User user) {
         this.uuid = player.getUniqueId();
         this.name = player.getName();
@@ -172,10 +144,6 @@ public class WindfallPlayer {
         double dy = this.y - y;
         double dz = this.z - z;
         return dx * dx + dy * dy + dz * dz;
-    }
-
-    public BoundingBox getCollisionBox() {
-        return BoundingBox.fromPosition(x, y, z, width, getHeight());
     }
 
     // Position roll: lastLast ← last ← current each tick
@@ -352,6 +320,9 @@ public class WindfallPlayer {
 
     public boolean isAlertsEnabled() { return alertsEnabled; }
     public void setAlertsEnabled(boolean alertsEnabled) { this.alertsEnabled = alertsEnabled; }
+
+    public boolean isRespawned() { return respawned; }
+    public void setRespawned(boolean respawned) { this.respawned = respawned; }
 
     // Iterates all check VLs — called frequently by PunishmentEngine and SeverityManager
     public int getTotalViolationLevel() {

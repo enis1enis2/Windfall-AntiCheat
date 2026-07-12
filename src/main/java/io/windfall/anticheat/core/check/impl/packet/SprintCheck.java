@@ -9,6 +9,8 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Sprint A", stableKey = "windfall.packet.sprint", decay = 0.01, setbackVl = 15)
 public class SprintCheck extends Check implements PacketCheck {
@@ -17,36 +19,50 @@ public class SprintCheck extends Check implements PacketCheck {
     private static final long TOGGLE_WINDOW_MS = 1000;
     private static final int MIN_TOGGLE_FLAGS = 3;
 
-    private boolean lastSprinting;
-    private long lastToggleTime;
-    private int toggleCount;
-    private int consecutiveFlags;
+    private static final class PlayerState {
+        boolean lastSprinting;
+        long lastToggleTime;
+        int toggleCount;
+        int consecutiveFlags;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!isMovementPacket(event)) return;
 
+        PlayerState state = getState(player);
         boolean sprinting = player.isSprinting();
         long now = System.currentTimeMillis();
 
-        if (now - lastToggleTime > TOGGLE_WINDOW_MS) {
-            if (toggleCount > MAX_SPRINT_TOGGLE_PER_SECOND) {
-                consecutiveFlags++;
-                if (consecutiveFlags >= MIN_TOGGLE_FLAGS) {
+        if (now - state.lastToggleTime > TOGGLE_WINDOW_MS) {
+            if (state.toggleCount > MAX_SPRINT_TOGGLE_PER_SECOND) {
+                state.consecutiveFlags++;
+                if (state.consecutiveFlags >= MIN_TOGGLE_FLAGS) {
                     flag(player);
-                    consecutiveFlags = 0;
+                    state.consecutiveFlags = 0;
                 }
             } else {
-                consecutiveFlags = Math.max(0, consecutiveFlags - 1);
+                state.consecutiveFlags = Math.max(0, state.consecutiveFlags - 1);
             }
-            toggleCount = 0;
-            lastToggleTime = now;
+            state.toggleCount = 0;
+            state.lastToggleTime = now;
         }
 
-        if (sprinting != lastSprinting) {
-            toggleCount++;
+        if (sprinting != state.lastSprinting) {
+            state.toggleCount++;
         }
-        lastSprinting = sprinting;
+        state.lastSprinting = sprinting;
     }
 
     @Override

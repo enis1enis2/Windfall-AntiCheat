@@ -9,16 +9,30 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Criticals A", stableKey = "windfall.combat.criticals", decay = 0.01, setbackVl = 10)
 public class CriticalsCheck extends Check implements PacketCheck {
 
-    // MC requires deltaY in (0.11, 0.5) for a valid critical hit
     private static final double MIN_DELTA_Y_CRITICAL = 0.11;
     private static final double MAX_DELTA_Y_CRITICAL = 0.5;
 
-    private int attacksSinceGround;
-    private int consecutiveInvalid;
+    private static final class PlayerState {
+        int attacksSinceGround;
+        int consecutiveInvalid;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
@@ -39,32 +53,33 @@ public class CriticalsCheck extends Check implements PacketCheck {
     }
 
     private void handleAttack(WindfallPlayer player) {
-        // Ground attacks are never criticals — reset counter
+        PlayerState state = getState(player);
+
         if (player.isOnGround()) {
-            consecutiveInvalid = Math.max(0, consecutiveInvalid - 1);
+            state.consecutiveInvalid = Math.max(0, state.consecutiveInvalid - 1);
             return;
         }
 
         double deltaY = player.getDeltaY();
         boolean validCritMotion = deltaY > MIN_DELTA_Y_CRITICAL && deltaY < MAX_DELTA_Y_CRITICAL;
 
-        // Slight negative tolerance for float precision at jump apex
         if (!validCritMotion && deltaY >= -0.01) {
-            consecutiveInvalid++;
-            if (consecutiveInvalid >= 4) {
+            state.consecutiveInvalid++;
+            if (state.consecutiveInvalid >= 4) {
                 flagWithSetback(player);
-                consecutiveInvalid = 0;
+                state.consecutiveInvalid = 0;
             }
         } else {
-            consecutiveInvalid = Math.max(0, consecutiveInvalid - 1);
+            state.consecutiveInvalid = Math.max(0, state.consecutiveInvalid - 1);
         }
     }
 
     private void handleMovement(WindfallPlayer player) {
+        PlayerState state = getState(player);
         if (player.isOnGround()) {
-            attacksSinceGround = 0;
+            state.attacksSinceGround = 0;
         } else {
-            attacksSinceGround++;
+            state.attacksSinceGround++;
         }
     }
 

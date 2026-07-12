@@ -252,4 +252,12 @@ public class CheckManager {
     public PluginDetector getPluginDetector() { return pluginDetector; }
     public FoliaCompat getFoliaCompat() { return foliaCompat; }
     public PurpurCompat getPurpurCompat() { return purpurCompat; }
+
+    public void removePlayer(java.util.UUID uuid) {
+        for (Check check : checks) {
+            try {
+                check.removePlayer(uuid);
+            } catch (Exception ignored) {}
+        }
+    }
 }

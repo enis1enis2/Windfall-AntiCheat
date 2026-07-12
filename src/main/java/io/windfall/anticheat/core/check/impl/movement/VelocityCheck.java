@@ -10,11 +10,14 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
+import io.windfall.anticheat.core.platform.FoliaCompat;
 import io.windfall.anticheat.core.platform.PurpurCompat;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import io.windfall.anticheat.core.physics.PhysicsConstants;
 import io.windfall.anticheat.core.version.VersionBracket;
 import java.util.ArrayDeque;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Velocity A", stableKey = "windfall.movement.velocity", decay = 0.01, setbackVl = 30,
     compat = {CompatFlag.PURPUR_KB_DEPENDENT,CompatFlag.RELAX_ON_MISMATCH},
@@ -24,22 +27,30 @@ public class VelocityCheck extends Check implements PacketCheck {
     private static final double MIN_VELOCITY_THRESHOLD = 0.005;
     private static final int MAX_PENDING_VELOCITIES = 5;
 
-    // Pre-1.9 knockback: full KB applies to airborne entities
     private static final double KB_HORIZONTAL_PRE_1_9 = 0.4;
-    // 1.9+: airborne horizontal KB reduced
     private static final double KB_HORIZONTAL_1_9_AIRBORNE = 0.28;
-    // Sprint multiplier
     private static final double KB_SPRINT_MULTIPLIER = 1.5;
-    // Vertical knockback
     private static final double KB_VERTICAL = 0.4;
 
-    private final ArrayDeque<PendingVelocity> pendingVelocities = new ArrayDeque<>();
+    private static final class PlayerState {
+        final ArrayDeque<PendingVelocity> pendingVelocities = new ArrayDeque<>();
+        boolean velocityActive;
+        double expectedDeltaX;
+        double expectedDeltaY;
+        double expectedDeltaZ;
+        int velocityAge;
+    }
 
-    private boolean velocityActive;
-    private double expectedDeltaX;
-    private double expectedDeltaY;
-    private double expectedDeltaZ;
-    private int velocityAge;
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
@@ -62,51 +73,54 @@ public class VelocityCheck extends Check implements PacketCheck {
             return;
         }
 
-        while (pendingVelocities.size() >= MAX_PENDING_VELOCITIES) {
-            pendingVelocities.removeFirst();
+        PlayerState state = getState(player);
+        while (state.pendingVelocities.size() >= MAX_PENDING_VELOCITIES) {
+            state.pendingVelocities.removeFirst();
         }
-        pendingVelocities.addLast(new PendingVelocity(velX, velY, velZ, System.currentTimeMillis()));
+        state.pendingVelocities.addLast(new PendingVelocity(velX, velY, velZ, System.currentTimeMillis()));
     }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!isMovementPacket(event)) return;
 
-        if (!velocityActive && !pendingVelocities.isEmpty()) {
-            PendingVelocity pv = pendingVelocities.peekFirst();
+        PlayerState state = getState(player);
+
+        if (!state.velocityActive && !state.pendingVelocities.isEmpty()) {
+            PendingVelocity pv = state.pendingVelocities.peekFirst();
             if (pv == null) return;
 
             long age = System.currentTimeMillis() - pv.receivedAt;
             long timeout = 500L + player.getTransactionPing();
             if (age > timeout) {
-                pendingVelocities.removeFirst();
+                state.pendingVelocities.removeFirst();
                 return;
             }
 
-            velocityActive = true;
-            pendingVelocities.removeFirst();
+            state.velocityActive = true;
+            state.pendingVelocities.removeFirst();
 
             double[] postDrag = applyVersionAwarePostVelocityPhysics(pv.velX, pv.velY, pv.velZ, player);
-            expectedDeltaX = postDrag[0];
-            expectedDeltaY = postDrag[1];
-            expectedDeltaZ = postDrag[2];
-            velocityAge = 0;
+            state.expectedDeltaX = postDrag[0];
+            state.expectedDeltaY = postDrag[1];
+            state.expectedDeltaZ = postDrag[2];
+            state.velocityAge = 0;
             return;
         }
 
-        if (!velocityActive) return;
+        if (!state.velocityActive) return;
 
-        velocityAge++;
+        state.velocityAge++;
 
         double actualDeltaX = player.getDeltaX();
         double actualDeltaZ = player.getDeltaZ();
         double actualDeltaY = player.getDeltaY();
 
-        double expectedHorizontalDist = Math.sqrt(expectedDeltaX * expectedDeltaX + expectedDeltaZ * expectedDeltaZ);
+        double expectedHorizontalDist = Math.sqrt(state.expectedDeltaX * state.expectedDeltaX + state.expectedDeltaZ * state.expectedDeltaZ);
         double actualHorizontalDist = Math.sqrt(actualDeltaX * actualDeltaX + actualDeltaZ * actualDeltaZ);
 
-        if (expectedHorizontalDist < MIN_VELOCITY_THRESHOLD && Math.abs(expectedDeltaY) < MIN_VELOCITY_THRESHOLD) {
-            velocityActive = false;
+        if (expectedHorizontalDist < MIN_VELOCITY_THRESHOLD && Math.abs(state.expectedDeltaY) < MIN_VELOCITY_THRESHOLD) {
+            state.velocityActive = false;
             resetBuffer(player);
             return;
         }
@@ -119,22 +133,21 @@ public class VelocityCheck extends Check implements PacketCheck {
         }
 
         double verticalRatio;
-        if (Math.abs(expectedDeltaY) > MIN_VELOCITY_THRESHOLD) {
-            verticalRatio = Math.abs(actualDeltaY) / Math.abs(expectedDeltaY);
+        if (Math.abs(state.expectedDeltaY) > MIN_VELOCITY_THRESHOLD) {
+            verticalRatio = Math.abs(actualDeltaY) / Math.abs(state.expectedDeltaY);
         } else {
             verticalRatio = Math.abs(actualDeltaY) < MIN_VELOCITY_THRESHOLD ? 1.0 : 0.0;
         }
 
         double combinedRatio = (horizontalRatio + verticalRatio) / 2.0;
 
-        velocityActive = false;
+        state.velocityActive = false;
 
-        if (velocityAge > 5) {
+        if (state.velocityAge > 5) {
             resetBuffer(player);
             return;
         }
 
-        // Version-aware tolerance: Bedrock gets wider tolerance, version gap gets wider tolerance
         double tolerance = 1.0;
         if (player.isBedrock()) {
             tolerance = 1.10;
@@ -142,11 +155,9 @@ public class VelocityCheck extends Check implements PacketCheck {
         int protocol = player.getProtocolVersion();
         VersionBracket bracket = VersionBracket.fromProtocol(protocol);
         if (bracket == VersionBracket.LEGACY) {
-            tolerance *= 1.2; // 1.8 KB formula differs significantly
+            tolerance *= 1.2;
         }
 
-        // Wall collision tolerance: when knockback pushes player into a wall,
-        // the client zeroes the perpendicular velocity component (Grim d2727a4 fix)
         if (isNearWall(player)) {
             tolerance *= 1.3;
         }
@@ -177,7 +188,6 @@ public class VelocityCheck extends Check implements PacketCheck {
         double airDrag = PhysicsConstants.AIR_DRAG;
         double groundFriction = PhysicsConstants.GROUND_FRICTION;
 
-        // Purpur custom knockback adjustment
         PurpurCompat purpur = WindfallPlugin.getInstance().getPurpurCompat();
         if (purpur.isCustomKnockbackEnabled()) {
             velX = purpur.adjustHorizontalKB(velX);
@@ -231,16 +241,21 @@ public class VelocityCheck extends Check implements PacketCheck {
         }
     }
 
-    // Checks if the player is adjacent to a solid block — when knockback pushes
-    // into a wall, the client zeroes the perpendicular velocity component
+    // Phase 2.1: Folia thread-safety — only access world data from region owner
+    // Phase 2.2: Check y-1 block (feet level) in addition to y and y+1
     private boolean isNearWall(WindfallPlayer player) {
         org.bukkit.World world = player.getPlayer().getWorld();
+        FoliaCompat folia = WindfallPlugin.getInstance().getFoliaCompat();
+        if (folia.isFolia() && !folia.isOwnedByCurrentRegion(player.getPlayer())) {
+            return false;
+        }
         int px = (int) Math.floor(player.getX());
         int py = (int) Math.floor(player.getY());
         int pz = (int) Math.floor(player.getZ());
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 if (dx == 0 && dz == 0) continue;
+                if (world.getBlockAt(px + dx, py - 1, pz + dz).getType().isSolid()) return true;
                 if (world.getBlockAt(px + dx, py, pz + dz).getType().isSolid()) return true;
                 if (world.getBlockAt(px + dx, py + 1, pz + dz).getType().isSolid()) return true;
             }

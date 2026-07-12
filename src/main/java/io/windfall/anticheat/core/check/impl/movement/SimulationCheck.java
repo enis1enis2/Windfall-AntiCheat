@@ -11,6 +11,8 @@ import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.physics.PhysicsConstants;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import io.windfall.anticheat.core.version.VersionBracket;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Simulation A", stableKey = "windfall.movement.simulation", decay = 0.01, setbackVl = 20,
     compat = {CompatFlag.RELAX_ON_MISMATCH},
@@ -20,21 +22,35 @@ public class SimulationCheck extends Check implements PacketCheck {
     private static final double MAX_SIMULATION_DEVIATION = 0.15;
     private static final int MIN_SAMPLES = 10;
 
-    private double expectedDeltaY;
-    private int samples;
+    private static final class PlayerState {
+        double expectedDeltaY;
+        int samples;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!isMovementPacket(event)) return;
 
+        PlayerState state = getState(player);
         boolean onGround = player.isOnGround();
         double deltaY = player.getDeltaY();
         double deltaX = player.getDeltaX();
         double deltaZ = player.getDeltaZ();
 
         if (onGround) {
-            expectedDeltaY = 0;
-            samples = 0;
+            state.expectedDeltaY = 0;
+            state.samples = 0;
             return;
         }
 
@@ -42,29 +58,26 @@ public class SimulationCheck extends Check implements PacketCheck {
         double gravity = PhysicsConstants.GRAVITY;
         double airDrag = PhysicsConstants.AIR_DRAG;
 
-        // Version-aware physics: swimming hitbox changed in 1.13
         if (player.isSwimming()) {
             double waterDrag = protocol >= 393 ? PhysicsConstants.WATER_DRAG : 0.8;
-            double predictedDeltaY = (expectedDeltaY - gravity) * waterDrag;
+            double predictedDeltaY = (state.expectedDeltaY - gravity) * waterDrag;
             double verticalDeviation = Math.abs(deltaY - predictedDeltaY);
-            checkDeviation(player, verticalDeviation, deltaX, deltaZ);
-            expectedDeltaY = deltaY;
+            checkDeviation(player, verticalDeviation, deltaX, deltaZ, state);
+            state.expectedDeltaY = deltaY;
             return;
         }
 
-        // Version-aware: 1.18.2 collision order change
-        double predictedDeltaY = (expectedDeltaY - gravity) * airDrag;
+        double predictedDeltaY = (state.expectedDeltaY - gravity) * airDrag;
 
         double verticalDeviation = Math.abs(deltaY - predictedDeltaY);
-        checkDeviation(player, verticalDeviation, deltaX, deltaZ);
+        checkDeviation(player, verticalDeviation, deltaX, deltaZ, state);
 
-        expectedDeltaY = deltaY;
+        state.expectedDeltaY = deltaY;
     }
 
-    private void checkDeviation(WindfallPlayer player, double verticalDeviation, double deltaX, double deltaZ) {
+    private void checkDeviation(WindfallPlayer player, double verticalDeviation, double deltaX, double deltaZ, PlayerState state) {
         double horizontalSpeed = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
 
-        // Version-aware tolerance: Bedrock gets wider tolerance
         double maxDeviation = MAX_SIMULATION_DEVIATION;
         if (player.isBedrock()) {
             maxDeviation *= 1.15;
@@ -76,17 +89,17 @@ public class SimulationCheck extends Check implements PacketCheck {
         }
 
         if (verticalDeviation > maxDeviation && horizontalSpeed > 0.1) {
-            samples++;
-            if (samples >= MIN_SAMPLES) {
+            state.samples++;
+            if (state.samples >= MIN_SAMPLES) {
                 increaseBuffer(player, 0.5 * (verticalDeviation / maxDeviation));
                 if (getBuffer(player) > 4.0) {
                     flag(player);
                     resetBuffer(player);
-                    samples = 0;
+                    state.samples = 0;
                 }
             }
         } else {
-            samples = Math.max(0, samples - 1);
+            state.samples = Math.max(0, state.samples - 1);
             decreaseBuffer(player, 0.1);
         }
     }

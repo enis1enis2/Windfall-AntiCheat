@@ -11,6 +11,8 @@ import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayDeque;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Backtrack A", stableKey = "windfall.combat.backtrack", decay = 0.01, setbackVl = 15, compat = {CompatFlag.VIAVERSION_SENSITIVE, CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
 public class BacktrackCheck extends Check implements PacketCheck {
@@ -20,22 +22,36 @@ public class BacktrackCheck extends Check implements PacketCheck {
     private static final double IMPOSSIBLE_REACH = 6.0;
     private static final int MIN_SAMPLES = 10;
 
-    private final ArrayDeque<Long> attackTimestamps = new ArrayDeque<>();
-    private long lastMovementTimestamp;
+    private static final class PlayerState {
+        final ArrayDeque<Long> attackTimestamps = new ArrayDeque<>();
+        long lastMovementTimestamp;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         PacketTypeCommon type = event.getPacketType();
+        PlayerState state = getState(player);
 
         if (type == PacketType.Play.Client.INTERACT_ENTITY) {
             WrapperPlayClientInteractEntity wrapper = new WrapperPlayClientInteractEntity(event);
             if (wrapper.getAction() != WrapperPlayClientInteractEntity.InteractAction.ATTACK) return;
 
             long now = System.currentTimeMillis();
-            long delay = now - lastMovementTimestamp;
-            attackTimestamps.addLast(delay);
-            while (attackTimestamps.size() > 30) {
-                attackTimestamps.removeFirst();
+            long delay = now - state.lastMovementTimestamp;
+            state.attackTimestamps.addLast(delay);
+            while (state.attackTimestamps.size() > 30) {
+                state.attackTimestamps.removeFirst();
             }
 
             if (delay > MAX_BACKTRACK_DELAY_MS) {
@@ -48,7 +64,7 @@ public class BacktrackCheck extends Check implements PacketCheck {
                 decreaseBuffer(player, 0.1);
             }
         } else if (isMovementPacket(type)) {
-            lastMovementTimestamp = System.currentTimeMillis();
+            state.lastMovementTimestamp = System.currentTimeMillis();
         }
     }
 

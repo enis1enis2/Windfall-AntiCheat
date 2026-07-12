@@ -11,13 +11,14 @@ import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayDeque;
 import java.util.Iterator;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Timer A", stableKey = "windfall.movement.timer", decay = 0.005, setbackVl = 25, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.2)
 public class TimerCheck extends Check implements PacketCheck {
 
     private static final int NORMAL_PACKETS_PER_TICK_MIN = 1;
     private static final int NORMAL_PACKETS_PER_TICK_MAX = 3;
-    // High-ping players have natural packet bursts — jitter tolerance prevents false positives
     private static final int LATENCY_JITTER_TOLERANCE = 2;
     private static final long WINDOW_DURATION_MS = 1000;
     private static final long WINDOW_TICK_COUNT = 20;
@@ -26,28 +27,40 @@ public class TimerCheck extends Check implements PacketCheck {
     private static final double FLAG_THRESHOLD_MULTIPLIER = 1.5;
     private static final long DOUBLE_BUFFER_INTERVAL_MS = 500;
 
-    private final ArrayDeque<Long> packetTimestamps = new ArrayDeque<>();
-    private final ArrayDeque<Long> secondaryPacketTimestamps = new ArrayDeque<>();
+    private static final class PlayerState {
+        ArrayDeque<Long> packetTimestamps = new ArrayDeque<>();
+        ArrayDeque<Long> secondaryPacketTimestamps = new ArrayDeque<>();
+        long lastSecondaryFlush = System.currentTimeMillis();
+        int consecutiveHighWindows;
+        int consecutiveLowWindows;
+    }
 
-    private long lastSecondaryFlush = System.currentTimeMillis();
-    private int consecutiveHighWindows;
-    private int consecutiveLowWindows;
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!isMovementPacket(event)) return;
 
+        PlayerState state = getState(player);
         long now = System.currentTimeMillis();
 
-        packetTimestamps.addLast(now);
-        secondaryPacketTimestamps.addLast(now);
+        state.packetTimestamps.addLast(now);
+        state.secondaryPacketTimestamps.addLast(now);
 
-        cleanWindow(packetTimestamps, now);
-        cleanWindow(secondaryPacketTimestamps, now);
+        cleanWindow(state.packetTimestamps, now);
+        cleanWindow(state.secondaryPacketTimestamps, now);
 
-        double packetsPerTick = packetTimestamps.size() / (double) WINDOW_TICK_COUNT;
+        double packetsPerTick = state.packetTimestamps.size() / (double) WINDOW_TICK_COUNT;
 
-        // Ping / 50 converts milliseconds to ticks for jitter tolerance
         int jitterTolerance = Math.max(LATENCY_JITTER_TOLERANCE,
                 (int) Math.ceil(player.getTransactionPing() / 50.0));
 
@@ -55,42 +68,39 @@ public class TimerCheck extends Check implements PacketCheck {
         double speedHackThreshold = maxNormalPerTick * SPEEDHACK_MULTIPLIER;
         double slowHackThreshold = Math.max(0.2, NORMAL_PACKETS_PER_TICK_MIN * SLOWHACK_MULTIPLIER);
 
-        // Need 2 consecutive high-rate windows before flagging to avoid lag spikes
         if (packetsPerTick > speedHackThreshold) {
             if (packetsPerTick > speedHackThreshold * FLAG_THRESHOLD_MULTIPLIER) {
-                consecutiveHighWindows++;
+                state.consecutiveHighWindows++;
             } else {
-                consecutiveHighWindows = Math.max(0, consecutiveHighWindows - 1);
+                state.consecutiveHighWindows = Math.max(0, state.consecutiveHighWindows - 1);
             }
 
-            if (consecutiveHighWindows >= 2) {
+            if (state.consecutiveHighWindows >= 2) {
                 increaseBuffer(player, 1.0);
                 if (getBuffer(player) > 3.0) {
                     flag(player);
                     resetBuffer(player);
-                    consecutiveHighWindows = 0;
+                    state.consecutiveHighWindows = 0;
                 }
             }
-        // 4 consecutive low windows because AFK can temporarily reduce packet rate
         } else if (packetsPerTick < slowHackThreshold) {
-            consecutiveLowWindows++;
-            if (consecutiveLowWindows >= 4) {
+            state.consecutiveLowWindows++;
+            if (state.consecutiveLowWindows >= 4) {
                 increaseBuffer(player, 0.8);
                 if (getBuffer(player) > 4.0) {
                     flag(player);
                     resetBuffer(player);
-                    consecutiveLowWindows = 0;
+                    state.consecutiveLowWindows = 0;
                 }
             }
         } else {
-            consecutiveHighWindows = Math.max(0, consecutiveHighWindows - 1);
-            consecutiveLowWindows = Math.max(0, consecutiveLowWindows - 1);
+            state.consecutiveHighWindows = Math.max(0, state.consecutiveHighWindows - 1);
+            state.consecutiveLowWindows = Math.max(0, state.consecutiveLowWindows - 1);
             decreaseBuffer(player, 0.1);
         }
 
-        // Secondary window catches burst hacks that the primary window smooths out
-        if (now - lastSecondaryFlush >= DOUBLE_BUFFER_INTERVAL_MS) {
-            long secondaryCount = secondaryPacketTimestamps.stream()
+        if (now - state.lastSecondaryFlush >= DOUBLE_BUFFER_INTERVAL_MS) {
+            long secondaryCount = state.secondaryPacketTimestamps.stream()
                     .filter(t -> now - t <= DOUBLE_BUFFER_INTERVAL_MS)
                     .count();
             double secondaryRate = secondaryCount / (DOUBLE_BUFFER_INTERVAL_MS / 50.0);
@@ -99,8 +109,8 @@ public class TimerCheck extends Check implements PacketCheck {
                 increaseBuffer(player, 0.5);
             }
 
-            secondaryPacketTimestamps.clear();
-            lastSecondaryFlush = now;
+            state.secondaryPacketTimestamps.clear();
+            state.lastSecondaryFlush = now;
         }
     }
 

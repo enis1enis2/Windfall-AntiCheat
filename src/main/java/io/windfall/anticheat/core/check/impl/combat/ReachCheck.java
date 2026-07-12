@@ -13,15 +13,14 @@ import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.physics.VersionPhysics;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.ArrayDeque;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Reach A", stableKey = "windfall.combat.reach", decay = 0.05, setbackVl = 10, compat = {CompatFlag.VIAVERSION_SENSITIVE, CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3)
 public class ReachCheck extends Check implements PacketCheck {
 
-    // 0.1 block tolerance for float rounding in the client's own reach calculation
     private static final double TOLERANCE = 0.1;
 
-    // Protocol-dependent margin: legacy clients (pre-1.9) have coarser hit detection
     private static final double PROTOCOL_MARGIN_LEGACY = 0.10;
     private static final double PROTOCOL_MARGIN_MODERN = 0.03;
 
@@ -36,13 +35,24 @@ public class ReachCheck extends Check implements PacketCheck {
     private static final double PLAYER_SNEAK_HEIGHT_LEGACY = 1.62;
     private static final double ENTITY_DEFAULT_SIZE = 0.25;
 
-    // 20-sample window = 1 second at 20 TPS
     private static final int ROLLING_WINDOW = 20;
 
-    // Static map persists across instances; cleaned up periodically via cleanup()
     private static final ConcurrentHashMap<Integer, TrackedEntity> trackedEntities = new ConcurrentHashMap<>();
 
-    private final ArrayDeque<Double> reachSamples = new ArrayDeque<>();
+    private static final class PlayerState {
+        final ArrayDeque<Double> reachSamples = new ArrayDeque<>();
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     public static void trackSpawn(int entityId, EntityType type, double x, double y, double z) {
         trackedEntities.put(entityId, new TrackedEntity(type, x, y, z, System.currentTimeMillis()));
@@ -72,6 +82,7 @@ public class ReachCheck extends Check implements PacketCheck {
         WrapperPlayClientInteractEntity wrapper = new WrapperPlayClientInteractEntity(event);
         if (wrapper.getAction() != WrapperPlayClientInteractEntity.InteractAction.ATTACK) return;
 
+        PlayerState state = getState(player);
         int targetId = wrapper.getEntityId();
 
         double[] compensated = getCompensatedSamples(player, targetId);
@@ -98,14 +109,13 @@ public class ReachCheck extends Check implements PacketCheck {
                 targetBB[0], targetBB[1], targetBB[2],
                 targetBB[3], targetBB[4], targetBB[5]);
 
-        reachSamples.addLast(reach);
-        if (reachSamples.size() > ROLLING_WINDOW) {
-            reachSamples.removeFirst();
+        state.reachSamples.addLast(reach);
+        if (state.reachSamples.size() > ROLLING_WINDOW) {
+            state.reachSamples.removeFirst();
         }
 
         double limit = getReachLimit(player);
 
-        // Ping-proportional tolerance, capped at 0.3 blocks to prevent abuse
         double pingTolerance = Math.min(player.getTransactionPing() * 0.001, 0.3);
         double protocolMargin = getProtocolMargin(player);
         double effectiveLimit = limit + TOLERANCE + pingTolerance + protocolMargin;
@@ -115,12 +125,12 @@ public class ReachCheck extends Check implements PacketCheck {
             return;
         }
 
-        double avgReach = reachSamples.stream()
+        double avgReach = state.reachSamples.stream()
                 .mapToDouble(Double::doubleValue)
                 .average()
                 .orElse(0.0);
 
-        if (avgReach > limit + 0.05 && reachSamples.size() >= ROLLING_WINDOW / 2) {
+        if (avgReach > limit + 0.05 && state.reachSamples.size() >= ROLLING_WINDOW / 2) {
             increaseBuffer(player, 0.5);
             if (getBuffer(player) > 3.0) {
                 flag(player);
@@ -174,7 +184,6 @@ public class ReachCheck extends Check implements PacketCheck {
         return VersionPhysics.getPlayerEyeHeight(player.isSneaking(), protocol);
     }
 
-    // Closest-point-on-AABB algorithm — clamps eye position to box bounds
     private double calculateReachDistance(double eyeX, double eyeY, double eyeZ,
                                           double bbMinX, double bbMinY, double bbMinZ,
                                           double bbMaxX, double bbMaxY, double bbMaxZ) {
@@ -189,7 +198,6 @@ public class ReachCheck extends Check implements PacketCheck {
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
-    // Fallback to player-sized AABB when entity type is unknown
     private double[] getEntityBoundingBox(int entityId) {
         TrackedEntity te = trackedEntities.get(entityId);
         if (te == null) return null;

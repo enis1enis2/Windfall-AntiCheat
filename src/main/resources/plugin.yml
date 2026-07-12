@@ -3,6 +3,7 @@ version: '${project.version}'
 main: io.windfall.anticheat.WindfallPlugin
 author: Windfall team
 description: Enterprise-grade packet-based anti-cheat for Minecraft 1.7-26.2+
+folia-supported: true
 depend: [packetevents]
 softdepend: [Geyser-Spigot, floodgate, ViaVersion]
 

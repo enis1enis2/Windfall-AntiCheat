@@ -9,6 +9,8 @@ import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "NoSlow A", stableKey = "windfall.movement.noslow", decay = 0.01, setbackVl = 15, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3)
 public class NoSlowCheck extends Check implements PacketCheck {
@@ -20,13 +22,27 @@ public class NoSlowCheck extends Check implements PacketCheck {
     private static final double MIN_SPEED_FOR_CHECK = 0.05;
     private static final int MIN_USING_ITEM_TICKS = 3;
 
-    private boolean usingItem;
-    private int usingItemTicks;
+    private static final class PlayerState {
+        boolean usingItem;
+        int usingItemTicks;
+    }
+
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!isMovementPacket(event)) return;
 
+        PlayerState state = getState(player);
         double deltaX = player.getDeltaX();
         double deltaZ = player.getDeltaZ();
         double horizontalSpeed = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
@@ -36,11 +52,9 @@ public class NoSlowCheck extends Check implements PacketCheck {
             return;
         }
 
-        // Detect item use via player state — not directly available from packets, use speed heuristic
         double maxExpectedSpeed = BASE_WALK_SPEED * SPRINT_MULTIPLIER;
 
-        // If player is moving faster than expected while using an item, it's noslow
-        if (usingItem && horizontalSpeed > maxExpectedSpeed * 0.9) {
+        if (state.usingItem && horizontalSpeed > maxExpectedSpeed * 0.9) {
             increaseBuffer(player, 0.8);
             if (getBuffer(player) > 4.0) {
                 flag(player);

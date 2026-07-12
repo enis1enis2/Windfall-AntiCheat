@@ -68,7 +68,8 @@ public final class MaterialUtils {
             return name.contains("LADDER") || name.contains("VINE")
                 || name.contains("SCAFFOLDING") || name.contains("TWISTING_VINES")
                 || name.contains("WEEPING_VINES") || name.equals("KELP")
-                || name.equals("KELP_PLANT") || name.equals("SOUL_SAND");
+                || name.equals("KELP_PLANT") || name.equals("SOUL_SAND")
+                || name.equals("SOUL_SOIL");
         });
     }
 
@@ -93,7 +94,7 @@ public final class MaterialUtils {
         if (material == null) return false;
         return HONEY_CACHE.computeIfAbsent(material, m -> {
             String name = normalize(m.name());
-            return name.equals("HONEY_BLOCK") || name.equals("HONEY_BLOCK_BLOCK");
+            return name.equals("HONEY_BLOCK");
         });
     }
 

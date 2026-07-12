@@ -53,6 +53,14 @@ public class PacketListener extends PacketListenerAbstract {
         try {
             if (wp == null || !wp.isValid()) return;
 
+            // Clear ViaVersion respawn flag on first position packet after respawn
+            if (wp.isRespawned()) {
+                if (type == PacketType.Play.Client.PLAYER_POSITION
+                        || type == PacketType.Play.Client.PLAYER_POSITION_AND_ROTATION) {
+                    wp.setRespawned(false);
+                }
+            }
+
             if (type == PacketType.Play.Client.PLAYER_POSITION) {
                 WrapperPlayClientPlayerPosition wrapper = new WrapperPlayClientPlayerPosition(event);
                 Vector3d pos = wrapper.getPosition();
@@ -125,6 +133,7 @@ public class PacketListener extends PacketListenerAbstract {
                 wp.setOnGround(true);
                 wp.setSprinting(false);
                 wp.setSneaking(false);
+                wp.setRespawned(true);
             } else if (type == PacketType.Play.Server.PING) {
                 transactionManager.sendTransaction(wp);
             } else if (type == PacketType.Play.Server.PLAYER_ABILITIES) {

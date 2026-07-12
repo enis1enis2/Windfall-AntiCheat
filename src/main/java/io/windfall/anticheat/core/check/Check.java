@@ -52,6 +52,10 @@ public abstract class Check {
     public abstract void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event);
     public abstract void onPacketSend(WindfallPlayer player, PacketSendEvent event);
 
+    public void removePlayer(java.util.UUID uuid) {
+        // Override in checks that maintain per-player state maps
+    }
+
     public void flag(WindfallPlayer player) {
         if (!enabled) return;
 

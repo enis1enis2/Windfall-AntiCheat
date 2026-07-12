@@ -1,5 +1,6 @@
 package io.windfall.anticheat.core.physics;
 
+import io.windfall.anticheat.core.player.WindfallPlayer.Pose;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -287,5 +288,57 @@ class VersionPhysicsTest {
     @Test
     void hasInputPackets_1214() {
         assertFalse(VersionPhysics.hasInputPackets(769));
+    }
+
+    // === PLAYER HEIGHT BY POSE ===
+
+    @Test
+    void playerHeight_pose_standing_767() {
+        assertEquals(1.8, VersionPhysics.getPlayerHeight(Pose.STANDING, 767));
+    }
+
+    @Test
+    void playerHeight_pose_sneaking_767() {
+        assertEquals(1.5, VersionPhysics.getPlayerHeight(Pose.SNEAKING, 767));
+    }
+
+    @Test
+    void playerHeight_pose_sneaking_47() {
+        assertEquals(1.62, VersionPhysics.getPlayerHeight(Pose.SNEAKING, 47));
+    }
+
+    @Test
+    void playerHeight_pose_swimming_767() {
+        assertEquals(0.6, VersionPhysics.getPlayerHeight(Pose.SWIMMING, 767));
+    }
+
+    @Test
+    void playerHeight_pose_fallFlying_767() {
+        assertEquals(0.6, VersionPhysics.getPlayerHeight(Pose.FALL_FLYING, 767));
+    }
+
+    @Test
+    void playerHeight_pose_sleeping_767() {
+        assertEquals(0.2, VersionPhysics.getPlayerHeight(Pose.SLEEPING, 767));
+    }
+
+    @Test
+    void playerHeight_pose_dying_767() {
+        assertEquals(0.0, VersionPhysics.getPlayerHeight(Pose.DYING, 767));
+    }
+
+    @Test
+    void playerHeight_pose_spinAttack_767() {
+        assertEquals(0.6, VersionPhysics.getPlayerHeight(Pose.SPIN_ATTACK, 767));
+    }
+
+    @Test
+    void playerHeight_pose_longJumping_767() {
+        assertEquals(1.5, VersionPhysics.getPlayerHeight(Pose.LONG_JUMPING, 767));
+    }
+
+    @Test
+    void playerHeight_pose_longJumping_47() {
+        assertEquals(1.8, VersionPhysics.getPlayerHeight(Pose.LONG_JUMPING, 47));
     }
 }

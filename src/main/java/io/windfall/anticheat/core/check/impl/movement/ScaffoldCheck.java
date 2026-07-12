@@ -11,11 +11,12 @@ import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @CheckData(name = "Scaffold A", stableKey = "windfall.movement.scaffold", decay = 0.005, setbackVl = 30, compat = {CompatFlag.FOLIA_UNSAFE, CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3, disableOnFolia = false)
 public class ScaffoldCheck extends Check implements PacketCheck {
 
-    // Touch/keyboard/controller have different max placement rates — Bedrock-specific thresholds
     private static final double JAVA_MAX_BLOCK_PLACE_PER_SECOND = 12.0;
     private static final double BEDROCK_TOUCH_MAX_BLOCKS_PER_SEC = 8.0;
     private static final double BEDROCK_KB_MAX_BLOCKS_PER_SEC = 10.0;
@@ -25,12 +26,24 @@ public class ScaffoldCheck extends Check implements PacketCheck {
     private static final int ROLLING_WINDOW_SIZE = 10;
     private static final long PLACE_WINDOW_MS = 1000;
 
-    private int blocksPlacedThisWindow;
-    private long windowStartTime;
-    private int lastSlot;
+    private static final class PlayerState {
+        int blocksPlacedThisWindow;
+        long windowStartTime;
+        int lastSlot;
+        double blocksPerSecondAccum;
+        int samplesCollected;
+    }
 
-    private double blocksPerSecondAccum;
-    private int samplesCollected;
+    private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
+
+    private PlayerState getState(WindfallPlayer player) {
+        return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
+    }
+
+    @Override
+    public void removePlayer(UUID uuid) {
+        stateMap.remove(uuid);
+    }
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
@@ -49,21 +62,22 @@ public class ScaffoldCheck extends Check implements PacketCheck {
     }
 
     private void handleBlockPlace(WindfallPlayer player) {
+        PlayerState state = getState(player);
         long now = System.currentTimeMillis();
 
-        if (windowStartTime == 0 || now - windowStartTime > PLACE_WINDOW_MS) {
-            if (blocksPlacedThisWindow > 0) {
-                double bps = blocksPlacedThisWindow;
-                blocksPerSecondAccum += bps;
-                samplesCollected++;
+        if (state.windowStartTime == 0 || now - state.windowStartTime > PLACE_WINDOW_MS) {
+            if (state.blocksPlacedThisWindow > 0) {
+                double bps = state.blocksPlacedThisWindow;
+                state.blocksPerSecondAccum += bps;
+                state.samplesCollected++;
             }
-            blocksPlacedThisWindow = 0;
-            windowStartTime = now;
+            state.blocksPlacedThisWindow = 0;
+            state.windowStartTime = now;
         }
 
-        blocksPlacedThisWindow++;
+        state.blocksPlacedThisWindow++;
 
-        double bps = blocksPlacedThisWindow / Math.max(1.0, (now - windowStartTime) / 1000.0);
+        double bps = state.blocksPlacedThisWindow / Math.max(1.0, (now - state.windowStartTime) / 1000.0);
 
         if (player.isBedrock()) {
             checkBedrockScaffold(player, bps);
@@ -79,7 +93,6 @@ public class ScaffoldCheck extends Check implements PacketCheck {
                 flag(player);
                 resetBuffer(player);
             }
-        // Placing blocks while sprinting is unusual — strong scaffold indicator
         } else if (player.isSprinting() && bps > SPRINTING_BLOCKS_PER_SEC_THRESHOLD) {
             increaseBuffer(player, 0.5);
             if (getBuffer(player) > 3.0) {

@@ -20,6 +20,9 @@ import io.windfall.anticheat.core.severity.SeverityManager;
 import io.windfall.anticheat.core.version.ServerFork;
 import io.windfall.anticheat.core.version.VersionManager;
 import io.windfall.anticheat.core.compensation.TransactionManager;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 // Single entry point — owns all managers, enforces strict init order
@@ -80,6 +83,8 @@ public final class WindfallPlugin extends JavaPlugin {
         PacketEvents.getAPI().getEventManager().registerListener(new PacketListener(this));
         PacketEvents.getAPI().init();
 
+        getServer().getPluginManager().registerEvents(new PlayerQuitListener(), this);
+
         this.running = true;
         this.scheduler.startGlobalTick();
 
@@ -114,4 +119,17 @@ public final class WindfallPlugin extends JavaPlugin {
     public PluginDetector getPluginDetector() { return pluginDetector; }
     public FoliaCompat getFoliaCompat() { return foliaCompat; }
     public PurpurCompat getPurpurCompat() { return purpurCompat; }
+
+    private final class PlayerQuitListener implements Listener {
+        @EventHandler
+        public void onQuit(PlayerQuitEvent event) {
+            java.util.UUID uuid = event.getPlayer().getUniqueId();
+            if (checkManager != null) {
+                checkManager.removePlayer(uuid);
+            }
+            if (playerManager != null) {
+                playerManager.remove(uuid);
+            }
+        }
+    }
 }

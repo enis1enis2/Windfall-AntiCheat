@@ -1,5 +1,6 @@
 package io.windfall.anticheat.core.physics;
 
+import io.windfall.anticheat.core.player.WindfallPlayer.Pose;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -152,5 +153,49 @@ class BoundingBoxTest {
         assertEquals(10.3, playerBox.maxX, 0.001);
         assertEquals(65.8, playerBox.maxY, 0.001);
         assertEquals(20.3, playerBox.maxZ, 0.001);
+    }
+
+    // === fromPlayer with Pose ===
+
+    @Test
+    void fromPlayer_pose_standing_returnsCorrectDimensions() {
+        BoundingBox box = BoundingBox.fromPlayer(10.0, 64.0, 20.0, Pose.STANDING, 767);
+        // Half width = 0.3, height = 1.8
+        assertEquals(9.7, box.minX, 0.001);
+        assertEquals(64.0, box.minY);
+        assertEquals(19.7, box.minZ, 0.001);
+        assertEquals(10.3, box.maxX, 0.001);
+        assertEquals(65.8, box.maxY, 0.001);
+        assertEquals(20.3, box.maxZ, 0.001);
+        assertEquals(0.6, box.getWidth(), 0.001);
+        assertEquals(1.8, box.getHeight(), 0.001);
+    }
+
+    @Test
+    void fromPlayer_pose_sneaking_returnsCorrectDimensions() {
+        BoundingBox box = BoundingBox.fromPlayer(10.0, 64.0, 20.0, Pose.SNEAKING, 767);
+        // Half width = 0.3, height = 1.5
+        assertEquals(9.7, box.minX, 0.001);
+        assertEquals(64.0, box.minY);
+        assertEquals(19.7, box.minZ, 0.001);
+        assertEquals(10.3, box.maxX, 0.001);
+        assertEquals(65.5, box.maxY, 0.001);
+        assertEquals(20.3, box.maxZ, 0.001);
+        assertEquals(0.6, box.getWidth(), 0.001);
+        assertEquals(1.5, box.getHeight(), 0.001);
+    }
+
+    @Test
+    void fromPlayer_pose_swimming_returnsCorrectDimensions() {
+        BoundingBox box = BoundingBox.fromPlayer(10.0, 64.0, 20.0, Pose.SWIMMING, 767);
+        // Half width = 0.3, height = 0.6
+        assertEquals(9.7, box.minX, 0.001);
+        assertEquals(64.0, box.minY);
+        assertEquals(19.7, box.minZ, 0.001);
+        assertEquals(10.3, box.maxX, 0.001);
+        assertEquals(64.6, box.maxY, 0.001);
+        assertEquals(20.3, box.maxZ, 0.001);
+        assertEquals(0.6, box.getWidth(), 0.001);
+        assertEquals(0.6, box.getHeight(), 0.001);
     }
 }
