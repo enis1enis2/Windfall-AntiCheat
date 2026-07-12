@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="docs/banner.jpg" alt="Windfall Anti-Cheat Banner" width="100%">
+</p>
+
+<p align="center">
   🇹🇷 Proudly Made in Turkey
 </p>
 
