@@ -1,6 +1,7 @@
 package io.windfall.anticheat.core.physics;
 
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.player.WindfallPlayer.Pose;
 import org.bukkit.Material;
 
 public final class VersionPhysics {
@@ -66,6 +67,20 @@ public final class VersionPhysics {
             return sneaking ? 1.5 : 1.8;
         }
         return sneaking ? 1.62 : 1.8;
+    }
+
+    public static double getPlayerHeight(Pose pose, int protocol) {
+        switch (pose) {
+            case FALL_FLYING: return 0.6;
+            case SWIMMING: return 0.6;
+            case SPIN_ATTACK: return 0.6;
+            case SLEEPING: return 0.2;
+            case DYING: return 0.0;
+            case SNEAKING: return protocol >= PROTOCOL_1_14 ? 1.5 : 1.62;
+            case LONG_JUMPING: return protocol >= PROTOCOL_1_14 ? 1.5 : 1.8;
+            case STANDING:
+            default: return 1.8;
+        }
     }
 
     public static double getPlayerEyeHeight(boolean sneaking, int protocol) {

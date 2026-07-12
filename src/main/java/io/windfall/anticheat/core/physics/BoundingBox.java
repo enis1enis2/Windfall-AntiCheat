@@ -1,5 +1,7 @@
 package io.windfall.anticheat.core.physics;
 
+import io.windfall.anticheat.core.player.WindfallPlayer;
+
 public final class BoundingBox {
 
     public final double minX, minY, minZ;
@@ -72,6 +74,13 @@ public final class BoundingBox {
         return new BoundingBox(nminX, nminY, nminZ, nmaxX, nmaxY, nmaxZ);
     }
 
+    public static BoundingBox fromPlayer(double x, double y, double z, WindfallPlayer.Pose pose, int protocol) {
+        double halfWidth = PhysicsConstants.PLAYER_WIDTH * 0.5;
+        double height = VersionPhysics.getPlayerHeight(pose, protocol);
+        return new BoundingBox(x - halfWidth, y, z - halfWidth, x + halfWidth, y + height, z + halfWidth);
+    }
+
+    // Legacy overload for backwards compatibility
     public static BoundingBox fromPlayer(double x, double y, double z, boolean sneaking, int protocol) {
         double halfWidth = PhysicsConstants.PLAYER_WIDTH * 0.5;
         double height = VersionPhysics.getPlayerHeight(sneaking, protocol);

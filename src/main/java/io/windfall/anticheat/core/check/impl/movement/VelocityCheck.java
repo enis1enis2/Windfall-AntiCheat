@@ -145,6 +145,12 @@ public class VelocityCheck extends Check implements PacketCheck {
             tolerance *= 1.2; // 1.8 KB formula differs significantly
         }
 
+        // Wall collision tolerance: when knockback pushes player into a wall,
+        // the client zeroes the perpendicular velocity component (Grim d2727a4 fix)
+        if (isNearWall(player)) {
+            tolerance *= 1.3;
+        }
+
         double adjustedThreshold05 = 0.5 / tolerance;
         double adjustedThreshold08 = 0.8 / tolerance;
 
@@ -223,5 +229,22 @@ public class VelocityCheck extends Check implements PacketCheck {
             this.velZ = velZ;
             this.receivedAt = receivedAt;
         }
+    }
+
+    // Checks if the player is adjacent to a solid block — when knockback pushes
+    // into a wall, the client zeroes the perpendicular velocity component
+    private boolean isNearWall(WindfallPlayer player) {
+        org.bukkit.World world = player.getPlayer().getWorld();
+        int px = (int) Math.floor(player.getX());
+        int py = (int) Math.floor(player.getY());
+        int pz = (int) Math.floor(player.getZ());
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dz == 0) continue;
+                if (world.getBlockAt(px + dx, py, pz + dz).getType().isSolid()) return true;
+                if (world.getBlockAt(px + dx, py + 1, pz + dz).getType().isSolid()) return true;
+            }
+        }
+        return false;
     }
 }

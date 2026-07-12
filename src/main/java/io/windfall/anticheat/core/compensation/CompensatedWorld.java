@@ -82,13 +82,17 @@ public final class CompensatedWorld {
     }
 
     public boolean isOnSlime(int x, int y, int z) {
-        Material material = getBlock(x, y - 1, z);
-        return material != null && MaterialUtils.isSlime(material);
+        Material below = getBlock(x, y - 1, z);
+        if (below != null && MaterialUtils.isSlime(below)) return true;
+        Material at = getBlock(x, y, z);
+        return at != null && MaterialUtils.isSlime(at);
     }
 
     public boolean isOnHoney(int x, int y, int z) {
-        Material material = getBlock(x, y - 1, z);
-        return material != null && MaterialUtils.isHoney(material);
+        Material below = getBlock(x, y - 1, z);
+        if (below != null && MaterialUtils.isHoney(below)) return true;
+        Material at = getBlock(x, y, z);
+        return at != null && MaterialUtils.isHoney(at);
     }
 
     public boolean isOnWeb(int x, int y, int z) {

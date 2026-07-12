@@ -9,6 +9,17 @@ import org.bukkit.entity.Player;
 
 public class WindfallPlayer {
 
+    public enum Pose {
+        STANDING,
+        FALL_FLYING,
+        SWIMMING,
+        SLEEPING,
+        SPIN_ATTACK,
+        SNEAKING,
+        DYING,
+        LONG_JUMPING
+    }
+
     public static final class BoundingBox {
         public final double minX, minY, minZ, maxX, maxY, maxZ;
 
@@ -72,6 +83,8 @@ public class WindfallPlayer {
     private double elytraMomentum;
     private int glideStartTick;
 
+    private Pose pose = Pose.STANDING;
+
     // Ping via our own transaction system, not Bukkit API — gives sub-tick accuracy
     private int transactionPing;
     private int transactionId;
@@ -116,10 +129,31 @@ public class WindfallPlayer {
     }
 
     public double getHeight() {
-        if (gliding) return 0.6; // Elytra/FALL_FLYING: hitbox compresses to ~0.6
-        if (swimming || climbing) return 0.6; // Swimming/crawling halves hitbox
-        if (sneaking && protocolVersion >= 477) return 1.5; // Sneak height changed in 1.14+
-        return 1.8;
+        switch (pose) {
+            case FALL_FLYING: return 0.6;
+            case SWIMMING: return 0.6;
+            case SPIN_ATTACK: return 0.6;
+            case SLEEPING: return 0.2;
+            case DYING: return 0.0;
+            case SNEAKING: return protocolVersion >= 477 ? 1.5 : 1.62;
+            case LONG_JUMPING: return protocolVersion >= 477 ? 1.5 : 1.8;
+            case STANDING:
+            default: return 1.8;
+        }
+    }
+
+    public double getEyeHeight() {
+        switch (pose) {
+            case FALL_FLYING: return 0.4;
+            case SWIMMING: return 0.4;
+            case SPIN_ATTACK: return 0.4;
+            case SLEEPING: return 0.2;
+            case DYING: return 0.0;
+            case SNEAKING: return protocolVersion >= 477 ? 1.27 : 1.54;
+            case LONG_JUMPING: return protocolVersion >= 477 ? 1.27 : 1.62;
+            case STANDING:
+            default: return 1.62;
+        }
     }
 
     public double getDeltaX() { return deltaX; }
@@ -212,19 +246,45 @@ public class WindfallPlayer {
     public boolean isSprinting() { return sprinting; }
     public void setSprinting(boolean sprinting) { this.sprinting = sprinting; }
     public boolean isSneaking() { return sneaking; }
-    public void setSneaking(boolean sneaking) { this.sneaking = sneaking; }
+    public void setSneaking(boolean sneaking) {
+        this.sneaking = sneaking;
+        if (sneaking && pose == Pose.STANDING) pose = Pose.SNEAKING;
+        else if (!sneaking && pose == Pose.SNEAKING) pose = Pose.STANDING;
+    }
     public boolean isFlying() { return flying; }
     public void setFlying(boolean flying) { this.flying = flying; }
     public boolean isSwimming() { return swimming; }
-    public void setSwimming(boolean swimming) { this.swimming = swimming; }
+    public void setSwimming(boolean swimming) {
+        this.swimming = swimming;
+        if (swimming) pose = Pose.SWIMMING;
+        else if (pose == Pose.SWIMMING) pose = Pose.STANDING;
+    }
     public boolean isClimbing() { return climbing; }
     public void setClimbing(boolean climbing) { this.climbing = climbing; }
     public boolean isGliding() { return gliding; }
-    public void setGliding(boolean gliding) { this.gliding = gliding; }
+    public void setGliding(boolean gliding) {
+        this.gliding = gliding;
+        if (gliding) pose = Pose.FALL_FLYING;
+        else if (pose == Pose.FALL_FLYING) pose = Pose.STANDING;
+    }
     public double getElytraMomentum() { return elytraMomentum; }
     public void setElytraMomentum(double elytraMomentum) { this.elytraMomentum = elytraMomentum; }
     public int getGlideStartTick() { return glideStartTick; }
     public void setGlideStartTick(int glideStartTick) { this.glideStartTick = glideStartTick; }
+
+    public Pose getPose() { return pose; }
+    public void setPose(Pose pose) {
+        this.pose = pose;
+        this.sneaking = (pose == Pose.SNEAKING);
+        this.swimming = (pose == Pose.SWIMMING);
+        this.gliding = (pose == Pose.FALL_FLYING);
+    }
+    public boolean isLongJumping() { return pose == Pose.LONG_JUMPING; }
+    public void setLongJumping(boolean longJumping) {
+        if (longJumping) pose = Pose.LONG_JUMPING;
+        else if (pose == Pose.LONG_JUMPING) pose = Pose.STANDING;
+    }
+    public boolean isDying() { return pose == Pose.DYING; }
 
     public int getTransactionPing() { return transactionPing; }
     public void setTransactionPing(int transactionPing) { this.transactionPing = transactionPing; }
