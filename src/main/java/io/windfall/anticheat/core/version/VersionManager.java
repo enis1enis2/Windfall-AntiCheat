@@ -2,11 +2,25 @@ package io.windfall.anticheat.core.version;
 
 import org.bukkit.Bukkit;
 
+/**
+ * Maps the running server's Bukkit version string to a protocol version number.
+ *
+ * <p>Parses {@link org.bukkit.Bukkit#getBukkitVersion()} (e.g., "1.20.4-R0.1-SNAPSHOT"
+ * or "26.1.2-R0.1-SNAPSHOT") and returns the equivalent protocol version number.
+ * Protocol versions are used throughout the check system for version-dependent physics.
+ *
+ * <p>Supports both legacy 1.x versioning (1.7-1.21.4) and Mojang's new year-based
+ * versioning (26.x, 27.x, ...) introduced in 2026.
+ *
+ * @see VersionBracket for grouped version ranges
+ * @see io.windfall.anticheat.core.physics.VersionPhysics for protocol-based branching
+ */
 public class VersionManager {
 
     private final String serverVersion;
     private final int protocolVersion;
 
+    /** Parses the protocol version from Bukkit's version string at startup */
     public VersionManager() {
         this.serverVersion = Bukkit.getBukkitVersion();
         this.protocolVersion = parseProtocolVersion(serverVersion);
@@ -18,6 +32,10 @@ public class VersionManager {
         return mapVersionToProtocol(mcVersion);
     }
 
+    /**
+     * Maps a Minecraft version string to its protocol version number.
+     * Handles legacy 1.x, year-based 26.x+, and unmapped future versions.
+     */
     private int mapVersionToProtocol(String mcVersion) {
         switch (mcVersion) {
             case "1.7.5": return 4;
@@ -80,20 +98,22 @@ public class VersionManager {
         }
     }
 
+    /** Returns the raw Bukkit version string (e.g., "1.20.4-R0.1-SNAPSHOT") */
     public String getServerVersion() {
         return serverVersion;
     }
 
-    // Protocol 393 = 1.13, the "flattening" update that changed all internal IDs
+    /** Whether this is a pre-flattening server (before 1.13, protocol <393) */
     public boolean isLegacy() {
         return protocolVersion < 393;
     }
 
-    // Protocol 763 = 1.20.1, new world height and movement code
+    /** Whether this is a modern server (1.20.1+, protocol >=763) */
     public boolean isModern() {
         return protocolVersion >= 763;
     }
 
+    /** Returns the numeric protocol version for the running server */
     public int getProtocolVersion() {
         return protocolVersion;
     }

@@ -66,10 +66,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Central registry for all anti-cheat checks.
+ *
+ * <p>Responsibilities:
+ * <ul>
+ *   <li>Instantiates all 52 checks and filters incompatible ones at startup</li>
+ *   <li>Dispatches packets to enabled checks via {@link #onPacketReceive} / {@link #onPacketSend}</li>
+ *   <li>Runs per-tick reward (VL/buffer decay) for all online players</li>
+ *   <li>Provides lookup by stableKey for commands and GUI</li>
+ *   <li>Handles player cleanup on disconnect via {@link #removePlayer}</li>
+ * </ul>
+ *
+ * <p>Check filtering is three-layered (applied at startup):
+ * <ol>
+ *   <li><b>Version range</b>: checks with incompatible min/max protocol are skipped</li>
+ *   <li><b>Fork detection</b>: Folia-unsafe or Purpur-dependent checks are disabled</li>
+ *   <li><b>Plugin detection</b>: OldCombatMechanics compatibility overrides</li>
+ * </ol>
+ *
+ * @see Check for base check lifecycle
+ * @see CheckData for annotation-based configuration
+ * @see CompatFlag for compatibility flag values
+ */
 public class CheckManager {
 
     private final WindfallPlugin plugin;
     private final List<Check> checks = new ArrayList<>();
+    /** Fast lookup map for checks by their stableKey (e.g., "windfall.movement.speed") */
     private final Map<String, Check> checkByKey = new ConcurrentHashMap<>();
     private final int serverProtocol;
     private final ServerFork serverFork;
@@ -87,6 +111,13 @@ public class CheckManager {
         registerChecks();
     }
 
+    /**
+     * Instantiates all checks, filters incompatible ones, and registers survivors.
+     *
+     * <p>Each check is created via its no-arg constructor (which reads {@link CheckData}).
+     * The three-layer filter determines whether to include or skip each check,
+     * logging the reason for skipped checks at INFO level.
+     */
     private void registerChecks() {
         List<Check> allChecks = new ArrayList<>();
         allChecks.add(new AimCheck());
@@ -168,6 +199,18 @@ public class CheckManager {
         }
     }
 
+    /**
+     * Determines why a check should be skipped, or null if it should be registered.
+     *
+     * <p>Three filter layers:
+     * <ol>
+     *   <li><b>Version range</b>: server protocol must be within [minVersion, maxVersion]</li>
+     *   <li><b>Fork detection</b>: checks marked disableOnFolia/disableOnPurpur are skipped</li>
+     *   <li><b>Plugin detection</b>: OldCombatMechanics on legacy servers keeps SwordBlock active</li>
+     * </ol>
+     *
+     * @return skip reason string, or null if check should be registered
+     */
     private String getSkipReason(Check check) {
         // Layer 1: Version range
         if (serverProtocol < check.getMinVersion() || serverProtocol > check.getMaxVersion()) {
@@ -194,6 +237,10 @@ public class CheckManager {
         return null;
     }
 
+    /**
+     * Dispatches an incoming packet to all enabled checks.
+     * Called from {@link io.windfall.anticheat.core.network.PacketListener#onPacketReceive}.
+     */
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         for (Check check : checks) {
             if (!check.isEnabled()) continue;
@@ -205,6 +252,10 @@ public class CheckManager {
         }
     }
 
+    /**
+     * Dispatches an outgoing packet to all enabled checks.
+     * Called from {@link io.windfall.anticheat.core.network.PacketListener#onPacketSend}.
+     */
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
         for (Check check : checks) {
             if (!check.isEnabled()) continue;
@@ -216,6 +267,11 @@ public class CheckManager {
         }
     }
 
+    /**
+     * Per-tick processing: resets player tick state and applies VL/buffer decay.
+     * Also decays punishment tiers for players whose VL has dropped.
+     * Called by {@link io.windfall.anticheat.core.scheduler.PlatformScheduler}.
+     */
     public void onTick() {
         io.windfall.anticheat.core.punishment.PunishmentEngine pe = plugin.getPunishmentEngine();
         for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
@@ -231,6 +287,7 @@ public class CheckManager {
         }
     }
 
+    /** Reloads config and updates enabled/punishable state for all checks */
     public void reloadChecks() {
         plugin.getWindfallConfig().reload();
         for (Check check : checks) {
@@ -239,10 +296,12 @@ public class CheckManager {
         }
     }
 
+    /** Returns the check with the given stableKey, or null if not found */
     public Check getCheckByStableKey(String key) {
         return checkByKey.get(key);
     }
 
+    /** Returns the list of all registered (non-skipped) checks */
     public List<Check> getChecks() {
         return checks;
     }
@@ -253,6 +312,10 @@ public class CheckManager {
     public FoliaCompat getFoliaCompat() { return foliaCompat; }
     public PurpurCompat getPurpurCompat() { return purpurCompat; }
 
+    /**
+     * Removes per-player state from all checks for the given UUID.
+     * Called on PlayerQuitEvent to prevent memory leaks in per-player state maps.
+     */
     public void removePlayer(java.util.UUID uuid) {
         for (Check check : checks) {
             try {

@@ -6,6 +6,31 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import io.windfall.anticheat.core.util.MaterialUtils;
 
+/**
+ * Stateless utility methods for movement prediction shared across all movement checks.
+ *
+ * <p>This is the core physics engine — it implements Minecraft's movement algorithm:
+ * <ol>
+ *   <li>Calculate base speed from sprint/crouch/potion state</li>
+ *   <li>Apply block friction (ground) or air drag (airborne)</li>
+ *   <li>Add player input acceleration (capped by base speed)</li>
+ *   <li>Predict vertical motion (gravity, jump, swim, water, lava, levitation)</li>
+ *   <li>Compare predicted position against reported position</li>
+ * </ol>
+ *
+ * <p>All constants sourced from {@link PhysicsConstants} and {@link VersionPhysics}.
+ * All methods are static — no instance state is held.
+ *
+ * <p>The engine supports two horizontal speed prediction modes:
+ * <ul>
+ *   <li><b>Without deltaY</b>: swim boost is ignored (baseline prediction)</li>
+ *   <li><b>With deltaY</b>: swim boost uses vertical velocity (for swim-check specific logic)</li>
+ * </ul>
+ *
+ * @see PredictionContext for the pre-computed snapshot that feeds into these methods
+ * @see io.windfall.anticheat.core.check.impl.movement.SpeedCheck for primary consumer
+ * @see io.windfall.anticheat.core.check.impl.movement.FlightCheck for vertical consumer
+ */
 // Stateless utility methods for movement prediction shared across all movement checks.
 // All constants sourced from PhysicsConstants and VersionPhysics.
 public final class PredictionEngine {
@@ -44,6 +69,11 @@ public final class PredictionEngine {
 
     // === PACKET DETECTION ===
 
+    /**
+     * Determines if an incoming packet carries position data.
+     * Movement checks only fire for these packet types — rotation-only and
+     * keep-alive packets are ignored by the check system.
+     */
     public static boolean isMovementPacket(PacketReceiveEvent event) {
         PacketTypeCommon type = event.getPacketType();
         return type == PacketType.Play.Client.PLAYER_FLYING
@@ -53,10 +83,24 @@ public final class PredictionEngine {
 
     // === HORIZONTAL SPEED ===
 
+    /**
+     * Euclidean horizontal speed from position deltas.
+     * Formula: sqrt(deltaX² + deltaZ²)
+     */
     public static double calculateHorizontalSpeed(double deltaX, double deltaZ) {
         return Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
     }
 
+    /**
+     * Calculates the base movement speed before friction and acceleration.
+     * Order of operations matters: sprint → crouch → speed potion → slowness potion.
+     *
+     * @param sprinting true if player is sprinting (×1.3)
+     * @param sneaking true if player is sneaking (×0.3)
+     * @param speedMultiplier speed potion multiplier (1.0 if no effect)
+     * @param slownessMultiplier slowness potion multiplier (1.0 if no effect)
+     * @return base speed in blocks/tick
+     */
     public static double calculateBaseSpeed(boolean sprinting, boolean sneaking,
                                              double speedMultiplier, double slownessMultiplier) {
         double speed = PhysicsConstants.PLAYER_WALK_SPEED;
@@ -67,6 +111,22 @@ public final class PredictionEngine {
         return speed;
     }
 
+    /**
+     * Predicts the maximum horizontal speed for this tick (without swim boost).
+     *
+     * <p>Algorithm:
+     * <ol>
+     *   <li>Determine friction: ground (0.91) or air (0.98), min with web (0.25) if climbing</li>
+     *   <li>Calculate max acceleration: ground uses 0.16277136/friction³, air uses 0.026</li>
+     *   <li>Swimming reduces acceleration by 10%</li>
+     *   <li>Max speed = lastSpeed × friction + acceleration</li>
+     * </ol>
+     *
+     * <p>The friction³ term for ground acceleration is the key equation:
+     * {@code accelFactor = 0.16277136 / (friction × friction × friction)}
+     * This ensures players can reach their base speed on normal ground but are
+     * significantly slower on soul sand, ice, etc.
+     */
     public static double calculateMaxHorizontalSpeed(double baseSpeed, double lastHorizontalSpeed,
                                                       boolean onGround, boolean climbing,
                                                       boolean swimming, int protocol) {
@@ -99,7 +159,11 @@ public final class PredictionEngine {
         return maxSpeed;
     }
 
-    // Overload that includes deltaY for swim boost calculation
+    /**
+     * Overload that includes deltaY for swim boost calculation.
+     * Swim boost adds 0.01 × max(0, deltaY) to max speed when in water (1.13+).
+     * Only meaningful for SwimCheck — other checks use the base overload.
+     */
     public static double calculateMaxHorizontalSpeed(double baseSpeed, double lastHorizontalSpeed,
                                                       boolean onGround, boolean climbing,
                                                       boolean swimming, int protocol, double deltaY) {
@@ -134,6 +198,22 @@ public final class PredictionEngine {
 
     // === VERTICAL PREDICTION ===
 
+    /**
+     * Predicts the next tick's vertical velocity (deltaY) based on current state.
+     *
+     * <p>Priority chain (first match wins):
+     * <ol>
+     *   <li>Water: drag × 0.8 - 0.02</li>
+     *   <li>Lava: drag × 0.5 - 0.02</li>
+     *   <li>Climbing (ladder/vine): capped at 0.15</li>
+     *   <li>Honey: capped at -0.5 (prevents fast falling through honey)</li>
+     *   <li>Fall flying / Riptide: unchanged (physics handled client-side)</li>
+     *   <li>Levitation: add 0.05 × amplifier</li>
+     *   <li>Default: (deltaY - gravity) × 0.98</li>
+     * </ol>
+     *
+     * <p>Slow Falling overrides gravity (0.01 instead of 0.08) in the default case.
+     */
     public static double predictDeltaY(double currentExpectedDeltaY, boolean inWater, boolean inLava,
                                         boolean climbing, boolean onHoney, boolean hasSlowFalling,
                                         boolean hasLevitation, double levitationAmplifier,
@@ -161,6 +241,7 @@ public final class PredictionEngine {
 
     // === FLUID DETECTION ===
 
+    /** Checks if the player's feet are in a water-type block (water, waterlogged) */
     public static boolean checkInWater(WindfallPlayer player) {
         try {
             org.bukkit.Material mat = player.getPlayer().getLocation().getBlock().getType();
@@ -170,6 +251,7 @@ public final class PredictionEngine {
         }
     }
 
+    /** Checks if the player's feet are in a lava-type block */
     public static boolean checkInLava(WindfallPlayer player) {
         try {
             org.bukkit.Material mat = player.getPlayer().getLocation().getBlock().getType();
@@ -179,6 +261,7 @@ public final class PredictionEngine {
         }
     }
 
+    /** Checks if the block 0.1 below the player's feet is a honey block */
     public static boolean checkOnHoney(WindfallPlayer player) {
         try {
             org.bukkit.Material mat = player.getPlayer().getLocation().subtract(0, 0.1, 0).getBlock().getType();
@@ -190,6 +273,10 @@ public final class PredictionEngine {
 
     // === POTION EFFECTS ===
 
+    /**
+     * Speed potion multiplier: 1.0 + 0.2 × level.
+     * Caps at level V (5) to match vanilla behaviour.
+     */
     public static double getSpeedPotionMultiplier(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
@@ -202,6 +289,10 @@ public final class PredictionEngine {
         return 1.0;
     }
 
+    /**
+     * Slowness potion multiplier: 1.0 - 0.15 × level.
+     * Caps at level IV (4). Uses "SLOW" substring to match both old ("SLOW") and new ("SLOWNESS") names.
+     */
     public static double getSlownessPotionMultiplier(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
@@ -215,6 +306,7 @@ public final class PredictionEngine {
         return 1.0;
     }
 
+    /** Checks if the player has the Slow Falling potion effect active */
     public static boolean checkSlowFalling(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
@@ -224,6 +316,7 @@ public final class PredictionEngine {
         return false;
     }
 
+    /** Checks if the player has the Levitation potion effect active */
     public static boolean checkLevitation(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
@@ -233,6 +326,7 @@ public final class PredictionEngine {
         return false;
     }
 
+    /** Returns the levitation amplifier (1-based) for the upward boost calculation */
     public static double getLevitationAmplifier(WindfallPlayer player) {
         try {
             for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
@@ -246,6 +340,10 @@ public final class PredictionEngine {
 
     // === ENTITY STATE ===
 
+    /**
+     * Checks if the player is using a Riptide trident via reflection.
+     * Uses reflection because {@code isRiptiding()} doesn't exist in all MC versions.
+     */
     public static boolean checkRiptiding(WindfallPlayer player) {
         try {
             java.lang.reflect.Method m = player.getPlayer().getClass().getMethod("isRiptiding");
@@ -255,6 +353,10 @@ public final class PredictionEngine {
         }
     }
 
+    /**
+     * Checks if the player is gliding with an elytra via reflection.
+     * Uses reflection because {@code isGliding()} was added in 1.9+.
+     */
     public static boolean checkFallFlying(WindfallPlayer player) {
         try {
             java.lang.reflect.Method m = player.getPlayer().getClass().getMethod("isGliding");

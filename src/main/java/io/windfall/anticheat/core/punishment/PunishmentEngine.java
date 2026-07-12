@@ -10,6 +10,23 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Escalating punishment tiers: warn → kick → tempban → permban.
+ *
+ * <p>Each tier fires once per player — the {@link #appliedTiers} map tracks the
+ * highest tier already applied, preventing duplicate actions at the same tier.
+ * Tiers decay when VL drops below the threshold (via {@link #decayTierIfNeeded}).
+ *
+ * <p>Punishment flow:
+ * <ol>
+ *   <li>{@link io.windfall.anticheat.core.check.Check#flag(WindfallPlayer)} calls {@code evaluate()}</li>
+ *   <li>Engine checks total VL against tier thresholds (highest first)</li>
+ *   <li>{@code executeOnce()} applies the punishment if tier hasn't been reached before</li>
+ *   <li>Commands are dispatched via console (tempban/ban) for cross-implementation compatibility</li>
+ * </ol>
+ *
+ * @see WindfallConfig#getPunishmentWarnVl() for tier threshold configuration
+ */
 // Escalating punishment tiers: warn → kick → tempban → permban
 // Each tier fires once per player — appliedTiers prevents duplicate actions
 public class PunishmentEngine {
@@ -44,6 +61,10 @@ public class PunishmentEngine {
         this.permbanReason = cfg.getPunishmentPermbanReason();
     }
 
+    /**
+     * Evaluates whether a player should be punished based on their total VL.
+     * Checks tiers from highest to lowest — only the highest reached tier fires.
+     */
     public void evaluate(WindfallPlayer player) {
         if (!enabled) return;
 
@@ -60,6 +81,10 @@ public class PunishmentEngine {
         }
     }
 
+    /**
+     * Removes the applied tier if the player's VL has dropped below the tier threshold.
+     * Called once per tick for all online players.
+     */
     public void decayTierIfNeeded(WindfallPlayer player) {
         if (!enabled) return;
 
@@ -78,6 +103,16 @@ public class PunishmentEngine {
         }
     }
 
+    /**
+     * Applies the punishment for the given tier, but only once per player per tier.
+     *
+     * <p>Uses dispatchCommand for ban/tempban because these commands handle async lookups
+     * and are more reliable across server implementations than direct API calls.
+     * Punishments are executed on the main thread via {@link PlatformScheduler#runSync}.
+     *
+     * @param player the player to punish
+     * @param tier   the VL threshold that triggered this punishment
+     */
     // Uses dispatchCommand for ban/tempban because these commands handle async lookups
     // and are more reliable across server implementations than direct API calls
     private void executeOnce(WindfallPlayer player, int tier) {
@@ -109,6 +144,11 @@ public class PunishmentEngine {
         });
     }
 
+    /**
+     * Parses a duration string (e.g., "1d", "12h", "30m") into milliseconds.
+     *
+     * @return duration in ms, or 24h default if parsing fails
+     */
     private long parseDuration(String duration) {
         try {
             String trimmed = duration.trim().toLowerCase();
@@ -123,6 +163,7 @@ public class PunishmentEngine {
         }
     }
 
+    /** Removes tracked tier state for a disconnected player to prevent memory leaks */
     public void cleanup(UUID uuid) {
         appliedTiers.remove(uuid);
     }

@@ -7,6 +7,17 @@ import java.io.InputStream;
 import java.util.logging.Logger;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+/**
+ * Purpur compatibility layer — reads custom knockback settings from purpur.yml.
+ *
+ * <p>Purpur allows server admins to customise knockback multipliers, which affects
+ * the VelocityCheck false positive rate. This class reads the relevant values at
+ * startup and provides adjustment methods for the check to apply.
+ *
+ * <p>If purpur.yml is missing or unreadable, all multipliers default to 1.0 (vanilla).
+ *
+ * @see io.windfall.anticheat.core.check.impl.movement.VelocityCheck for usage
+ */
 public final class PurpurCompat {
 
     private boolean isPurpur;
@@ -14,6 +25,7 @@ public final class PurpurCompat {
     private double attackKnockbackMultiplier = 1.0;
     private double knockbackVerticalMultiplier = 1.0;
 
+    /** Reads knockback settings from purpur.yml if running on Purpur */
     public void init(ServerFork fork, Logger logger) {
         this.isPurpur = fork.isPurpur();
         if (!isPurpur) return;
@@ -44,11 +56,13 @@ public final class PurpurCompat {
         }
     }
 
+    /** Adjusts horizontal knockback by Purpur's attack-knockback multiplier */
     public double adjustHorizontalKB(double vanillaKB) {
         if (!customKnockbackEnabled) return vanillaKB;
         return vanillaKB * attackKnockbackMultiplier;
     }
 
+    /** Adjusts vertical knockback by Purpur's knockback-vertical multiplier */
     public double adjustVerticalKB(double vanillaKB) {
         if (!customKnockbackEnabled) return vanillaKB;
         return vanillaKB * knockbackVerticalMultiplier;

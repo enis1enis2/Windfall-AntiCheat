@@ -14,21 +14,44 @@ import java.util.concurrent.ConcurrentHashMap;
  * When a player is being pushed by a geyser column, movement checks
  * should relax their thresholds to avoid false positives.
  *
- * Scans downward 32 blocks from player position for active geyser columns
- * (POTENT_SULFUR blocks in ERUPTING or CONTINUOUS states).
+ * <p>Scans downward {@value #SCAN_DEPTH} blocks and upward {@value #SCAN_HEIGHT} blocks
+ * from player position for active geyser columns (POTENT_SULFUR blocks in ERUPTING or
+ * CONTINUOUS states). Scanning is limited to {@value #SCAN_RANGE_XZ} blocks horizontally.
+ *
+ * <p>Scan results are cached per-player and re-evaluated every {@value #TICK_INTERVAL} ticks
+ * to avoid excessive block lookups. The {@link #getToleranceMultiplier} method returns a
+ * 1.5x multiplier when the player is near geysers, which movement checks use to relax
+ * their thresholds.
+ *
+ * <p>This tracker is version-gated: POTENT_SULFUR does not exist in Minecraft versions
+ * before 26.2, so the check returns false immediately on older servers.
+ *
+ * @see BedrockInfo for player device information
+ * @see GeyserManager for Geyser/Floodgate Bedrock detection
  */
 public class GeysersTracker {
 
+    /** Horizontal scan radius (blocks) around the player in X and Z directions */
     private static final int SCAN_RANGE_XZ = 2;
+    /** How far below the player to scan for geyser source blocks */
     private static final int SCAN_DEPTH = 32;
+    /** How far above the player to scan for active geyser columns */
     private static final int SCAN_HEIGHT = 4;
+    /** Minimum ticks between re-scans to avoid excessive block lookups */
     private static final long TICK_INTERVAL = 1L;
 
+    /** Thread-safe map of player UUID to their geyser proximity state */
     private final Map<UUID, GeyserState> playerStates = new ConcurrentHashMap<>();
 
+    /**
+     * Per-player cached geyser detection state to avoid re-scanning every packet.
+     */
     private static final class GeyserState {
+        /** Whether the player is currently within range of an active geyser */
         volatile boolean beingPushed;
+        /** Last tick when the scan was performed (to enforce tick interval) */
         volatile long lastCheckTick;
+        /** Number of active geyser blocks found near the player */
         volatile int geyserCount;
 
         GeyserState() {

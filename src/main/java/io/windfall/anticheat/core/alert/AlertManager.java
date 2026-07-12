@@ -12,8 +12,25 @@ import org.bukkit.entity.Player;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-// Coordinates in-game chat alerts and Discord webhook dispatch
-// Rate-limits alerts per player+check to prevent chat spam
+/**
+ * Coordinates in-game chat alerts and Discord webhook dispatch.
+ *
+ * <p>Alerts are rate-limited per player+check combination to prevent chat spam.
+ * The cooldown uses {@link Set#add()} atomic semantics — if the key already exists,
+ * the alert is silently dropped. After the cooldown expires, the key is removed
+ * via a scheduled task.
+ *
+ * <p>Alert flow:
+ * <ol>
+ *   <li>{@link Check#flag(WindfallPlayer)} calls {@code sendAlert()}</li>
+ *   <li>Rate limiter checks cooldown — skips if still active</li>
+ *   <li>Permission-gated broadcast to all online staff</li>
+ *   <li>Optional Discord webhook dispatch via {@link DiscordWebhook}</li>
+ * </ol>
+ *
+ * @see DiscordWebhook for webhook payload construction
+ * @see WindfallConfig#isAlertsEnabled() for global enable/disable
+ */
 public class AlertManager {
 
     private final WindfallPlugin plugin;
@@ -26,6 +43,20 @@ public class AlertManager {
         this.discordWebhook = new DiscordWebhook(plugin);
     }
 
+    /**
+     * Sends an alert to online staff and optionally to Discord.
+     *
+     * <p>Alerts are suppressed if:
+     * <ul>
+     *   <li>Alerts are disabled in config</li>
+     *   <li>A cooldown is active for this player+check pair</li>
+     *   <li>The player has alerts disabled (toggled via command)</li>
+     * </ul>
+     *
+     * @param player the flagged player
+     * @param check  the check that triggered the flag
+     * @param detail additional context (e.g., "VL=15", "VL=8 (SETBACK)")
+     */
     public void sendAlert(WindfallPlayer player, Check check, String detail) {
         WindfallConfig config = plugin.getWindfallConfig();
         if (!config.isAlertsEnabled()) return;
@@ -42,6 +73,7 @@ public class AlertManager {
         plugin.getScheduler().runLater(() -> alertCooldowns.remove(cooldownKey),
             config.getDiscordRateLimitMs() / 50);
 
+        // Format and broadcast to staff
         String permission = config.getAlertsStaffPermission();
         String alertMessage = ChatColor.translateAlternateColorCodes('&',
             config.getAlertPrefix() + " &r" + player.getName() + " flagged for &c" + check.getName()
@@ -53,6 +85,7 @@ public class AlertManager {
             }
         }
 
+        // Dispatch to Discord if enabled
         if (config.isDiscordEnabled()) {
             BedrockInfo bedrock = player.getBedrockInfo();
             String platform = bedrock != null ? bedrock.deviceOs() : "Java";

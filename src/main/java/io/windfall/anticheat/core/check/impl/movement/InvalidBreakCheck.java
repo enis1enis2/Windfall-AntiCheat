@@ -12,12 +12,32 @@ import io.windfall.anticheat.core.player.WindfallPlayer;
 import org.bukkit.Material;
 
 /**
- * Detects invalid block breaking: breaking air, breaking bedrock, or
- * breaking blocks that cannot be broken in survival.
+ * Detects invalid block-breaking attempts that are impossible in vanilla
+ * survival mode. Specifically flags:
+ * <ul>
+ *   <li>Breaking air (no block at the target position).</li>
+ *   <li>Breaking indestructible / protected blocks such as bedrock, barriers,
+ *       end portals, command blocks, structure blocks, and jigsaw blocks.</li>
+ * </ul>
+ *
+ * <p><b>Algorithm:</b> On every {@code START_DIGGING} packet the server-side
+ * block type at the target coordinates is checked. If the block is air or
+ * belongs to the protected-set, the player is immediately flagged with a
+ * detailed reason logged for staff review.</p>
+ *
+ * @see Check
+ * @see PacketCheck
  */
 @CheckData(name = "Invalid Break A", stableKey = "windfall.movement.invalidbreak", decay = 0.02, setbackVl = 10)
 public class InvalidBreakCheck extends Check implements PacketCheck {
 
+    /**
+     * Validates the target block on every START_DIGGING packet. Flags if the
+     * block is air or an indestructible/protected material.
+     *
+     * @param player the player associated with this packet
+     * @param event  the incoming digging packet
+     */
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (event.getPacketType() != PacketType.Play.Client.PLAYER_DIGGING) return;
@@ -38,6 +58,7 @@ public class InvalidBreakCheck extends Check implements PacketCheck {
             }
 
             String name = type.name();
+            /** Indestructible / creative-only blocks that cannot be broken in survival. */
             if (name.equals("BEDROCK") || name.equals("BARRIER") || name.equals("END_PORTAL")
                     || name.equals("END_PORTAL_FRAME") || name.equals("COMMAND_BLOCK")
                     || name.equals("STRUCTURE_BLOCK") || name.equals("JIGSAW_BLOCK")) {
@@ -49,10 +70,18 @@ public class InvalidBreakCheck extends Check implements PacketCheck {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
     }
 
+    /**
+     * Flags the player and logs a descriptive warning with the specific reason
+     * for the invalid break (air vs. protected block) for staff review.
+     *
+     * @param player the player to flag
+     * @param detail human-readable description of the violation
+     */
     private void flagDetail(WindfallPlayer player, String detail) {
         flag(player);
         var logger = io.windfall.anticheat.WindfallPlugin.getInstance().getLogger();

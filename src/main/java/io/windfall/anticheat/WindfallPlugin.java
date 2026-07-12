@@ -25,6 +25,29 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**
+ * Main plugin entry point — owns all managers and enforces strict initialization order.
+ *
+ * <p>Startup lifecycle:
+ * <ol>
+ *   <li>{@link #onLoad()}: Sets static instance, initializes PacketEvents API</li>
+ *   <li>{@link #onEnable()}: Creates managers in dependency order, registers listeners</li>
+ *   <li>{@link #onDisable()}: Stops scheduler, terminates PacketEvents</li>
+ * </ol>
+ *
+ * <p>Manager initialization order matters — later managers depend on earlier ones:
+ * {@code Config → Version → Fork → Plugin → Scheduler → Platform → Player → Transaction
+ * → Geyser → Severity → Punishment → Check → Command → Alert → GUI}
+ *
+ * <p>Player lifecycle:
+ * <ul>
+ *   <li>Added at LOGIN_SUCCESS via {@link PacketListener}</li>
+ *   <li>Removed on PlayerQuitEvent via {@link PlayerQuitListener}</li>
+ * </ul>
+ *
+ * @see CheckManager for anti-cheat check registration and processing
+ * @see PacketListener for packet interception and player state updates
+ */
 // Single entry point — owns all managers, enforces strict init order
 public final class WindfallPlugin extends JavaPlugin {
 

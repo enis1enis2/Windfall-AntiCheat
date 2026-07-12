@@ -7,6 +7,30 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.Collections;
 import java.util.Set;
 
+/**
+ * Typed accessors for every config value — keeps config keys out of business logic.
+ *
+ * <p>Defaults are set once in {@link #setDefaults()} and merged into the file on first load.
+ * The {@code copyDefaults(true)} call fills missing keys without overwriting user edits.
+ *
+ * <p>Per-check config follows a fallback pattern: if a per-check key (e.g.,
+ * {@code checks.windfall.movement.speed.enabled}) is not set, it falls back to
+ * {@code checks.default.enabled}. This lets operators override individual checks
+ * while maintaining sane defaults.
+ *
+ * <p>Config sections:
+ * <ul>
+ *   <li><b>Alerts</b>: in-game chat notifications for staff</li>
+ *   <li><b>Discord</b>: webhook integration for remote alerts</li>
+ *   <li><b>Bedrock</b>: tolerance multipliers for Bedrock/Geyser players</li>
+ *   <li><b>Severity</b>: VL escalation multiplier tiers</li>
+ *   <li><b>Punishments</b>: warn → kick → tempban → permban thresholds</li>
+ *   <li><b>Checks</b>: per-check enable/disable, maxVL, setbackVL, decay, punishable</li>
+ * </ul>
+ *
+ * @see io.windfall.anticheat.core.check.Check for config key usage
+ * @see io.windfall.anticheat.core.punishment.PunishmentEngine for punishment thresholds
+ */
 // Typed accessors for every config value — keeps config keys out of business logic
 // Defaults are set once in setDefaults() and merged into the file on first load
 public class WindfallConfig {
@@ -340,6 +364,7 @@ public class WindfallConfig {
         return config.getBoolean("checks.default.punishable", true);
     }
 
+    /** Returns all registered check stableKeys (e.g., "windfall.movement.speed") */
     public Set<String> getCheckKeys() {
         if (config.isConfigurationSection("checks")) {
             return config.getConfigurationSection("checks").getKeys(false);
@@ -348,16 +373,23 @@ public class WindfallConfig {
     }
 
     // === Config persistence (for GUI sync) ===
+
+    /** Persists the enabled state for a specific check to config.yml */
     public void saveCheckEnabled(String checkKey, boolean enabled) {
         config.set("checks." + checkKey + ".enabled", enabled);
         plugin.saveConfig();
     }
 
+    /** Persists the punishable state for a specific check to config.yml */
     public void saveCheckPunishable(String checkKey, boolean punishable) {
         config.set("checks." + checkKey + ".punishable", punishable);
         plugin.saveConfig();
     }
 
+    /**
+     * Reloads config from disk and clears material caches.
+     * Called by {@link io.windfall.anticheat.core.check.CheckManager#reloadChecks()}.
+     */
     public void reload() {
         plugin.reloadConfig();
         this.config = plugin.getConfig();

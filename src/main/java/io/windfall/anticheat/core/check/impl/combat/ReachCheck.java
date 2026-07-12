@@ -16,35 +16,80 @@ import java.util.ArrayDeque;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Detects reach (hit-box extension) cheats by measuring the Euclidean distance between
+ * the player's eye position and the closest point on the target's bounding box at the
+ * moment of an attack packet.
+ *
+ * <p><b>Distance calculation:</b> The closest point on the target's AABB to the player's
+ * eye is found via axis clamping, then the Euclidean distance is computed. This is the
+ * geometrically correct minimum distance from a point to an axis-aligned bounding box.</p>
+ *
+ * <p><b>Reach limits:</b> Base reach varies by protocol version:
+ * <ul>
+ *   <li>Legacy (pre-1.9): {@value REACH_LEGACY} blocks</li>
+ *   <li>1.9+ with cooldown: {@value REACH_1_9_BASE} + up to {@value REACH_1_9_COOLDOWN_BONUS} blocks based on cooldown</li>
+ *   <li>Modern: {@value REACH_MODERN} blocks</li>
+ * </ul>
+ * Additional tolerances are added for ping compensation ({@code min(ping * 0.001, 0.3)}),
+ * protocol version margin, and a fixed {@value TOLERANCE} block buffer.</p>
+ *
+ * <p><b>Lag compensation:</b> Entity positions are rewound by up to 3 ticks (based on RTT)
+ * to account for server-side entity position lag, using the {@link TrackedEntity} cache
+ * populated by spawn/move/remove packet handlers.</p>
+ *
+ * @see io.windfall.anticheat.core.physics.VersionPhysics
+ */
 @CheckData(name = "Reach A", stableKey = "windfall.combat.reach", decay = 0.05, setbackVl = 10, compat = {CompatFlag.VIAVERSION_SENSITIVE, CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3)
 public class ReachCheck extends Check implements PacketCheck {
 
+    /** Fixed tolerance in blocks added to the reach limit for borderline cases. */
     private static final double TOLERANCE = 0.1;
 
+    /** Extra margin (blocks) for legacy protocol versions where position data is less precise. */
     private static final double PROTOCOL_MARGIN_LEGACY = 0.10;
+    /** Extra margin (blocks) for modern protocol versions. */
     private static final double PROTOCOL_MARGIN_MODERN = 0.03;
 
+    /** Maximum reach distance (blocks) for legacy clients (pre-1.9 combat). */
     private static final double REACH_LEGACY = 4.0;
+    /** Base reach distance for 1.9+ clients when attack cooldown is fully charged. */
     private static final double REACH_1_9_BASE = 3.0;
+    /** Bonus reach (blocks) awarded when the 1.9+ attack cooldown is fully charged. */
     private static final double REACH_1_9_COOLDOWN_BONUS = 0.5;
+    /** Default reach distance for modern clients without cooldown mechanics. */
     private static final double REACH_MODERN = 3.0;
 
+    /** Player hit-box width in blocks (0.6 for all versions). */
     private static final double PLAYER_WIDTH = 0.6;
+    /** Player hit-box height in blocks (standing, modern versions). */
     private static final double PLAYER_HEIGHT = 1.8;
+    /** Sneaking player eye height (1.14+). */
     private static final double PLAYER_SNEAK_HEIGHT_1_14 = 1.5;
+    /** Sneaking player eye height (legacy versions). */
     private static final double PLAYER_SNEAK_HEIGHT_LEGACY = 1.62;
+    /** Default non-player entity size used when the entity type is unknown. */
     private static final double ENTITY_DEFAULT_SIZE = 0.25;
 
+    /** Number of recent reach samples kept for averaging (rolling window). */
     private static final int ROLLING_WINDOW = 20;
 
+    /** Shared cache of tracked entity positions, populated by spawn/move/remove handlers. */
     private static final ConcurrentHashMap<Integer, TrackedEntity> trackedEntities = new ConcurrentHashMap<>();
 
+    /** Per-player state holding recent reach distance samples for averaging. */
     private static final class PlayerState {
         final ArrayDeque<Double> reachSamples = new ArrayDeque<>();
     }
 
     private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
 
+    /**
+     * Retrieves or initializes the tracking state for the given player.
+     *
+     * @param player the player whose state to retrieve
+     * @return the current {@link PlayerState} for the player
+     */
     private PlayerState getState(WindfallPlayer player) {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
@@ -54,10 +99,27 @@ public class ReachCheck extends Check implements PacketCheck {
         stateMap.remove(uuid);
     }
 
+    /**
+     * Records an entity's spawn position in the shared tracking cache.
+     *
+     * @param entityId the entity's network ID
+     * @param type     the entity type
+     * @param x        spawn X coordinate
+     * @param y        spawn Y coordinate
+     * @param z        spawn Z coordinate
+     */
     public static void trackSpawn(int entityId, EntityType type, double x, double y, double z) {
         trackedEntities.put(entityId, new TrackedEntity(type, x, y, z, System.currentTimeMillis()));
     }
 
+    /**
+     * Updates an entity's position in the tracking cache, preserving the original type.
+     *
+     * @param entityId the entity's network ID
+     * @param x        new X coordinate
+     * @param y        new Y coordinate
+     * @param z        new Z coordinate
+     */
     public static void trackMove(int entityId, double x, double y, double z) {
         trackedEntities.merge(entityId,
                 new TrackedEntity(null, x, y, z, System.currentTimeMillis()),
@@ -66,15 +128,35 @@ public class ReachCheck extends Check implements PacketCheck {
                         fresh.x, fresh.y, fresh.z, fresh.timestamp));
     }
 
+    /**
+     * Removes an entity from the tracking cache (e.g., on entity destroy packet).
+     *
+     * @param entityId the entity's network ID to remove
+     */
     public static void trackRemove(int entityId) {
         trackedEntities.remove(entityId);
     }
 
+    /**
+     * Evicts stale entries from the entity tracking cache. Should be called periodically
+     * (e.g., once per tick) to prevent memory leaks from entities that are no longer tracked.
+     *
+     * @param maxAgeMs maximum age in milliseconds before an entry is evicted
+     */
     public static void cleanup(long maxAgeMs) {
         long now = System.currentTimeMillis();
         trackedEntities.entrySet().removeIf(e -> now - e.getValue().timestamp > maxAgeMs);
     }
 
+    /**
+     * Processes attack packets to compute and evaluate reach distance. Uses the player's
+     * eye position and the target's bounding box (with lag-compensated position when available)
+     * to calculate the Euclidean distance. Flags immediately on hard violations, or accumulates
+     * buffer for sustained borderline cases.
+     *
+     * @param player the attacking player
+     * @param event  the incoming interact-entity packet
+     */
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (event.getPacketType() != PacketType.Play.Client.INTERACT_ENTITY) return;
@@ -145,16 +227,39 @@ public class ReachCheck extends Check implements PacketCheck {
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
     }
 
+    /**
+     * Returns the protocol-version-appropriate extra reach margin (blocks).
+     *
+     * @param player the player to check
+     * @return margin in blocks
+     */
     private double getProtocolMargin(WindfallPlayer player) {
         return player.getProtocolVersion() < 107 ? PROTOCOL_MARGIN_LEGACY : PROTOCOL_MARGIN_MODERN;
     }
 
+    /**
+     * Computes lag-compensated position samples for an entity. The entity is rewound
+     * by a number of ticks proportional to the player's RTT (capped at 3 ticks).
+     *
+     * @param player   the attacking player (used for ping)
+     * @param entityId the target entity's network ID
+     * @return compensated [x, y, z] array, or {@code null} if the entity is not tracked
+     */
     private double[] getCompensatedSamples(WindfallPlayer player, int entityId) {
         int rtt = player.getTransactionPing();
         int rewindTicks = Math.max(1, Math.min(rtt / 50, 3));
         return getEntityPositionAtTick(entityId, rewindTicks);
     }
 
+    /**
+     * Retrieves the entity's last known position, rewound by the specified tick count.
+     * Currently returns the latest position as full tick-level interpolation is not yet
+     * implemented.
+     *
+     * @param entityId   the entity's network ID
+     * @param rewindTicks number of ticks to rewind (1–3)
+     * @return [x, y, z] position array, or {@code null} if not tracked
+     */
     private double[] getEntityPositionAtTick(int entityId, int rewindTicks) {
         TrackedEntity te = trackedEntities.get(entityId);
         if (te == null) return null;
@@ -166,6 +271,13 @@ public class ReachCheck extends Check implements PacketCheck {
         return new double[]{te.x, te.y, te.z};
     }
 
+    /**
+     * Computes the maximum legal reach distance for the player, accounting for version-specific
+     * combat mechanics (e.g., 1.9+ attack cooldown bonus).
+     *
+     * @param player the player to compute the limit for
+     * @return the base reach limit in blocks
+     */
     private double getReachLimit(WindfallPlayer player) {
         int protocol = player.getProtocolVersion();
         double baseReach = VersionPhysics.getMaxReach(protocol);
@@ -179,11 +291,33 @@ public class ReachCheck extends Check implements PacketCheck {
         return baseReach;
     }
 
+    /**
+     * Returns the player's eye height based on protocol version and sneaking state.
+     *
+     * @param player the player to get the eye height for
+     * @return eye height in blocks above the player's feet position
+     */
     private double getEyeHeight(WindfallPlayer player) {
         int protocol = player.getProtocolVersion();
         return VersionPhysics.getPlayerEyeHeight(player.isSneaking(), protocol);
     }
 
+    /**
+     * Computes the Euclidean distance from a point (eye position) to the closest point
+     * on an axis-aligned bounding box (AABB). Uses axis clamping to find the nearest
+     * point on each axis, then computes the 3D Euclidean norm.
+     *
+     * @param eyeX player eye X
+     * @param eyeY player eye Y
+     * @param eyeZ player eye Z
+     * @param bbMinX target AABB minimum X
+     * @param bbMinY target AABB minimum Y
+     * @param bbMinZ target AABB minimum Z
+     * @param bbMaxX target AABB maximum X
+     * @param bbMaxY target AABB maximum Y
+     * @param bbMaxZ target AABB maximum Z
+     * @return the shortest distance in blocks from the eye to the bounding box
+     */
     private double calculateReachDistance(double eyeX, double eyeY, double eyeZ,
                                           double bbMinX, double bbMinY, double bbMinZ,
                                           double bbMaxX, double bbMaxY, double bbMaxZ) {
@@ -198,6 +332,13 @@ public class ReachCheck extends Check implements PacketCheck {
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
+    /**
+     * Builds a bounding box ([minX, minY, minZ, maxX, maxY, maxZ]) for a tracked entity.
+     * Player entities use standard dimensions; non-player entities use a default size.
+     *
+     * @param entityId the entity's network ID
+     * @return a 6-element array representing the AABB, or {@code null} if not tracked
+     */
     private double[] getEntityBoundingBox(int entityId) {
         TrackedEntity te = trackedEntities.get(entityId);
         if (te == null) return null;
@@ -222,10 +363,19 @@ public class ReachCheck extends Check implements PacketCheck {
         };
     }
 
+    /**
+     * Clamps a value to the range [min, max].
+     *
+     * @param value the value to clamp
+     * @param min   the minimum bound
+     * @param max   the maximum bound
+     * @return the clamped value
+     */
     private static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
     }
 
+    /** Cached entity data: type, position, and last-seen timestamp for lag compensation. */
     private static final class TrackedEntity {
         final EntityType type;
         final double x, y, z;

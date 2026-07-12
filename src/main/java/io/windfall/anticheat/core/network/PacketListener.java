@@ -28,6 +28,34 @@ import io.windfall.anticheat.core.player.PlayerManager;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import org.bukkit.entity.Player;
 
+/**
+ * Central packet interceptor — updates player state and dispatches to all checks.
+ *
+ * <p>This listener sits between PacketEvents and the check system. It processes
+ * raw packets to update {@link WindfallPlayer} state (position, rotation, velocity,
+ * ground, sprint, abilities) before dispatching to {@link CheckManager}.
+ *
+ * <p>Incoming packets (client → server):
+ * <ul>
+ *   <li>Position/Rotation/Flying: update player coordinates, ground state, deltas</li>
+ *   <li>KeepAlive: process transaction ping measurement</li>
+ *   <li>InteractEntity: record attack timestamp</li>
+ *   <li>First position after respawn: clear respawned flag</li>
+ * </ul>
+ *
+ * <p>Outgoing packets (server → client):
+ * <ul>
+ *   <li>LOGIN_SUCCESS: create WindfallPlayer (earliest safe point for User data)</li>
+ *   <li>EntityVelocity: capture server-sent knockback velocity</li>
+ *   <li>PlayerPositionAndLook: record teleport destination for setbacks</li>
+ *   <li>RESPAWN: reset player state, set respawned flag for ViaVersion desync protection</li>
+ *   <li>Ping: send transaction for ping measurement</li>
+ *   <li>PlayerAbilities: update flight state</li>
+ * </ul>
+ *
+ * @see CheckManager for check dispatch
+ * @see TransactionManager for ping measurement system
+ */
 public class PacketListener extends PacketListenerAbstract {
 
     private final WindfallPlugin plugin;

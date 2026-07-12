@@ -2,6 +2,23 @@ package io.windfall.anticheat.core.version;
 
 import java.util.logging.Logger;
 
+/**
+ * Detects the server software fork at runtime.
+ *
+ * <p>Order of detection matters — Folia extends Paper, Purpur extends Pufferfish extends Paper.
+ * The class probes for unique config classes in dependency order:
+ * Folia → Purpur → Paper → Spigot → Bukkit (vanilla).
+ *
+ * <p>Fork detection affects:
+ * <ul>
+ *   <li>Scheduler usage (Folia requires EntityScheduler)</li>
+ *   <li>Knockback calculations (Purpur has custom knockback)</li>
+ *   <li>Feature availability (async chunk loading, EAR, etc.)</li>
+ * </ul>
+ *
+ * @see FoliaCompat for Folia-specific thread handling
+ * @see PurpurCompat for Purpur-specific knockback
+ */
 public enum ServerFork {
 
     FOLIA("Folia", "Regionized multithreading, EntityScheduler required"),
@@ -18,6 +35,10 @@ public enum ServerFork {
         this.description = description;
     }
 
+    /**
+     * Detects the server fork by probing for unique config classes.
+     * Logs the detected fork if a logger is provided.
+     */
     public static ServerFork detect(Logger logger) {
         // Order matters: Folia extends Paper, Purpur extends Pufferfish extends Paper
         if (classExists("io.papermc.paper.threadedregions.RegionizedServer")) {
@@ -40,6 +61,7 @@ public enum ServerFork {
         return BUKKIT;
     }
 
+    /** Checks if a class exists on the classpath without throwing */
     private static boolean classExists(String className) {
         try {
             Class.forName(className);
@@ -49,9 +71,16 @@ public enum ServerFork {
         }
     }
 
+    /** Whether this fork is Folia (regionised multithreading) */
     public boolean isFolia() { return this == FOLIA; }
+
+    /** Whether this fork is Purpur (custom knockback support) */
     public boolean isPurpur() { return this == PURPUR; }
+
+    /** Whether this fork is Paper or above (Paper, Folia, Purpur) */
     public boolean isPaperOrAbove() { return this == PAPER || this == FOLIA || this == PURPUR; }
+
+    /** Whether this fork is Spigot or above (Spigot, Paper, Folia, Purpur) */
     public boolean isSpigotOrAbove() { return this != BUKKIT; }
 
     public String getDisplayName() { return displayName; }

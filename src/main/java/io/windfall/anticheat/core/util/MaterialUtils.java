@@ -28,6 +28,13 @@ public final class MaterialUtils {
 
     // Core classification methods with caching
 
+    /**
+     * Checks if a material is a fluid (water or lava, including stationary variants).
+     * Result is cached per material for zero-overhead repeated lookups.
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is water, lava, or their stationary variants
+     */
     public static boolean isFluid(Material material) {
         if (material == null || material == Material.AIR) return false;
         return FLUID_CACHE.computeIfAbsent(material, m -> {
@@ -37,18 +44,38 @@ public final class MaterialUtils {
         });
     }
 
+    /**
+     * Checks if a material is water (flowing or stationary).
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is water or stationary water
+     */
     public static boolean isWater(Material material) {
         if (material == null) return false;
         String name = normalize(material.name());
         return name.equals("WATER") || name.equals("STATIONARY_WATER");
     }
 
+    /**
+     * Checks if a material is lava (flowing or stationary).
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is lava or stationary lava
+     */
     public static boolean isLava(Material material) {
         if (material == null) return false;
         String name = normalize(material.name());
         return name.equals("LAVA") || name.equals("STATIONARY_LAVA");
     }
 
+    /**
+     * Checks if a material has solid collision (is a solid block that entities can stand on).
+     * Fluids and air are excluded. Uses {@code Material.isSolid()} with fallback for
+     * version compatibility.
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is a solid block with collision
+     */
     public static boolean hasCollision(Material material) {
         if (material == null || material == Material.AIR) return false;
         return COLLISION_CACHE.computeIfAbsent(material, m -> {
@@ -61,6 +88,13 @@ public final class MaterialUtils {
         });
     }
 
+    /**
+     * Checks if a material is climbable (ladders, vines, scaffolding, kelp, soul sand, etc.).
+     * Climbable blocks affect movement physics — players can ascend without jumping.
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material allows climbing movement
+     */
     public static boolean isClimbable(Material material) {
         if (material == null) return false;
         return CLIMBABLE_CACHE.computeIfAbsent(material, m -> {
@@ -73,6 +107,13 @@ public final class MaterialUtils {
         });
     }
 
+    /**
+     * Checks if a material is an ice block (ice, packed ice, blue ice, frosted ice).
+     * Ice affects movement friction and is relevant for speed checks.
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is any ice variant
+     */
     public static boolean isIce(Material material) {
         if (material == null) return false;
         return ICE_CACHE.computeIfAbsent(material, m -> {
@@ -82,6 +123,13 @@ public final class MaterialUtils {
         });
     }
 
+    /**
+     * Checks if a material is a slime block or honey block.
+     * These blocks have special bounce/stick physics affecting movement validation.
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is a slime or honey block
+     */
     public static boolean isSlime(Material material) {
         if (material == null) return false;
         return SLIME_CACHE.computeIfAbsent(material, m -> {
@@ -90,6 +138,12 @@ public final class MaterialUtils {
         });
     }
 
+    /**
+     * Checks if a material is a honey block (separate from slime for specific friction checks).
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is a honey block
+     */
     public static boolean isHoney(Material material) {
         if (material == null) return false;
         return HONEY_CACHE.computeIfAbsent(material, m -> {
@@ -98,6 +152,13 @@ public final class MaterialUtils {
         });
     }
 
+    /**
+     * Checks if a material is cobweb (slows player movement significantly).
+     * Relevant for speed checks — web movement is intentionally very slow.
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is cobweb or string
+     */
     public static boolean isWeb(Material material) {
         if (material == null) return false;
         return WEB_CACHE.computeIfAbsent(material, m -> {
@@ -107,6 +168,12 @@ public final class MaterialUtils {
         });
     }
 
+    /**
+     * Checks if a material is soul sand (slows player movement in Nether).
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is soul sand
+     */
     public static boolean isSoulSand(Material material) {
         if (material == null) return false;
         return SOUL_SAND_CACHE.computeIfAbsent(material, m ->
@@ -114,6 +181,12 @@ public final class MaterialUtils {
         );
     }
 
+    /**
+     * Checks if a material is a bubble column block (pulls/pushes players vertically).
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is a bubble column
+     */
     public static boolean isBubbleColumn(Material material) {
         if (material == null) return false;
         return BUBBLE_COLUMN_CACHE.computeIfAbsent(material, m ->
@@ -121,6 +194,12 @@ public final class MaterialUtils {
         );
     }
 
+    /**
+     * Checks if a material is powder snow (slows and traps players).
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is powder snow
+     */
     public static boolean isPowderSnow(Material material) {
         if (material == null) return false;
         return POWDER_SNOW_CACHE.computeIfAbsent(material, m ->
@@ -128,6 +207,13 @@ public final class MaterialUtils {
         );
     }
 
+    /**
+     * Checks if a material can be replaced (air, fluids, non-solid blocks).
+     * Used by placement and interaction checks to determine valid block states.
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is replaceable (air, fluid, or non-solid)
+     */
     public static boolean isReplaceable(Material material) {
         if (material == null || material == Material.AIR) return true;
         return REPLACABLE_CACHE.computeIfAbsent(material, m -> {
@@ -141,6 +227,14 @@ public final class MaterialUtils {
         });
     }
 
+    /**
+     * Checks if a material has a non-full collision shape (stairs, slabs, fences, walls, etc.).
+     * Non-full shapes affect raytrace and reach calculations — blocks may not fill the
+     * full bounding box, requiring adjusted hit detection thresholds.
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material has a non-full but collidable shape
+     */
     public static boolean isNonFullShape(Material material) {
         if (material == null || material == Material.AIR) return false;
         return NON_FULL_SHAPE_CACHE.computeIfAbsent(material, m -> {
@@ -162,21 +256,37 @@ public final class MaterialUtils {
 
     // Utility methods
 
+    /**
+     * Checks if a material is an air-like block (air, cave air, void air).
+     * Air blocks have no collision and are ignored by most movement checks.
+     *
+     * @param material the Bukkit Material to check
+     * @return true if the material is any air variant
+     */
     public static boolean isAirLike(Material material) {
         if (material == null) return false;
         return material == Material.AIR || material.name().contains("AIR");
     }
 
+    /** Checks if a normalized material name is an air variant */
     private static boolean isAirLike(String name) {
         return name.equals("AIR") || name.equals("CAVE_AIR")
             || name.equals("VOID_AIR") || name.endsWith(":AIR");
     }
 
+    /** Checks if a normalized material name is a fluid variant */
     private static boolean isFluid(String name) {
         return name.equals("WATER") || name.equals("LAVA")
             || name.equals("STATIONARY_WATER") || name.equals("STATIONARY_LAVA");
     }
 
+    /**
+     * Normalizes a material name by stripping namespaces (e.g., "minecraft:stone" → "STONE"),
+     * trimming whitespace, and converting to uppercase.
+     *
+     * @param raw the raw material name string
+     * @return the normalized uppercase name, or empty string if null
+     */
     private static String normalize(String raw) {
         if (raw == null) return "";
         String name = raw.trim();
@@ -187,6 +297,11 @@ public final class MaterialUtils {
         return name.toUpperCase(Locale.ROOT);
     }
 
+    /**
+     * Clears all material classification caches.
+     * Should be called on plugin reload or when material data changes
+     * (e.g., world generation changes, custom blocks added).
+     */
     // Clear caches (call on reload)
     public static void clearCaches() {
         COLLISION_CACHE.clear();

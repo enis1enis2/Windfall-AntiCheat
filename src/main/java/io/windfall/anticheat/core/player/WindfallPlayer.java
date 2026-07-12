@@ -7,8 +7,27 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.entity.Player;
 
+/**
+ * Tracks all anti-cheat state for a single online player.
+ *
+ * <p>One instance per connected player, created at LOGIN_SUCCESS and destroyed on quit.
+ * Stores position history, velocity, rotation, ground state, pose, and per-check
+ * violation levels and buffers.
+ *
+ * <p>Thread safety: {@link #violationLevels} and {@link #buffers} use
+ * {@link ConcurrentHashMap} because checks read from Netty threads while ticks
+ * run on the main thread.
+ *
+ * <p>Position tracking uses a three-deep roll (current → last → lastLast)
+ * to enable acceleration and jerk calculations in movement checks.
+ * Deltas are computed automatically in {@link #setPosition}.
+ *
+ * @see PlayerManager for the player registry
+ * @see io.windfall.anticheat.core.check.Check for per-check VL/buffer storage
+ */
 public class WindfallPlayer {
 
+    /** Player pose states matching vanilla Minecraft — affects bounding box height and eye height */
     public enum Pose {
         STANDING,
         FALL_FLYING,
@@ -33,6 +52,7 @@ public class WindfallPlayer {
     // Three-deep history needed for acceleration and jerk calculations in movement checks
     private double lastLastX, lastLastY, lastLastZ;
 
+    /** Per-tick position deltas: current - last */
     private double deltaX, deltaY, deltaZ;
 
     // Standard player bounding box: 0.6 wide × 1.8 tall (MC default since 1.0)
@@ -41,6 +61,7 @@ public class WindfallPlayer {
 
     private boolean onGround;
     private boolean lastOnGround;
+    /** Server-reported ground state — may lag behind client state by 1 tick */
     private boolean serverOnGround;
 
     private boolean sprinting;
@@ -58,7 +79,9 @@ public class WindfallPlayer {
     private int transactionPing;
     private int transactionId;
 
+    /** Client-claimed velocity (from movement packets) */
     private double velocityX, velocityY, velocityZ;
+    /** Server-sent velocity (from ENTITY_VELOCITY packet) */
     private double serverVelocityX, serverVelocityY, serverVelocityZ;
     private boolean velocityReceived;
 
@@ -90,6 +113,10 @@ public class WindfallPlayer {
     // Set after RESPAWN packet to suppress false-positive flags from ViaVersion respawn desync
     private boolean respawned;
 
+    /**
+     * Creates a WindfallPlayer from a Bukkit Player and PacketEvents User.
+     * Called once at LOGIN_SUCCESS from {@link io.windfall.anticheat.core.network.PacketListener}.
+     */
     public WindfallPlayer(Player player, User user) {
         this.uuid = player.getUniqueId();
         this.name = player.getName();
@@ -100,6 +127,18 @@ public class WindfallPlayer {
         this.joinTime = System.currentTimeMillis();
     }
 
+    /**
+     * Returns the bounding box height for the current pose.
+     *
+     * <p>Heights vary by pose and protocol version:
+     * <ul>
+     *   <li>STANDING: 1.8 (all versions)</li>
+     *   <li>SNEAKING: 1.5 (1.14+, protocol ≥477) or 1.62 (older)</li>
+     *   <li>FALL_FLYING/SWIMMING/SPIN_ATTACK: 0.6</li>
+     *   <li>SLEEPING: 0.2</li>
+     *   <li>DYING: 0.0</li>
+     * </ul>
+     */
     public double getHeight() {
         switch (pose) {
             case FALL_FLYING: return 0.6;
@@ -114,6 +153,12 @@ public class WindfallPlayer {
         }
     }
 
+    /**
+     * Returns the eye height for the current pose (offset from feet to eye level).
+     *
+     * <p>Used by reach and hitbox checks to compute the player's look vector origin.
+     * Eye height follows the same pose/version scaling as {@link #getHeight()}.
+     */
     public double getEyeHeight() {
         switch (pose) {
             case FALL_FLYING: return 0.4;
@@ -131,14 +176,17 @@ public class WindfallPlayer {
     public double getDeltaX() { return deltaX; }
     public double getDeltaZ() { return deltaZ; }
 
+    /** Returns horizontal speed: sqrt(deltaX² + deltaZ²) */
     public double getHorizontalSpeed() {
         return Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
     }
 
+    /** Returns absolute vertical speed: |deltaY| */
     public double getVerticalSpeed() {
         return Math.abs(deltaY);
     }
 
+    /** Returns squared distance from this player to the given point — avoids sqrt for comparisons */
     public double getDistanceSq(double x, double y, double z) {
         double dx = this.x - x;
         double dy = this.y - y;
@@ -146,6 +194,12 @@ public class WindfallPlayer {
         return dx * dx + dy * dy + dz * dz;
     }
 
+    /**
+     * Updates position and rolls the three-deep history.
+     *
+     * <p>Called from {@link io.windfall.anticheat.core.network.PacketListener} on each
+     * position packet. Automatically computes deltas (current - last) and increments tickCount.
+     */
     // Position roll: lastLast ← last ← current each tick
     public void setPosition(double x, double y, double z) {
         this.lastLastX = this.lastX;
@@ -163,6 +217,12 @@ public class WindfallPlayer {
         this.tickCount++;
     }
 
+    /**
+     * Resets per-tick state: clears movement flag and rolls ground/rotation history.
+     *
+     * <p>Must run BEFORE checks each tick so that {@link #isLastOnGround()} reflects
+     * the previous tick's ground state. Called by {@link io.windfall.anticheat.core.check.CheckManager#onTick()}.
+     */
     // Must run BEFORE checks each tick so lastOnGround reflects previous tick state
     public void resetTickState() {
         this.movedSinceTick = false;
@@ -171,6 +231,7 @@ public class WindfallPlayer {
         this.lastPitch = this.pitch;
     }
 
+    /** Records the current position as the last known ground position (used for setbacks) */
     public void updateGroundPosition() {
         if (onGround) {
             this.groundX = x;
@@ -202,6 +263,10 @@ public class WindfallPlayer {
     public void setHeight(double height) { this.height = height; }
 
     public boolean isOnGround() { return onGround; }
+    /**
+     * Updates ground state and records ground position if now grounded.
+     * Also rolls lastOnGround for previous-tick access.
+     */
     public void setOnGround(boolean onGround) {
         this.lastOnGround = this.onGround;
         this.onGround = onGround;
@@ -214,6 +279,7 @@ public class WindfallPlayer {
     public boolean isSprinting() { return sprinting; }
     public void setSprinting(boolean sprinting) { this.sprinting = sprinting; }
     public boolean isSneaking() { return sneaking; }
+    /** Updates sneak state and automatically transitions pose between SNEAKING ↔ STANDING */
     public void setSneaking(boolean sneaking) {
         this.sneaking = sneaking;
         if (sneaking && pose == Pose.STANDING) pose = Pose.SNEAKING;
@@ -222,6 +288,7 @@ public class WindfallPlayer {
     public boolean isFlying() { return flying; }
     public void setFlying(boolean flying) { this.flying = flying; }
     public boolean isSwimming() { return swimming; }
+    /** Updates swim state and automatically transitions pose between SWIMMING ↔ STANDING */
     public void setSwimming(boolean swimming) {
         this.swimming = swimming;
         if (swimming) pose = Pose.SWIMMING;
@@ -230,6 +297,7 @@ public class WindfallPlayer {
     public boolean isClimbing() { return climbing; }
     public void setClimbing(boolean climbing) { this.climbing = climbing; }
     public boolean isGliding() { return gliding; }
+    /** Updates glide state and automatically transitions pose between FALL_FLYING ↔ STANDING */
     public void setGliding(boolean gliding) {
         this.gliding = gliding;
         if (gliding) pose = Pose.FALL_FLYING;
@@ -241,6 +309,7 @@ public class WindfallPlayer {
     public void setGlideStartTick(int glideStartTick) { this.glideStartTick = glideStartTick; }
 
     public Pose getPose() { return pose; }
+    /** Sets pose directly and synchronizes boolean flags (sneaking, swimming, gliding) */
     public void setPose(Pose pose) {
         this.pose = pose;
         this.sneaking = (pose == Pose.SNEAKING);
@@ -248,12 +317,14 @@ public class WindfallPlayer {
         this.gliding = (pose == Pose.FALL_FLYING);
     }
     public boolean isLongJumping() { return pose == Pose.LONG_JUMPING; }
+    /** Updates long-jumping state and transitions pose between LONG_JUMPING ↔ STANDING */
     public void setLongJumping(boolean longJumping) {
         if (longJumping) pose = Pose.LONG_JUMPING;
         else if (pose == Pose.LONG_JUMPING) pose = Pose.STANDING;
     }
     public boolean isDying() { return pose == Pose.DYING; }
 
+    /** Returns the player's ping measured via our transaction system (sub-tick accuracy) */
     public int getTransactionPing() { return transactionPing; }
     public void setTransactionPing(int transactionPing) { this.transactionPing = transactionPing; }
     public int getTransactionId() { return transactionId; }
@@ -281,16 +352,20 @@ public class WindfallPlayer {
 
     public void setProtocolVersion(int protocolVersion) { this.protocolVersion = protocolVersion; }
 
+    /** Returns the X coordinate of the last server-initiated teleport (used for setbacks) */
     public double getTeleportX() { return teleportX; }
     public double getTeleportY() { return teleportY; }
     public double getTeleportZ() { return teleportZ; }
     public void setTeleportPosition(double x, double y, double z) { this.teleportX = x; this.teleportY = y; this.teleportZ = z; }
 
+    /** Returns the X coordinate of the last known ground position (fallback for setbacks) */
     public double getGroundX() { return groundX; }
     public double getGroundY() { return groundY; }
     public double getGroundZ() { return groundZ; }
 
+    /** Returns the per-check violation levels map (keyed by stableKey) */
     public ConcurrentHashMap<String, Integer> getViolationLevels() { return violationLevels; }
+    /** Returns the per-check buffer map (keyed by stableKey) — higher values = stronger detection confidence */
     public ConcurrentHashMap<String, Double> getBuffers() { return buffers; }
 
     public int getAttackCooldown() { return attackCooldown; }
@@ -311,19 +386,26 @@ public class WindfallPlayer {
     public boolean isMovedSinceTick() { return movedSinceTick; }
     public void setMovedSinceTick(boolean movedSinceTick) { this.movedSinceTick = movedSinceTick; }
 
+    /** Returns false after the player disconnects — causes packet callbacks to skip processing */
     public boolean isValid() { return valid; }
     public void setValid(boolean valid) { this.valid = valid; }
 
     public BedrockInfo getBedrockInfo() { return bedrockInfo; }
     public void setBedrockInfo(BedrockInfo bedrockInfo) { this.bedrockInfo = bedrockInfo; }
+    /** Returns true if this player is a Bedrock client connected via Geyser */
     public boolean isBedrock() { return bedrockInfo != null; }
 
     public boolean isAlertsEnabled() { return alertsEnabled; }
     public void setAlertsEnabled(boolean alertsEnabled) { this.alertsEnabled = alertsEnabled; }
 
+    /** Returns true if the player just respawned — used to suppress ViaVersion false positives */
     public boolean isRespawned() { return respawned; }
     public void setRespawned(boolean respawned) { this.respawned = respawned; }
 
+    /**
+     * Sums all check violation levels for this player.
+     * Called frequently by PunishmentEngine and SeverityManager for tier evaluation.
+     */
     // Iterates all check VLs — called frequently by PunishmentEngine and SeverityManager
     public int getTotalViolationLevel() {
         int total = 0;

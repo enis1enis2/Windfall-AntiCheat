@@ -14,14 +14,38 @@ import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Detects players who break or place blocks without performing the arm-swing
+ * animation. In vanilla Minecraft, a {@code ANIMATION} packet must precede
+ * any dig or placement action; hacked clients that skip the swing to gain
+ * speed or hide actions are flagged.
+ *
+ * <p><b>Algorithm:</b> Tracks the timestamp of the last swing packet. When a
+ * {@code START_DIGGING} or non-null face {@code PLAYER_BLOCK_PLACEMENT}
+ * packet arrives and no swing has been received within {@link #SWING_TIMEOUT_MS},
+ * a missing-swing counter increments. After {@link #BUFFER_THRESHOLD} consecutive
+ * misses the violation buffer rises, and once it exceeds 3.0 the player is flagged.</p>
+ *
+ * @see Check
+ * @see PacketCheck
+ */
 @CheckData(name = "No Swing A", stableKey = "windfall.movement.noswing", decay = 0.02, setbackVl = 10)
 public class NoSwingCheck extends Check implements PacketCheck {
 
+    /** Maximum milliseconds since last swing packet before a dig/place is considered unsawn. */
     private static final long SWING_TIMEOUT_MS = 300;
+
+    /** Number of consecutive missing swings required before buffering a violation. */
     private static final int BUFFER_THRESHOLD = 3;
 
+    /**
+     * Per-player tracking state holding the last swing timestamp and the
+     * count of consecutive actions performed without a swing.
+     */
     private static final class PlayerState {
+        /** {@link System#currentTimeMillis()} of the most recent ANIMATION packet. */
         long lastSwingTime;
+        /** Consecutive dig/place actions received without an intervening swing. */
         int missingSwingCount;
     }
 
@@ -31,6 +55,13 @@ public class NoSwingCheck extends Check implements PacketCheck {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    /**
+     * Processes incoming packets. Records swing timestamps for ANIMATION packets
+     * and triggers a swing check on START_DIGGING and non-null-face block placements.
+     *
+     * @param player the player associated with this packet
+     * @param event  the incoming packet event
+     */
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         PacketTypeCommon type = event.getPacketType();
@@ -55,10 +86,20 @@ public class NoSwingCheck extends Check implements PacketCheck {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
     }
 
+    /**
+     * Core swing-validation logic. Compares the time since the last swing against
+     * {@link #SWING_TIMEOUT_MS}. If exceeded, the missing-swing counter increases;
+     * otherwise it decays by 1 (minimum 0). Consecutive misses beyond
+     * {@link #BUFFER_THRESHOLD} add 1.0 to the violation buffer, and a buffer
+     * exceeding 3.0 triggers a flag.
+     *
+     * @param player the player to check
+     */
     private void checkSwing(WindfallPlayer player) {
         PlayerState state = getState(player);
         long now = System.currentTimeMillis();

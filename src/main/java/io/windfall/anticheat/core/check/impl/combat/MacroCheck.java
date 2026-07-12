@@ -13,13 +13,36 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Detects movement macros (e.g., auto-walk, anti-knockback scripts) by analyzing patterns
+ * in the player's movement packet sequence.
+ *
+ * <p><b>Algorithm:</b> Each movement packet is encoded as a single character
+ * ({@code P}osition, {@code R}otation, {@code M}ove, {@code F}lying). Characters are
+ * accumulated in a sliding buffer of up to {@value PATTERN_WINDOW} packets. When the
+ * buffer contains enough data (>= 10 chars), the check searches previously seen patterns
+ * for substrings matching the tail 5 characters of the current buffer.</p>
+ *
+ * <p><b>Thresholds:</b> If the repetition ratio exceeds {@value REPETITION_THRESHOLD}
+ * (90%) and the occurrence count meets {@value MIN_REPEAT_COUNT} (8+), buffer increases.
+ * A flag is raised when the buffer exceeds 5.0.</p>
+ *
+ * <p>A pattern flush occurs after {@code 100ms} of inactivity, ensuring that bursts
+ * of movement are captured as distinct pattern strings.</p>
+ *
+ * @see io.windfall.anticheat.core.check.Check
+ */
 @CheckData(name = "Macro A", stableKey = "windfall.combat.macro", decay = 0.01, setbackVl = 20)
 public class MacroCheck extends Check implements PacketCheck {
 
+    /** Maximum number of recent movement characters kept in the sliding buffer. */
     private static final int PATTERN_WINDOW = 50;
+    /** Minimum number of historical occurrences required before flagging a repeated pattern. */
     private static final int MIN_REPEAT_COUNT = 8;
+    /** Ratio threshold (0.0–1.0) above which a pattern is considered macro-repetitive. */
     private static final double REPETITION_THRESHOLD = 0.9;
 
+    /** Per-player state holding the pattern buffer and historical pattern counts. */
     private static final class PlayerState {
         final Map<String, Integer> movementPatterns = new HashMap<>();
         long lastPatternTime;
@@ -29,10 +52,25 @@ public class MacroCheck extends Check implements PacketCheck {
 
     private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
 
+    /**
+     * Retrieves or initializes the tracking state for the given player.
+     *
+     * @param player the player whose state to retrieve
+     * @return the current {@link PlayerState} for the player
+     */
     private PlayerState getState(WindfallPlayer player) {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    /**
+     * Processes incoming movement packets. If the gap since the last packet exceeds 100ms,
+     * the current pattern buffer is flushed (recorded as a distinct pattern). The movement
+     * code for the packet type is appended and repetition detection runs when the buffer
+     * reaches 10+ characters.
+     *
+     * @param player the player associated with the packet
+     * @param event  the incoming packet event
+     */
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         PacketTypeCommon type = event.getPacketType();
@@ -63,6 +101,14 @@ public class MacroCheck extends Check implements PacketCheck {
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
     }
 
+    /**
+     * Flushes the current movement pattern into the historical map if it meets the minimum
+     * length (5 chars), then resets the buffer. Patterns shorter than 5 chars are discarded
+     * as they are too short to meaningfully identify macro behavior.
+     *
+     * @param player the player whose pattern to flush
+     * @param state  the player's tracking state
+     */
     private void flushPattern(WindfallPlayer player, PlayerState state) {
         if (state.patternBuffer.length() >= 5) {
             String pattern = state.patternBuffer.toString();
@@ -71,6 +117,15 @@ public class MacroCheck extends Check implements PacketCheck {
         state.patternBuffer = new StringBuilder();
     }
 
+    /**
+     * Analyzes the current pattern buffer for repetitive substrings. Checks whether the
+     * tail 5 characters of the buffer appear in historically recorded patterns. If the
+     * repetition ratio exceeds {@value REPETITION_THRESHOLD} with at least
+     * {@value MIN_REPEAT_COUNT} occurrences, buffer increases and flags when above 5.0.
+     *
+     * @param player the player being checked
+     * @param state  the player's tracking state
+     */
     private void detectRepetition(WindfallPlayer player, PlayerState state) {
         String current = state.patternBuffer.toString();
         if (current.length() < 10) return;
@@ -94,6 +149,14 @@ public class MacroCheck extends Check implements PacketCheck {
         }
     }
 
+    /**
+     * Encodes a movement packet type as a single character for pattern analysis.
+     * Using compact codes enables efficient substring matching and storage.
+     *
+     * @param type   the packet type
+     * @param player the player (unused here, reserved for future per-version encoding)
+     * @return a character code: {@code P}osition, {@code R}otation, {@code M}ove, {@code F}lying, or {@code X} for unknown
+     */
     private char getMovementCode(PacketTypeCommon type, WindfallPlayer player) {
         if (type == PacketType.Play.Client.PLAYER_POSITION) return 'P';
         if (type == PacketType.Play.Client.PLAYER_ROTATION) return 'R';
@@ -102,6 +165,12 @@ public class MacroCheck extends Check implements PacketCheck {
         return 'X';
     }
 
+    /**
+     * Checks whether the given packet type represents player movement.
+     *
+     * @param type the packet type to check
+     * @return {@code true} if the type is position, rotation, position+rotation, or flying
+     */
     private boolean isMovementType(PacketTypeCommon type) {
         return type == PacketType.Play.Client.PLAYER_POSITION
             || type == PacketType.Play.Client.PLAYER_ROTATION
