@@ -48,7 +48,7 @@ public final class FoliaCompat {
         if (!isFolia) return;
         try {
             entitySchedulerRun = Class.forName("io.papermc.paper.threadedregions.scheduler.EntityScheduler")
-                .getMethod("run", Object.class, java.util.function.Consumer.class, Runnable.class);
+                .getMethod("run", org.bukkit.plugin.Plugin.class, java.util.function.Consumer.class, Runnable.class);
             initialized = true;
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to init Folia EntityScheduler reflection", e);

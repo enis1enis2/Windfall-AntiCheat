@@ -42,7 +42,7 @@ public class PlatformScheduler {
             Method getAsyncScheduler = Bukkit.class.getMethod("getAsyncScheduler");
             Object asyncScheduler = getAsyncScheduler.invoke(null);
             Method runAtFixedRate = asyncScheduler.getClass().getMethod(
-                "runAtFixedRate", Object.class, Consumer.class, long.class, long.class, TimeUnit.class);
+                "runAtFixedRate", org.bukkit.plugin.Plugin.class, Consumer.class, long.class, long.class, TimeUnit.class);
             globalTask = runAtFixedRate.invoke(
                 asyncScheduler, plugin, (Consumer<Object>) task -> tick(), 50L, 50L, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
@@ -66,7 +66,7 @@ public class PlatformScheduler {
             try {
                 Method getGlobalScheduler = Bukkit.class.getMethod("getGlobalRegionScheduler");
                 Object scheduler = getGlobalScheduler.invoke(null);
-                Method run = scheduler.getClass().getMethod("run", Object.class, Consumer.class);
+                Method run = scheduler.getClass().getMethod("run", org.bukkit.plugin.Plugin.class, Consumer.class);
                 run.invoke(scheduler, plugin, (Consumer<Object>) task -> runnable.run());
             } catch (Exception e) {
                 plugin.getLogger().severe("Folia runSync error: " + e.getMessage());
@@ -81,7 +81,7 @@ public class PlatformScheduler {
             try {
                 Method getAsyncScheduler = Bukkit.class.getMethod("getAsyncScheduler");
                 Object asyncScheduler = getAsyncScheduler.invoke(null);
-                Method runNow = asyncScheduler.getClass().getMethod("runNow", Object.class, Consumer.class);
+                Method runNow = asyncScheduler.getClass().getMethod("runNow", org.bukkit.plugin.Plugin.class, Consumer.class);
                 runNow.invoke(asyncScheduler, plugin, (Consumer<Object>) task -> runnable.run());
             } catch (Exception e) {
                 plugin.getLogger().severe("Folia runAsync error: " + e.getMessage());
@@ -97,7 +97,7 @@ public class PlatformScheduler {
                 Method getGlobalScheduler = Bukkit.class.getMethod("getGlobalRegionScheduler");
                 Object scheduler = getGlobalScheduler.invoke(null);
                 Method runDelayed = scheduler.getClass().getMethod(
-                    "runDelayed", Object.class, Consumer.class, long.class);
+                    "runDelayed", org.bukkit.plugin.Plugin.class, Consumer.class, long.class);
                 runDelayed.invoke(scheduler, plugin, (Consumer<Object>) task -> runnable.run(), delayTicks);
             } catch (Exception e) {
                 plugin.getLogger().severe("Folia runLater error: " + e.getMessage());
