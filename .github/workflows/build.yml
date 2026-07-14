@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 17
-        uses: actions/setup-java@c5195efdbf08203860ded22c7f4c01a0d1e18a06 # v4.7.1
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -28,7 +28,7 @@ jobs:
         run: mvn -B clean package --file pom.xml
 
       - name: Upload artifact
-        uses: actions/upload-artifact@ea165f8d65b6db9a6b7e75b195bb30a4b6b92b23 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: Windfall
           path: target/Windfall.jar
@@ -44,7 +44,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 17
-        uses: actions/setup-java@c5195efdbf08203860ded22c7f4c01a0d1e18a06 # v4.7.1
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: '17'
           distribution: 'temurin'
