@@ -128,8 +128,8 @@ Windfall adapts checks across all supported MC versions and server forks through
 │  1. Version Range         minVersion / maxVersion           │
 │  2. Fork Detection        Folia / Purpur / Paper / Spigot   │
 │  3. Plugin Detection      ViaVersion / Geyser / OCM         │
-│  4. Player Profile        Protocol / Bedrock / Via gap       │
-│  5. Config Override       Manual disable per check           │
+│  4. Player Profile        Protocol / Bedrock / Via gap      │
+│  5. Config Override       Manual disable per check          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
