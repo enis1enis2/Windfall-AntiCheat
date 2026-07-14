@@ -50,6 +50,14 @@ public final class FoliaCompat {
             entitySchedulerRun = Class.forName("io.papermc.paper.threadedregions.scheduler.EntityScheduler")
                 .getMethod("run", org.bukkit.plugin.Plugin.class, java.util.function.Consumer.class, Runnable.class);
             initialized = true;
+        } catch (NoSuchMethodException e) {
+            try {
+                entitySchedulerRun = Class.forName("io.papermc.paper.threadedregions.scheduler.EntityScheduler")
+                    .getMethod("run", Object.class, java.util.function.Consumer.class, Runnable.class);
+                initialized = true;
+            } catch (Exception fallback) {
+                logger.log(Level.WARNING, "Failed to init Folia EntityScheduler reflection", fallback);
+            }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to init Folia EntityScheduler reflection", e);
         }
