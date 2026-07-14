@@ -287,6 +287,12 @@ If you're building your own anti-cheat, these projects are excellent references 
 
 ---
 
+## Contributing
+
+We welcome contributions! Whether it's a bug fix, a new check, or documentation improvement — we'd love your help. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+---
+
 ## License
 
 MIT License — Copyright (c) 2026 Enis Polat
