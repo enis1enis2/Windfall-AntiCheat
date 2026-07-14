@@ -5,148 +5,282 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Windfall — Minecraft Anti-Cheat</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0a0f;
-            color: #e0e0e0;
-            line-height: 1.6;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #12100e;
+            color: #e8e0d4;
+            line-height: 1.7;
         }
-        a { color: #6c5ce7; text-decoration: none; transition: color 0.2s; }
-        a:hover { color: #a29bfe; }
+        a { color: #e8a838; text-decoration: none; transition: color 0.25s; }
+        a:hover { color: #f0c060; }
 
         .hero {
+            position: relative;
             text-align: center;
-            padding: 100px 20px 80px;
-            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
-            border-bottom: 1px solid #1a1a2e;
+            padding: 120px 20px 100px;
+            overflow: hidden;
         }
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% 0%, rgba(232,168,56,0.12) 0%, transparent 60%),
+                linear-gradient(180deg, #1a1512 0%, #12100e 100%);
+            z-index: 0;
+        }
+        .hero > .container { position: relative; z-index: 1; }
         .hero h1 {
-            font-size: 3.5rem;
+            font-size: 4rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            letter-spacing: -1px;
+            color: #f5efe6;
+            margin-bottom: 8px;
+        }
+        .hero h1 span {
+            background: linear-gradient(135deg, #e8a838, #f0c060);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 16px;
         }
-        .hero p {
-            font-size: 1.2rem;
-            color: #8a8a9a;
-            max-width: 600px;
-            margin: 0 auto 32px;
+        .hero .tagline {
+            font-size: 1.15rem;
+            color: #9a8e7e;
+            max-width: 560px;
+            margin: 0 auto 40px;
+            font-weight: 400;
         }
-        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
         .btn {
-            padding: 12px 32px;
+            padding: 13px 32px;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s;
             border: none;
+            font-family: inherit;
         }
         .btn-primary {
-            background: #6c5ce7;
-            color: #fff;
+            background: linear-gradient(135deg, #e8a838, #d4943a);
+            color: #1a1512;
         }
-        .btn-primary:hover { background: #5a4bd1; color: #fff; }
+        .btn-primary:hover { background: linear-gradient(135deg, #f0c060, #e8a838); color: #1a1512; }
         .btn-secondary {
             background: transparent;
-            color: #a29bfe;
-            border: 2px solid #6c5ce7;
+            color: #c4b8a8;
+            border: 1.5px solid #3a342c;
         }
-        .btn-secondary:hover { background: #6c5ce7; color: #fff; }
+        .btn-secondary:hover { border-color: #e8a838; color: #e8a838; }
 
-        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+        .container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
 
         .section { padding: 80px 0; }
+        .section-alt { background: #161310; }
         .section h2 {
             text-align: center;
-            font-size: 2rem;
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #f5efe6;
+        }
+        .section-sub {
+            text-align: center;
+            color: #8a7e6e;
             margin-bottom: 48px;
-            color: #fff;
+            font-size: 1.05rem;
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 20px;
         }
         .feature-card {
-            background: #12121a;
-            border: 1px solid #1a1a2e;
-            border-radius: 12px;
-            padding: 32px;
-            transition: border-color 0.2s;
+            background: #1a1612;
+            border: 1px solid #2a2520;
+            border-radius: 14px;
+            padding: 30px 28px;
+            transition: border-color 0.25s, transform 0.25s;
         }
-        .feature-card:hover { border-color: #6c5ce7; }
+        .feature-card:hover { border-color: #3a342c; transform: translateY(-2px); }
+        .feature-card .icon {
+            font-size: 1.6rem;
+            margin-bottom: 14px;
+            display: block;
+        }
         .feature-card h3 {
-            color: #a29bfe;
-            font-size: 1.1rem;
-            margin-bottom: 12px;
+            color: #e8a838;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 10px;
         }
-        .feature-card p { color: #8a8a9a; font-size: 0.95rem; }
+        .feature-card p { color: #8a7e6e; font-size: 0.92rem; line-height: 1.65; }
 
-        .versions {
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+        .stat-box {
             text-align: center;
-            padding: 60px 20px;
-            background: #12121a;
-            border-top: 1px solid #1a1a2e;
-            border-bottom: 1px solid #1a1a2e;
+            padding: 28px 16px;
+            background: #1a1612;
+            border: 1px solid #2a2520;
+            border-radius: 14px;
         }
-        .versions h2 { margin-bottom: 24px; }
-        .version-badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .stat-box .number {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e8a838, #f0c060);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .stat-box .label { color: #8a7e6e; font-size: 0.85rem; font-weight: 500; }
+
+        .versions-bar {
+            text-align: center;
+            padding: 50px 20px;
+            background: #161310;
+            border-top: 1px solid #2a2520;
+            border-bottom: 1px solid #2a2520;
+        }
+        .versions-bar h2 { margin-bottom: 20px; }
+        .version-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         .badge {
-            background: #1a1a2e;
-            border: 1px solid #2a2a3e;
-            padding: 8px 16px;
+            background: #1a1612;
+            border: 1px solid #2a2520;
+            padding: 7px 16px;
             border-radius: 20px;
-            font-size: 0.9rem;
-            color: #a29bfe;
+            font-size: 0.85rem;
+            color: #c4b8a8;
+            font-weight: 500;
         }
+        .badge-accent { border-color: #3a3020; color: #e8a838; background: #1e1a14; }
 
         .install { text-align: center; }
-        .install code {
-            display: block;
-            background: #12121a;
-            border: 1px solid #1a1a2e;
-            border-radius: 8px;
-            padding: 20px 32px;
-            font-size: 1rem;
-            color: #a29bfe;
-            margin: 24px auto;
-            max-width: 500px;
+        .install-steps {
+            display: inline-block;
             text-align: left;
+            margin-bottom: 28px;
+        }
+        .install-steps li {
+            color: #9a8e7e;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .install-steps a { font-weight: 600; }
+        .install code {
+            display: inline-block;
+            background: #1a1612;
+            border: 1px solid #2a2520;
+            border-radius: 8px;
+            padding: 14px 28px;
+            font-size: 1.05rem;
+            color: #e8a838;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .checks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .check-category {
+            background: #1a1612;
+            border: 1px solid #2a2520;
+            border-radius: 14px;
+            padding: 28px;
+        }
+        .check-category h3 {
+            color: #e8a838;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2a2520;
+        }
+        .check-tag {
+            display: inline-block;
+            background: #1e1a14;
+            border: 1px solid #2a2520;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            color: #c4b8a8;
+            margin: 3px 2px;
+            font-weight: 500;
+        }
+        .check-tag-new {
+            border-color: #3a3020;
+            color: #e8a838;
+        }
+
+        .changelog {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .changelog-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid #2a2520;
+        }
+        .changelog-item:last-child { border-bottom: none; }
+        .changelog-version {
+            flex-shrink: 0;
+            width: 80px;
+            text-align: right;
+        }
+        .changelog-version span {
+            display: inline-block;
+            background: #1e1a14;
+            border: 1px solid #2a2520;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #e8a838;
+        }
+        .changelog-content { flex: 1; }
+        .changelog-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        .changelog-content li {
+            color: #9a8e7e;
+            font-size: 0.92rem;
+            padding: 3px 0;
+            padding-left: 18px;
+            position: relative;
+        }
+        .changelog-content li::before {
+            content: '·';
+            position: absolute;
+            left: 0;
+            color: #e8a838;
+            font-weight: bold;
         }
 
         .footer {
             text-align: center;
-            padding: 40px 20px;
-            color: #555;
+            padding: 44px 20px;
+            color: #5a5248;
             font-size: 0.85rem;
-            border-top: 1px solid #1a1a2e;
+            border-top: 1px solid #2a2520;
         }
+        .footer a { color: #8a7e6e; }
+        .footer a:hover { color: #e8a838; }
 
-        .checks-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 32px;
-        }
-        .checks-table th, .checks-table td {
-            padding: 10px 16px;
-            text-align: left;
-            border-bottom: 1px solid #1a1a2e;
-        }
-        .checks-table th { color: #a29bfe; font-weight: 600; }
-        .checks-table td { color: #8a8a9a; }
-        .check-tag {
-            display: inline-block;
-            background: #1a1a2e;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            color: #6c5ce7;
-            margin: 2px;
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.6rem; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .changelog-item { flex-direction: column; gap: 8px; }
+            .changelog-version { text-align: left; width: auto; }
         }
     </style>
 </head>
@@ -154,8 +288,8 @@
 
     <div class="hero">
         <div class="container">
-            <h1>Windfall</h1>
-            <p>Free, open-source Minecraft anti-cheat. Detects movement, combat, and inventory exploits across 33 checks — from 1.7 to the latest MC versions.</p>
+            <h1>Wind<span>fall</span></h1>
+            <p class="tagline">Open-source Minecraft anti-cheat with 52 detection checks. Lightweight, fork-aware, and built for servers running 1.7 through 26.2+.</p>
             <div class="hero-buttons">
                 <a href="https://github.com/enis1enis2/Windfall-AntiCheat/releases" class="btn btn-primary">Download Latest</a>
                 <a href="https://github.com/enis1enis2/Windfall-AntiCheat" class="btn btn-secondary">View on GitHub</a>
@@ -163,15 +297,36 @@
         </div>
     </div>
 
-    <div class="versions">
+    <div class="stats-row container" style="margin-top: -30px; position: relative; z-index: 2;">
+        <div class="stat-box">
+            <span class="number">52</span>
+            <span class="label">Detection Checks</span>
+        </div>
+        <div class="stat-box">
+            <span class="number">1.7+</span>
+            <span class="label">MC Version Support</span>
+        </div>
+        <div class="stat-box">
+            <span class="number">19+</span>
+            <span class="label">Server Forks</span>
+        </div>
+        <div class="stat-box">
+            <span class="number">93ms</span>
+            <span class="label">Avg Boot Time</span>
+        </div>
+    </div>
+
+    <div class="versions-bar">
         <div class="container">
-            <h2>Supports Every Major Version</h2>
+            <h2 style="font-size:1.4rem;">Works Everywhere</h2>
             <div class="version-badges">
                 <span class="badge">1.7 — 1.8</span>
                 <span class="badge">1.9 — 1.12</span>
                 <span class="badge">1.13 — 1.16</span>
                 <span class="badge">1.17 — 1.21.5</span>
-                <span class="badge">26.x — 26.2</span>
+                <span class="badge badge-accent">26.x — 26.2</span>
+                <span class="badge badge-accent">Folia</span>
+                <span class="badge badge-accent">Purpur</span>
             </div>
         </div>
     </div>
@@ -179,43 +334,50 @@
     <div class="section">
         <div class="container">
             <h2>Why Windfall?</h2>
+            <p class="section-sub">Built for server owners who want reliable protection without the performance hit.</p>
             <div class="features-grid">
                 <div class="feature-card">
-                    <h3>Free &amp; Open Source</h3>
-                    <p>MIT licensed. Full source code available on GitHub. No hidden costs, no paywalls.</p>
+                    <span class="icon">🛡</span>
+                    <h3>52 Detection Checks</h3>
+                    <p>Covers movement, combat, inventory, and packet exploits — with new checks added regularly across all categories.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>33 Checks</h3>
-                    <p>Comprehensive detection covering movement, combat, inventory, and packet exploits.</p>
+                    <span class="icon">⚡</span>
+                    <h3>Async &amp; Low Impact</h3>
+                    <p>Packet listeners and check processing run asynchronously. Optimized for high-player servers with minimal TPS impact.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Low Impact</h3>
-                    <p>Async processing and optimized packet listeners keep your TPS high and latency low.</p>
+                    <span class="icon">🔀</span>
+                    <h3>Folia &amp; Purpur Ready</h3>
+                    <p>Full Folia region-threading support with safe entity schedulers. Purpur-specific knockback and mechanics detection built in.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Modern MC Versions</h3>
-                    <p>Updated for Mojang's year-based versioning. Supports 26.x through 26.2 out of the box.</p>
+                    <span class="icon">🌍</span>
+                    <h3>WorldGuard Integration</h3>
+                    <p>Automatically detects WorldGuard regions. Toggle check enforcement per-region using flag-based configuration.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Simple Setup</h3>
-                    <p>Drop the JAR in, add PacketEvents, and you're running. No database required.</p>
+                    <span class="icon">🔌</span>
+                    <h3>Public API</h3>
+                    <p>Expose player data and check status to other plugins via <code>WindfallAPI</code>. No reflection needed — clean, stable interface.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Paper &amp; Spigot</h3>
-                    <p>Works on both Paper and Spigot servers with no extra configuration needed.</p>
+                    <span class="icon">📦</span>
+                    <h3>Drop-in Setup</h3>
+                    <p>Install Windfall + PacketEvents, restart, done. Works on Spigot, Paper, Folia, Purpur, and 15+ other forks out of the box.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="section">
+    <div class="section section-alt">
         <div class="container install">
-            <h2>Quick Start</h2>
-            <ol style="display:inline-block; text-align:left; color:#8a8a9a; margin-bottom: 24px;">
+            <h2>Get Started in 60 Seconds</h2>
+            <ol class="install-steps">
                 <li>Download the latest <a href="https://github.com/enis1enis2/Windfall-AntiCheat/releases">release</a></li>
                 <li>Install <a href="https://ci.codemc.io/job/petrex/job/PacketEvents2/lastBuild/">PacketEvents 2.13.0</a> as a separate plugin</li>
-                <li>Drop both JARs into your <code style="display:inline;padding:2px 8px;">plugins/</code> folder</li>
-                <li>Restart your server</li>
+                <li>Drop both JARs into your <code style="display:inline;padding:2px 8px;font-size:0.9rem;">plugins/</code> folder</li>
+                <li>Restart your server — Windfall auto-detects your fork and loads optimal checks</li>
             </ol>
             <code>/windfall reload</code>
         </div>
@@ -223,10 +385,11 @@
 
     <div class="section">
         <div class="container">
-            <h2>Checks</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <h3>Movement</h3>
+            <h2>All 52 Checks</h2>
+            <p class="section-sub">Organized by category. Version-specific checks activate automatically based on your server.</p>
+            <div class="checks-grid">
+                <div class="check-category">
+                    <h3>Movement — 29 Checks</h3>
                     <p>
                         <span class="check-tag">Speed</span>
                         <span class="check-tag">Fly</span>
@@ -237,31 +400,115 @@
                         <span class="check-tag">Jesus</span>
                         <span class="check-tag">Phase</span>
                         <span class="check-tag">Elevator</span>
+                        <span class="check-tag">Spin</span>
+                        <span class="check-tag">Velocity</span>
+                        <span class="check-tag">caffold</span>
+                        <span class="check-tag">Spider</span>
+                        <span class="check-tag">Sneak</span>
+                        <span class="check-tag">GroundSpoof</span>
+                        <span class="check-tag">InvalidPlace</span>
+                        <span class="check-tag">MultiPlace</span>
+                        <span class="check-tag">MultiBreak</span>
+                        <span class="check-tag">NoSwing</span>
+                        <span class="check-tag">FastBreak</span>
+                        <span class="check-tag">WrongBreak</span>
+                        <span class="check-tag">RotationBreak</span>
+                        <span class="check-tag">Rotation</span>
+                        <span class="check-tag">Strafe</span>
+                        <span class="check-tag">Water</span>
+                        <span class="check-tag">Boat</span>
+                        <span class="check-tag">Piston</span>
+                        <span class="check-tag">BlockUpdate</span>
+                        <span class="check-tag">Climb</span>
                     </p>
                 </div>
-                <div class="feature-card">
-                    <h3>Combat</h3>
+                <div class="check-category">
+                    <h3>Combat — 12 Checks</h3>
                     <p>
                         <span class="check-tag">KillAura</span>
                         <span class="check-tag">Reach</span>
                         <span class="check-tag">AutoClicker</span>
                         <span class="check-tag">CPS</span>
                         <span class="check-tag">Aim</span>
+                        <span class="check-tag">AimSpeed</span>
                         <span class="check-tag">SwordBlock</span>
                         <span class="check-tag">FastHeal</span>
+                        <span class="check-tag">Projectile</span>
+                        <span class="check-tag">Criticals</span>
+                        <span class="check-tag">Velocity</span>
+                        <span class="check-tag">Angle</span>
                     </p>
                 </div>
-                <div class="feature-card">
-                    <h3>Inventory &amp; Packets</h3>
+                <div class="check-category">
+                    <h3>Packets — 10 Checks</h3>
+                    <p>
+                        <span class="check-tag">Invalid</span>
+                        <span class="check-tag">Impossible</span>
+                        <span class="check-tag">Order</span>
+                        <span class="check-tag">Consistency</span>
+                        <span class="check-tag">Vehicle</span>
+                        <span class="check-tag">Transaction</span>
+                        <span class="check-tag">Sign</span>
+                        <span class="check-tag">Book</span>
+                        <span class="check-tag">Window</span>
+                        <span class="check-tag">Place</span>
+                    </p>
+                </div>
+                <div class="check-category">
+                    <h3>Inventory — 1 Check</h3>
                     <p>
                         <span class="check-tag">AutoArmor</span>
-                        <span class="check-tag">AutoTotem</span>
-                        <span class="check-tag">AutoEat</span>
-                        <span class="check-tag">AutoSwap</span>
-                        <span class="check-tag">Packet</span>
-                        <span class="check-tag">FastPlace</span>
-                        <span class="check-tag">FastBreak</span>
                     </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section section-alt">
+        <div class="container">
+            <h2>What's New</h2>
+            <p class="section-sub">Recent changes and improvements.</p>
+            <div class="changelog">
+                <div class="changelog-item">
+                    <div class="changelog-version"><span>v1.8.2</span></div>
+                    <div class="changelog-content">
+                        <ul>
+                            <li>Folia compatibility fix — EntityScheduler reflection now works across all Folia versions</li>
+                            <li>Added fallback for modified Folia forks with alternate scheduler signatures</li>
+                            <li>PlatformScheduler async ticks now resolve correctly on Luminol and similar forks</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="changelog-item">
+                    <div class="changelog-version"><span>v1.8.0</span></div>
+                    <div class="changelog-content">
+                        <ul>
+                            <li>ActionData block-break/place/piston tracking for smarter exemptions</li>
+                            <li>WorldGuard region integration — per-flag check enforcement</li>
+                            <li>Public API — <code>WindfallAPI</code> interface for other plugins</li>
+                            <li>Piston and block-update exemptions in Flight and Speed checks</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="changelog-item">
+                    <div class="changelog-version"><span>v1.7.0</span></div>
+                    <div class="changelog-content">
+                        <ul>
+                            <li>Full codebase documentation — Javadoc on every public class and method</li>
+                            <li>515 unit tests passing</li>
+                            <li>Mockito JDK compatibility fixes for Java 16+</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="changelog-item">
+                    <div class="changelog-version"><span>v1.6.0</span></div>
+                    <div class="changelog-content">
+                        <ul>
+                            <li>Folia region-threading support — safe entity scheduler integration</li>
+                            <li>Purpur fork detection and mechanics support</li>
+                            <li>Mojang year-based versioning support (26.x)</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -269,6 +516,7 @@
 
     <div class="footer">
         <p>Windfall Anti-Cheat &mdash; MIT License &copy; 2026 Enis Polat</p>
+        <p style="margin-top:6px;">Built with <a href="https://github.com/PaperMC/Paper">Paper</a>, <a href="https://github.com/retrooper/packetevents">PacketEvents</a>, and community support.</p>
     </div>
 
 </body>
