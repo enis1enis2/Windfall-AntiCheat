@@ -68,22 +68,29 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
           if [ -n "$GPG_PRIVATE_KEY" ]; then
-            mvn -B clean package --file pom.xml -Dgpg.skip=false -Dgpg.passphrase="$GPG_PASSPHRASE"
+            mvn -B clean package -Pobfuscate --file pom.xml -Dgpg.skip=false -Dgpg.passphrase="$GPG_PASSPHRASE"
           else
-            mvn -B clean package --file pom.xml
+            mvn -B clean package -Pobfuscate --file pom.xml
           fi
+
+      - name: Prepare release JARs
+        run: |
+          cd target
+          # Rename obfuscated JAR to Windfall.jar (main release artifact)
+          mv Windfall-*-obfuscated.jar Windfall.jar
+          # Rename ProGuard mapping file for release
+          mv proguard_map.txt mapping.txt
+          # Rebuild checksum for obfuscated JAR
+          sha256sum Windfall.jar > Windfall.jar.sha256
+          echo "=== SHA-256 Checksum (obfuscated) ==="
+          cat Windfall.jar.sha256
+          # Keep original unobfuscated JAR as dev artifact
+          ls -la Windfall*.jar
 
       - name: OWASP Dependency-Check
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: mvn -B dependency-check:check --file pom.xml -DnvdApiKey="$NVD_API_KEY" || true
-
-      - name: Generate checksum
-        run: |
-          cd target
-          sha256sum Windfall.jar > Windfall.jar.sha256
-          echo "=== SHA-256 Checksum ==="
-          cat Windfall.jar.sha256
 
       - name: Get commit info
         id: commit
@@ -132,10 +139,14 @@ jobs:
             2. Place it in `plugins/` next to `packetevents-spigot-2.x.x.jar`
             3. Restart the server
 
+            ### Deobfuscation
+            Stack traces can be deobfuscated using `mapping.txt` (ProGuard mapping file).
+
             **Requires:** Java 11+ · PacketEvents 2.13.0+ · MC 1.7–26.2+
           files: |
             target/Windfall.jar
             target/Windfall.jar.sha256
+            target/mapping.txt
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
