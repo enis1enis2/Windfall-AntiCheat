@@ -98,7 +98,7 @@ jobs:
 
       - name: Create release
         if: steps.version.outputs.is_version == 'true'
-        uses: softprops/action-gh-release@72f2a53f3807f70f4b8df98c395d7582f5391d39 # v2.2.2
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: "Windfall ${{ steps.version.outputs.tag }}"
