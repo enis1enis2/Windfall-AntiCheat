@@ -5,8 +5,10 @@ import io.windfall.anticheat.core.config.WindfallConfig;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import org.bukkit.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.BanList;
 import org.bukkit.entity.Player;
 
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -106,15 +108,13 @@ public class PunishmentEngine {
     /**
      * Applies the punishment for the given tier, but only once per player per tier.
      *
-     * <p>Uses dispatchCommand for ban/tempban because these commands handle async lookups
-     * and are more reliable across server implementations than direct API calls.
-     * Punishments are executed on the main thread via {@link PlatformScheduler#runSync}.
+     * <p>Uses the direct Bukkit Player ban API instead of dispatchCommand to avoid
+     * command injection vulnerabilities from config values. Punishments are executed
+     * on the main thread via {@link PlatformScheduler#runSync}.
      *
      * @param player the player to punish
      * @param tier   the VL threshold that triggered this punishment
      */
-    // Uses dispatchCommand for ban/tempban because these commands handle async lookups
-    // and are more reliable across server implementations than direct API calls
     private void executeOnce(WindfallPlayer player, int tier) {
         Integer current = appliedTiers.getOrDefault(player.getUuid(), 0);
         if (current >= tier) return;
@@ -129,14 +129,17 @@ public class PunishmentEngine {
             } else if (tier == kickVl) {
                 bukkitPlayer.kickPlayer(ChatColor.translateAlternateColorCodes('&', kickMessage));
             } else if (tier == tempbanVl) {
-                String duration = plugin.getWindfallConfig().getPunishmentTempbanDuration().trim();
-                bukkitPlayer.getServer().dispatchCommand(
-                    bukkitPlayer.getServer().getConsoleSender(),
-                    "tempban " + bukkitPlayer.getName() + " " + duration + " " + tempbanReason);
+                long durationMs = parseDuration(tempbanDuration);
+                Date expiry = new Date(System.currentTimeMillis() + durationMs);
+                Bukkit.getBanList(BanList.Type.NAME).addBan(
+                    bukkitPlayer.getName(),
+                    ChatColor.translateAlternateColorCodes('&', tempbanReason),
+                    expiry, "Windfall");
             } else if (tier == permbanVl) {
-                bukkitPlayer.getServer().dispatchCommand(
-                    bukkitPlayer.getServer().getConsoleSender(),
-                    "ban " + bukkitPlayer.getName() + " " + permbanReason);
+                Bukkit.getBanList(BanList.Type.NAME).addBan(
+                    bukkitPlayer.getName(),
+                    ChatColor.translateAlternateColorCodes('&', permbanReason),
+                    (Date) null, "Windfall");
             }
 
             plugin.getLogger().info("[Punishment] " + player.getName()
@@ -145,11 +148,12 @@ public class PunishmentEngine {
     }
 
     /**
-     * Parses a duration string (e.g., "1d", "12h", "30m") into milliseconds.
+     * Parses a duration string (e.g., "1d", "12h", "30m", "45s") into milliseconds.
+     * Used to compute the ban expiry from the configured tempban duration.
      *
      * @return duration in ms, or 24h default if parsing fails
      */
-    private long parseDuration(String duration) {
+    long parseDuration(String duration) {
         try {
             String trimmed = duration.trim().toLowerCase();
             long value = Long.parseLong(trimmed.replaceAll("[^0-9]", ""));

@@ -220,6 +220,8 @@ public abstract class Check {
      */
     // Prefers last teleport position; falls back to last ground if no teleport sent yet (0,0,0 sentinel)
     protected void performSetback(WindfallPlayer player) {
+        // Skip setback during respawn desync — position is (0,0,0) until first post-respawn position packet
+        if (player.isRespawned()) return;
         double tx = player.getTeleportX();
         double ty = player.getTeleportY();
         double tz = player.getTeleportZ();

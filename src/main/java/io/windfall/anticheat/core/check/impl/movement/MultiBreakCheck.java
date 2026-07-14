@@ -49,6 +49,11 @@ public class MultiBreakCheck extends Check implements PacketCheck {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    @Override
+    public void removePlayer(java.util.UUID uuid) {
+        stateMap.remove(uuid);
+    }
+
     /**
      * Counts START_DIGGING packets per tick. Resets the counter on new ticks
      * and flags when more than {@link #MAX_BREAKS_PER_TICK} breaks occur in

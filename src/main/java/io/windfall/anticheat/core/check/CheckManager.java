@@ -100,6 +100,8 @@ public class CheckManager {
     private final PluginDetector pluginDetector;
     private final FoliaCompat foliaCompat;
     private final PurpurCompat purpurCompat;
+    /** Tick counter for periodic tasks (e.g., ReachCheck entity eviction) */
+    private long tickCounter = 0;
 
     public CheckManager(WindfallPlugin plugin) {
         this.plugin = plugin;
@@ -277,8 +279,8 @@ public class CheckManager {
         for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
             if (!player.isValid()) continue;
             player.resetTickState();
-            // Advance all ActionData tick counters for block update/piston exemptions
             player.getActionData().tick();
+            player.updateCachedState();
             for (Check check : checks) {
                 if (!check.isEnabled()) continue;
                 check.reward(player);
@@ -286,6 +288,13 @@ public class CheckManager {
             if (pe != null) {
                 pe.decayTierIfNeeded(player);
             }
+        }
+        if (tickCounter++ % 200 == 0) {
+            ReachCheck.cleanup(10_000L);
+        }
+        // Evict stale Discord webhook rate-limit entries every 5 minutes (6000 ticks)
+        if (tickCounter % 6000 == 0 && plugin.getAlertManager() != null) {
+            plugin.getAlertManager().getDiscordWebhook().cleanupStaleEntries();
         }
     }
 

@@ -4,7 +4,6 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import io.windfall.anticheat.core.player.WindfallPlayer;
-import io.windfall.anticheat.core.util.MaterialUtils;
 
 /**
  * Stateless utility methods for movement prediction shared across all movement checks.
@@ -152,10 +151,6 @@ public final class PredictionEngine {
 
         double maxSpeed = lastHorizontalSpeed * friction + maxAccel;
 
-        if (swimming && protocol >= 393) {
-            double swimBoost = 0.01 * 0.0; // deltaY must be supplied by caller for swim boost
-            maxSpeed += swimBoost;
-        }
         return maxSpeed;
     }
 
@@ -243,32 +238,17 @@ public final class PredictionEngine {
 
     /** Checks if the player's feet are in a water-type block (water, waterlogged) */
     public static boolean checkInWater(WindfallPlayer player) {
-        try {
-            org.bukkit.Material mat = player.getPlayer().getLocation().getBlock().getType();
-            return MaterialUtils.isWater(mat);
-        } catch (Exception e) {
-            return false;
-        }
+        return player.isCachedInWater();
     }
 
     /** Checks if the player's feet are in a lava-type block */
     public static boolean checkInLava(WindfallPlayer player) {
-        try {
-            org.bukkit.Material mat = player.getPlayer().getLocation().getBlock().getType();
-            return MaterialUtils.isLava(mat);
-        } catch (Exception e) {
-            return false;
-        }
+        return player.isCachedInLava();
     }
 
     /** Checks if the block 0.1 below the player's feet is a honey block */
     public static boolean checkOnHoney(WindfallPlayer player) {
-        try {
-            org.bukkit.Material mat = player.getPlayer().getLocation().subtract(0, 0.1, 0).getBlock().getType();
-            return MaterialUtils.isHoney(mat);
-        } catch (Exception e) {
-            return false;
-        }
+        return player.isCachedOnHoney();
     }
 
     // === POTION EFFECTS ===
@@ -278,15 +258,7 @@ public final class PredictionEngine {
      * Caps at level V (5) to match vanilla behaviour.
      */
     public static double getSpeedPotionMultiplier(WindfallPlayer player) {
-        try {
-            for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                if (effect.getType().getName().toUpperCase().contains(POTION_SPEED)) {
-                    int level = Math.min(effect.getAmplifier() + 1, SPEED_POTION_MAX_LEVEL);
-                    return 1.0 + (SPEED_POTION_MULT * level);
-                }
-            }
-        } catch (Exception ignored) {}
-        return 1.0;
+        return player.getCachedSpeedMultiplier();
     }
 
     /**
@@ -294,75 +266,39 @@ public final class PredictionEngine {
      * Caps at level IV (4). Uses "SLOW" substring to match both old ("SLOW") and new ("SLOWNESS") names.
      */
     public static double getSlownessPotionMultiplier(WindfallPlayer player) {
-        try {
-            for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                String typeName = effect.getType().getName().toUpperCase();
-                if (typeName.contains(POTION_SLOWNESS_OLD)) {
-                    int level = Math.min(effect.getAmplifier() + 1, SLOWNESS_POTION_MAX_LEVEL);
-                    return 1.0 - (SLOWNESS_POTION_MULT * level);
-                }
-            }
-        } catch (Exception ignored) {}
-        return 1.0;
+        return player.getCachedSlownessMultiplier();
     }
 
     /** Checks if the player has the Slow Falling potion effect active */
     public static boolean checkSlowFalling(WindfallPlayer player) {
-        try {
-            for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                if (effect.getType().getName().toUpperCase().contains(POTION_SLOW_FALLING)) return true;
-            }
-        } catch (Exception ignored) {}
-        return false;
+        return player.isCachedHasSlowFalling();
     }
 
     /** Checks if the player has the Levitation potion effect active */
     public static boolean checkLevitation(WindfallPlayer player) {
-        try {
-            for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                if (effect.getType().getName().toUpperCase().contains(POTION_LEVITATION)) return true;
-            }
-        } catch (Exception ignored) {}
-        return false;
+        return player.isCachedHasLevitation();
     }
 
     /** Returns the levitation amplifier (1-based) for the upward boost calculation */
     public static double getLevitationAmplifier(WindfallPlayer player) {
-        try {
-            for (org.bukkit.potion.PotionEffect effect : player.getPlayer().getActivePotionEffects()) {
-                if (effect.getType().getName().toUpperCase().contains(POTION_LEVITATION)) {
-                    return effect.getAmplifier() + 1;
-                }
-            }
-        } catch (Exception ignored) {}
-        return 1.0;
+        return player.getCachedLevitationAmplifier();
     }
 
     // === ENTITY STATE ===
 
     /**
-     * Checks if the player is using a Riptide trident via reflection.
-     * Uses reflection because {@code isRiptiding()} doesn't exist in all MC versions.
+     * Checks if the player is using a Riptide trident via cached state.
+     * Cached on main thread to avoid reflection from Netty threads.
      */
     public static boolean checkRiptiding(WindfallPlayer player) {
-        try {
-            java.lang.reflect.Method m = player.getPlayer().getClass().getMethod("isRiptiding");
-            return (Boolean) m.invoke(player.getPlayer());
-        } catch (Exception e) {
-            return false;
-        }
+        return player.isCachedHasRiptide();
     }
 
     /**
-     * Checks if the player is gliding with an elytra via reflection.
-     * Uses reflection because {@code isGliding()} was added in 1.9+.
+     * Checks if the player is gliding with an elytra via cached state.
+     * Cached on main thread to avoid reflection from Netty threads.
      */
     public static boolean checkFallFlying(WindfallPlayer player) {
-        try {
-            java.lang.reflect.Method m = player.getPlayer().getClass().getMethod("isGliding");
-            return (Boolean) m.invoke(player.getPlayer());
-        } catch (Exception e) {
-            return false;
-        }
+        return player.isCachedIsFallFlying();
     }
 }

@@ -65,6 +65,11 @@ public class GroundSpoofCheck extends Check implements PacketCheck {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    @Override
+    public void removePlayer(java.util.UUID uuid) {
+        stateMap.remove(uuid);
+    }
+
     /**
      * Processes incoming movement packets to detect ground state falsification.
      *

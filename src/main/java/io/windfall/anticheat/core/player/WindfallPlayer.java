@@ -117,6 +117,19 @@ public class WindfallPlayer {
     // Set after RESPAWN packet to suppress false-positive flags from ViaVersion respawn desync
     private boolean respawned;
 
+    // Cached Bukkit API state — updated on main thread, read from Netty packet threads.
+    // Prevents thread-unsafe cross-thread Bukkit API access in PredictionEngine.
+    private volatile boolean cachedInWater;
+    private volatile boolean cachedInLava;
+    private volatile boolean cachedOnHoney;
+    private volatile double cachedSpeedMultiplier = 1.0;
+    private volatile double cachedSlownessMultiplier = 1.0;
+    private volatile boolean cachedHasSlowFalling;
+    private volatile boolean cachedHasLevitation;
+    private volatile double cachedLevitationAmplifier = 1.0;
+    private volatile boolean cachedIsFallFlying;
+    private volatile boolean cachedHasRiptide;
+
     /**
      * Creates a WindfallPlayer from a Bukkit Player and PacketEvents User.
      * Called once at LOGIN_SUCCESS from {@link io.windfall.anticheat.core.network.PacketListener}.
@@ -421,4 +434,81 @@ public class WindfallPlayer {
         }
         return total;
     }
+
+    // === Cached Bukkit state — safe to read from Netty threads ===
+
+    /** Updates all cached Bukkit API state on the main thread. Called once per tick from CheckManager. */
+    public void updateCachedState() {
+        try {
+            org.bukkit.Location loc = player.getLocation();
+            org.bukkit.block.Block block = loc.getBlock();
+            this.cachedInWater = io.windfall.anticheat.core.util.MaterialUtils.isWater(block.getType());
+            this.cachedInLava = io.windfall.anticheat.core.util.MaterialUtils.isLava(block.getType());
+            this.cachedOnHoney = io.windfall.anticheat.core.util.MaterialUtils.isHoney(
+                loc.clone().subtract(0, 0.1, 0).getBlock().getType());
+        } catch (Exception e) {
+            this.cachedInWater = false;
+            this.cachedInLava = false;
+            this.cachedOnHoney = false;
+        }
+        try {
+            this.cachedSpeedMultiplier = computePotionMultiplier("SPEED", 0.20, 5);
+            this.cachedSlownessMultiplier = computePotionMultiplier("SLOW", -0.15, 4);
+            this.cachedHasSlowFalling = hasPotionEffect("SLOW_FALLING");
+            this.cachedHasLevitation = hasPotionEffect("LEVITATION");
+            this.cachedLevitationAmplifier = getPotionAmplifier("LEVITATION");
+        } catch (Exception e) {
+            this.cachedSpeedMultiplier = 1.0;
+            this.cachedSlownessMultiplier = 1.0;
+            this.cachedHasSlowFalling = false;
+            this.cachedHasLevitation = false;
+            this.cachedLevitationAmplifier = 1.0;
+        }
+        try {
+            java.lang.reflect.Method riptideMethod = player.getClass().getMethod("isRiptiding");
+            this.cachedHasRiptide = (Boolean) riptideMethod.invoke(player);
+            java.lang.reflect.Method glideMethod = player.getClass().getMethod("isGliding");
+            this.cachedIsFallFlying = (Boolean) glideMethod.invoke(player);
+        } catch (Exception e) {
+            this.cachedHasRiptide = false;
+            this.cachedIsFallFlying = false;
+        }
+    }
+
+    private double computePotionMultiplier(String nameContains, double perLevel, int maxLevel) {
+        for (org.bukkit.potion.PotionEffect effect : player.getActivePotionEffects()) {
+            if (effect.getType().getName().toUpperCase().contains(nameContains)) {
+                int level = Math.min(effect.getAmplifier() + 1, maxLevel);
+                return 1.0 + (perLevel * level);
+            }
+        }
+        return 1.0;
+    }
+
+    private boolean hasPotionEffect(String nameContains) {
+        for (org.bukkit.potion.PotionEffect effect : player.getActivePotionEffects()) {
+            if (effect.getType().getName().toUpperCase().contains(nameContains)) return true;
+        }
+        return false;
+    }
+
+    private double getPotionAmplifier(String nameContains) {
+        for (org.bukkit.potion.PotionEffect effect : player.getActivePotionEffects()) {
+            if (effect.getType().getName().toUpperCase().contains(nameContains)) {
+                return effect.getAmplifier() + 1;
+            }
+        }
+        return 1.0;
+    }
+
+    public boolean isCachedInWater() { return cachedInWater; }
+    public boolean isCachedInLava() { return cachedInLava; }
+    public boolean isCachedOnHoney() { return cachedOnHoney; }
+    public double getCachedSpeedMultiplier() { return cachedSpeedMultiplier; }
+    public double getCachedSlownessMultiplier() { return cachedSlownessMultiplier; }
+    public boolean isCachedHasSlowFalling() { return cachedHasSlowFalling; }
+    public boolean isCachedHasLevitation() { return cachedHasLevitation; }
+    public double getCachedLevitationAmplifier() { return cachedLevitationAmplifier; }
+    public boolean isCachedIsFallFlying() { return cachedIsFallFlying; }
+    public boolean isCachedHasRiptide() { return cachedHasRiptide; }
 }

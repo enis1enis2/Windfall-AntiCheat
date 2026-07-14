@@ -62,6 +62,11 @@ public class MacroCheck extends Check implements PacketCheck {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    @Override
+    public void removePlayer(java.util.UUID uuid) {
+        stateMap.remove(uuid);
+    }
+
     /**
      * Processes incoming movement packets. If the gap since the last packet exceeds 100ms,
      * the current pattern buffer is flushed (recorded as a distinct pattern). The movement

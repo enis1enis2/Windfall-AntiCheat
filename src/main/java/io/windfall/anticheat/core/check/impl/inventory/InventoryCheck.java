@@ -78,6 +78,11 @@ public class InventoryCheck extends Check implements PacketCheck {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    @Override
+    public void removePlayer(java.util.UUID uuid) {
+        stateMap.remove(uuid);
+    }
+
     /**
      * Processes incoming packets for inventory click speed validation.
      * Handles CLICK_WINDOW for rate limiting and CREATIVE_INVENTORY_ACTION for mode validation.

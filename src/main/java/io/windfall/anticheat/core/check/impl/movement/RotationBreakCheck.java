@@ -48,6 +48,11 @@ public class RotationBreakCheck extends Check implements PacketCheck {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    @Override
+    public void removePlayer(java.util.UUID uuid) {
+        stateMap.remove(uuid);
+    }
+
     /**
      * Tracks rotation deltas across the break lifecycle: snapshots yaw/pitch on
      * start, compares on finish, and flags if the delta exceeds the threshold.

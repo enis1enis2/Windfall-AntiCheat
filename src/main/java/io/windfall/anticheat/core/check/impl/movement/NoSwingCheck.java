@@ -55,6 +55,11 @@ public class NoSwingCheck extends Check implements PacketCheck {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    @Override
+    public void removePlayer(java.util.UUID uuid) {
+        stateMap.remove(uuid);
+    }
+
     /**
      * Processes incoming packets. Records swing timestamps for ANIMATION packets
      * and triggers a swing check on START_DIGGING and non-null-face block placements.

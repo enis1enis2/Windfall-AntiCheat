@@ -108,4 +108,10 @@ public class DiscordWebhook {
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
     }
+
+    /** Evicts stale rate-limit entries older than 5 minutes — called periodically from CheckManager.onTick() */
+    public void cleanupStaleEntries() {
+        long cutoff = System.currentTimeMillis() - 300_000L;
+        lastAlertTimes.entrySet().removeIf(entry -> entry.getValue() < cutoff);
+    }
 }

@@ -165,6 +165,12 @@ public final class WindfallPlugin extends JavaPlugin {
         @EventHandler
         public void onQuit(PlayerQuitEvent event) {
             java.util.UUID uuid = event.getPlayer().getUniqueId();
+            if (transactionManager != null) {
+                transactionManager.onPlayerQuit(uuid);
+            }
+            if (punishmentEngine != null) {
+                punishmentEngine.cleanup(uuid);
+            }
             if (checkManager != null) {
                 checkManager.removePlayer(uuid);
             }

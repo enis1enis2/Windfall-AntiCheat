@@ -70,6 +70,11 @@ public class FastBreakCheck extends Check implements PacketCheck {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    @Override
+    public void removePlayer(java.util.UUID uuid) {
+        stateMap.remove(uuid);
+    }
+
     /**
      * Processes PLAYER_DIGGING packets to track break start, cancel, and finish
      * events. Compares actual break duration against the vanilla baseline.

@@ -65,6 +65,11 @@ public class SpeedCheck extends Check implements PacketCheck {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
+    @Override
+    public void removePlayer(java.util.UUID uuid) {
+        stateMap.remove(uuid);
+    }
+
     /**
      * Processes incoming movement packets to compare actual vs predicted horizontal speed.
      *
