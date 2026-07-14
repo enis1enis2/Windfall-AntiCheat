@@ -23,7 +23,7 @@ Thank you for considering contributing to Windfall! Every contribution helps mak
 
 ## Code of Conduct
 
-This project adheres to the [Contributor Covenant](https://www.contributor-covenant.org/). By participating, you are expected to uphold this code. Be respectful, constructive, and inclusive in all interactions.
+This project adheres to the [Contributor Covenant 3.0](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Be respectful, constructive, and inclusive in all interactions.
 
 ---
 
