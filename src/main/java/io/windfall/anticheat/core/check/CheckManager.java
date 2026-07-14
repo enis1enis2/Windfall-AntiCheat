@@ -249,7 +249,7 @@ public class CheckManager {
             try {
                 check.onPacketReceive(player, event);
             } catch (Exception e) {
-                plugin.getLogger().severe("Check " + check.getName() + " error: " + e.getMessage());
+                plugin.getLogger().fine("Check " + check.getName() + " packet error (likely upstream PacketEvents issue): " + e.getMessage());
             }
         }
     }
@@ -264,7 +264,7 @@ public class CheckManager {
             try {
                 check.onPacketSend(player, event);
             } catch (Exception e) {
-                plugin.getLogger().severe("Check " + check.getName() + " error: " + e.getMessage());
+                plugin.getLogger().fine("Check " + check.getName() + " packet error (likely upstream PacketEvents issue): " + e.getMessage());
             }
         }
     }

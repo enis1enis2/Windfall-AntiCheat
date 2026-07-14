@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        Known false positives for Windfall dependencies.
+        Geyser/Spigot publish SNAPSHOT stubs — CVEs against the full Geyser runtime
+        do not apply to the API-only stub we compile against.
+    -->
+    <suppress>
+        <notes>Suppress CVEs against geyser-api SNAPSHOT — runtime vulnerability, not API stub</notes>
+        <packageUrl regex="true">pkg:maven/org\.geysermc\.geyser/api@.*-SNAPSHOT</packageUrl>
+        <cve>CVE-2026-42188</cve>
+    </suppress>
+</suppressions>

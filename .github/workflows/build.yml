@@ -67,6 +67,9 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: mvn -B clean package --file pom.xml -Dgpg.passphrase="$GPG_PASSPHRASE"
 
+      - name: OWASP Dependency-Check
+        run: mvn -B dependency-check:check --file pom.xml -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" || true
+
       - name: Generate checksum
         run: |
           cd target

@@ -1,6 +1,7 @@
 package io.windfall.anticheat.core.plugin;
 
 import io.windfall.anticheat.WindfallPlugin;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
@@ -54,6 +55,11 @@ public final class PluginDetector {
         geyserInstalled = isPluginEnabled("Geyser-Spigot") || isPluginEnabled("geyser");
         if (geyserInstalled) {
             logger.info("[Windfall] Geyser detected — Bedrock player adaptation active");
+            String geyserVersion = getPluginVersion("Geyser-Spigot");
+            if (geyserVersion == null) geyserVersion = getPluginVersion("geyser");
+            if (geyserVersion != null && isGeyserVulnerable(geyserVersion)) {
+                logger.warning("[Windfall] Geyser " + geyserVersion + " has known SSRF vulnerability (CVE-2026-42188) — update to 2.9.3+");
+            }
         }
 
         oldCombatMechanicsInstalled = isPluginEnabled("OldCombatMechanics");
@@ -83,5 +89,30 @@ public final class PluginDetector {
     /** Returns true if any Via* plugin (Version, Backwards, or Rewind) is installed */
     public boolean isAnyViaVersionPlugin() {
         return viaVersionInstalled || viaBackwardsInstalled || viaRewindInstalled;
+    }
+
+    /** Gets the version string of a plugin by name, or null if not found */
+    private String getPluginVersion(String name) {
+        Plugin plugin = Bukkit.getPluginManager().getPlugin(name);
+        return plugin != null ? plugin.getDescription().getVersion() : null;
+    }
+
+    /**
+     * Checks if a Geyser version is vulnerable to CVE-2026-42188 (SSRF).
+     * Affects all versions <= 2.9.2.
+     *
+     * @param version Geyser version string
+     * @return true if version is vulnerable
+     */
+    private boolean isGeyserVulnerable(String version) {
+        try {
+            String[] parts = version.split("\\.");
+            int major = Integer.parseInt(parts[0]);
+            int minor = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
+            int patch = parts.length > 2 ? Integer.parseInt(parts[2]) : 0;
+            return major < 2 || (major == 2 && minor < 9) || (major == 2 && minor == 9 && patch < 3);
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }
