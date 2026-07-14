@@ -60,7 +60,7 @@ jobs:
         run: |
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import
           echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
-          gconf-agent --daemon || true
+          gpg-agent --daemon || true
 
       - name: Build with Maven
         env:
