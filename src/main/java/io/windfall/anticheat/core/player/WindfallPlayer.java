@@ -3,6 +3,7 @@ package io.windfall.anticheat.core.player;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.player.User;
 import io.windfall.anticheat.core.bedrock.BedrockInfo;
+import io.windfall.anticheat.core.player.data.ActionData;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.entity.Player;
@@ -109,6 +110,9 @@ public class WindfallPlayer {
 
     private BedrockInfo bedrockInfo;
     private boolean alertsEnabled = true;
+
+    /** Tracks block-level actions (placement, breaking, piston pushes) for movement check exemptions */
+    private final ActionData actionData = new ActionData(this);
 
     // Set after RESPAWN packet to suppress false-positive flags from ViaVersion respawn desync
     private boolean respawned;
@@ -397,6 +401,9 @@ public class WindfallPlayer {
 
     public boolean isAlertsEnabled() { return alertsEnabled; }
     public void setAlertsEnabled(boolean alertsEnabled) { this.alertsEnabled = alertsEnabled; }
+
+    /** Returns the action data tracker for this player — provides block update/piston exemptions */
+    public ActionData getActionData() { return actionData; }
 
     /** Returns true if the player just respawned — used to suppress ViaVersion false positives */
     public boolean isRespawned() { return respawned; }

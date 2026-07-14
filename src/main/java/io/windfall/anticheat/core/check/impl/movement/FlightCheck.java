@@ -6,6 +6,7 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
+import io.windfall.anticheat.core.player.data.ActionData;
 import io.windfall.anticheat.core.physics.PredictionContext;
 import io.windfall.anticheat.core.physics.PredictionEngine;
 import io.windfall.anticheat.core.player.WindfallPlayer;
@@ -81,6 +82,20 @@ public class FlightCheck extends Check implements PacketCheck {
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (!PredictionEngine.isMovementPacket(event)) return;
+
+        ActionData actionData = player.getActionData();
+
+        // Exempt if a piston recently pushed the player — piston movement causes erratic vertical deltas
+        if (actionData.hasRecentPistonUpdate(5)) {
+            decreaseBuffer(player, 0.5);
+            return;
+        }
+
+        // Exempt if a block was recently placed/broken directly under the player — causes position adjustments
+        if (actionData.hasRecentBlockUpdateUnder(5)) {
+            decreaseBuffer(player, 0.3);
+            return;
+        }
 
         PlayerState state = getState(player);
         PredictionContext ctx = new PredictionContext(player);

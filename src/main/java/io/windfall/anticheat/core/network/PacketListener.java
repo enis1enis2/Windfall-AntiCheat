@@ -121,6 +121,9 @@ public class PacketListener extends PacketListenerAbstract {
             }
 
             checkManager.onPacketReceive(wp, event);
+
+            // Feed block action packets to ActionData for movement check exemptions
+            wp.getActionData().processReceive(event);
         } catch (Exception e) {
             plugin.getLogger().warning("Exception in onPacketReceive: " + e.getMessage());
         }
@@ -171,6 +174,9 @@ public class PacketListener extends PacketListenerAbstract {
             }
 
             checkManager.onPacketSend(wp, event);
+
+            // Feed block change packets to ActionData for movement check exemptions
+            wp.getActionData().processSend(event);
         } catch (Exception e) {
             plugin.getLogger().warning("Exception in onPacketSend: " + e.getMessage());
         }

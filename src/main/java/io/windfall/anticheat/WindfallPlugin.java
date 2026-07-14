@@ -3,9 +3,13 @@ package io.windfall.anticheat;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import com.github.retrooper.packetevents.PacketEvents;
 import io.windfall.anticheat.core.alert.AlertManager;
+import io.windfall.anticheat.api.WindfallAPI;
+import io.windfall.anticheat.api.WindfallProvider;
+import io.windfall.anticheat.api.WindfallAPIImpl;
 import io.windfall.anticheat.core.bedrock.GeyserManager;
 import io.windfall.anticheat.core.bedrock.GeysersTracker;
 import io.windfall.anticheat.core.check.CheckManager;
+import io.windfall.anticheat.core.compat.WorldGuardCompat;
 import io.windfall.anticheat.core.command.ChecklistGUI;
 import io.windfall.anticheat.core.command.CommandManager;
 import io.windfall.anticheat.core.config.WindfallConfig;
@@ -67,6 +71,7 @@ public final class WindfallPlugin extends JavaPlugin {
     private ChecklistGUI checklistGUI;
     private ServerFork serverFork;
     private PluginDetector pluginDetector;
+    private WorldGuardCompat worldGuardCompat;
     private FoliaCompat foliaCompat;
     private PurpurCompat purpurCompat;
     private volatile boolean running;
@@ -103,6 +108,17 @@ public final class WindfallPlugin extends JavaPlugin {
         this.alertManager = new AlertManager(this);
         this.checklistGUI = new ChecklistGUI(this);
 
+        // Initialize WorldGuard integration if available
+        if (pluginDetector.isWorldGuardInstalled()) {
+            this.worldGuardCompat = WorldGuardCompat.load();
+            if (worldGuardCompat != null) {
+                getLogger().info("[Windfall] WorldGuard integration loaded");
+            }
+        }
+
+        // Register public API for other plugins
+        WindfallProvider.register(new WindfallAPIImpl(this));
+
         PacketEvents.getAPI().getEventManager().registerListener(new PacketListener(this));
         PacketEvents.getAPI().init();
 
@@ -119,6 +135,7 @@ public final class WindfallPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         this.running = false;
+        WindfallProvider.unregister();
         if (scheduler != null) scheduler.shutdown();
         PacketEvents.getAPI().terminate();
         getLogger().info("Windfall disabled.");
@@ -140,6 +157,7 @@ public final class WindfallPlugin extends JavaPlugin {
     public boolean isRunning() { return running; }
     public ServerFork getServerFork() { return serverFork; }
     public PluginDetector getPluginDetector() { return pluginDetector; }
+    public WorldGuardCompat getWorldGuardCompat() { return worldGuardCompat; }
     public FoliaCompat getFoliaCompat() { return foliaCompat; }
     public PurpurCompat getPurpurCompat() { return purpurCompat; }
 

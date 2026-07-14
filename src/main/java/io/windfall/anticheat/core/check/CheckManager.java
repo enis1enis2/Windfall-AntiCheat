@@ -277,6 +277,8 @@ public class CheckManager {
         for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
             if (!player.isValid()) continue;
             player.resetTickState();
+            // Advance all ActionData tick counters for block update/piston exemptions
+            player.getActionData().tick();
             for (Check check : checks) {
                 if (!check.isEnabled()) continue;
                 check.reward(player);

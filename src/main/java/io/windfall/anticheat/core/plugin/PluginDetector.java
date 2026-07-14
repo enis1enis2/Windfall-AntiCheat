@@ -30,6 +30,7 @@ public final class PluginDetector {
     private boolean viaRewindInstalled;
     private boolean geyserInstalled;
     private boolean oldCombatMechanicsInstalled;
+    private boolean worldGuardInstalled;
 
     /** Scans for installed plugins and logs what was found */
     public void init(WindfallPlugin plugin) {
@@ -59,6 +60,11 @@ public final class PluginDetector {
         if (oldCombatMechanicsInstalled) {
             logger.info("[Windfall] OldCombatMechanics detected — 1.8 combat emulation active");
         }
+
+        worldGuardInstalled = isPluginEnabled("WorldGuard");
+        if (worldGuardInstalled) {
+            logger.info("[Windfall] WorldGuard detected — region-based exemptions available");
+        }
     }
 
     /** Checks if a plugin is both present and enabled */
@@ -72,6 +78,7 @@ public final class PluginDetector {
     public boolean isViaRewindInstalled() { return viaRewindInstalled; }
     public boolean isGeyserInstalled() { return geyserInstalled; }
     public boolean isOldCombatMechanicsInstalled() { return oldCombatMechanicsInstalled; }
+    public boolean isWorldGuardInstalled() { return worldGuardInstalled; }
 
     /** Returns true if any Via* plugin (Version, Backwards, or Rewind) is installed */
     public boolean isAnyViaVersionPlugin() {
