@@ -168,6 +168,10 @@ public class WindfallPlayer {
     /** Tracks block-level actions (placement, breaking, piston pushes) for movement check exemptions */
     private final ActionData actionData = new ActionData(this);
 
+    // === BYPASS RESISTANCE STATE ===
+    // Latency-compensated world state for this player
+    private volatile io.windfall.anticheat.core.compensation.CompensatedWorld compensatedWorld;
+
     // Set after RESPAWN packet to suppress false-positive flags from ViaVersion respawn desync
     private volatile boolean respawned;
 
@@ -479,6 +483,11 @@ public class WindfallPlayer {
 
     /** Returns the action data tracker for this player — provides block update/piston exemptions */
     public ActionData getActionData() { return actionData; }
+
+    /** Returns the latency-compensated world for this player — used by bypass resistance engine */
+    public io.windfall.anticheat.core.compensation.CompensatedWorld getCompensatedWorld() { return compensatedWorld; }
+    /** Sets the latency-compensated world for this player */
+    public void setCompensatedWorld(io.windfall.anticheat.core.compensation.CompensatedWorld world) { this.compensatedWorld = world; }
 
     /** Returns true if the player just respawned — used to suppress ViaVersion false positives */
     public boolean isRespawned() { return respawned; }

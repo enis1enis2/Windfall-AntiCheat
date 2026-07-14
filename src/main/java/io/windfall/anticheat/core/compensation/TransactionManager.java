@@ -183,6 +183,40 @@ public final class TransactionManager {
     }
 
     /**
+     * Sends a transaction for PingPong tracking and returns the ID.
+     * Used by {@link PingPongManager} to send dual pings per tick.
+     *
+     * @param player the player to send the transaction to
+     * @return the transaction ID, or -1 if the send failed
+     */
+    public short sendPigPongTransaction(WindfallPlayer player) {
+        if (!player.isValid()) return -1;
+
+        TransactionState state = playerTransactions.computeIfAbsent(
+                player.getUuid(), k -> new TransactionState());
+
+        short id = state.nextTransactionId();
+        long sendTime = System.nanoTime();
+
+        state.pendingTransactions.add(new PendingTransaction(id, sendTime));
+
+        try {
+            if (player.getProtocolVersion() >= 756) {
+                WrapperPlayServerPing ping = new WrapperPlayServerPing((int) id);
+                PacketEvents.getAPI().getPlayerManager().sendPacket(player.getPlayer(), ping);
+            } else {
+                WrapperPlayServerWindowConfirmation confirm = new WrapperPlayServerWindowConfirmation(
+                        0, id, false);
+                PacketEvents.getAPI().getPlayerManager().sendPacket(player.getPlayer(), confirm);
+            }
+            return id;
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("Windfall: Failed to send ping-pong transaction: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    /**
      * Cleans up transaction state when a player disconnects.
      * Prevents memory leaks from orphaned pending transactions and callbacks.
      *

@@ -23,6 +23,7 @@ import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.bedrock.BedrockInfo;
 import io.windfall.anticheat.core.bedrock.GeyserManager;
 import io.windfall.anticheat.core.check.CheckManager;
+import io.windfall.anticheat.core.compensation.PingPongManager;
 import io.windfall.anticheat.core.compensation.TransactionManager;
 import io.windfall.anticheat.core.player.PlayerManager;
 import io.windfall.anticheat.core.player.WindfallPlayer;
@@ -62,12 +63,14 @@ public class PacketListener extends PacketListenerAbstract {
     private final PlayerManager playerManager;
     private final CheckManager checkManager;
     private final TransactionManager transactionManager;
+    private final PingPongManager pingPongManager;
 
     public PacketListener(WindfallPlugin plugin) {
         this.plugin = plugin;
         this.playerManager = plugin.getPlayerManager();
         this.checkManager = plugin.getCheckManager();
         this.transactionManager = plugin.getTransactionManager();
+        this.pingPongManager = plugin.getPingPongManager();
     }
 
     @Override

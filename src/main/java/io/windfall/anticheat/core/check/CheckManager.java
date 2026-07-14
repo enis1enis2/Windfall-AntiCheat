@@ -56,6 +56,9 @@ import io.windfall.anticheat.core.check.impl.packet.ClientBrandCheck;
 import io.windfall.anticheat.core.check.impl.packet.VehicleCheck;
 import io.windfall.anticheat.core.check.impl.inventory.InventoryCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.compensation.PingPongManager;
+import io.windfall.anticheat.core.compensation.LatencyCompensator;
+import io.windfall.anticheat.core.compensation.SimulationEngine;
 import io.windfall.anticheat.core.plugin.PluginDetector;
 import io.windfall.anticheat.core.platform.FoliaCompat;
 import io.windfall.anticheat.core.platform.PurpurCompat;
@@ -103,6 +106,14 @@ public class CheckManager {
     /** Tick counter for periodic tasks (e.g., ReachCheck entity eviction) */
     private long tickCounter = 0;
 
+    // === BYPASS RESISTANCE ENGINES ===
+    /** Dual-ping sandwich system for precise client state tracking */
+    private final PingPongManager pingPongManager;
+    /** Latency-compensated world change queue */
+    private final LatencyCompensator latencyCompensator;
+    /** Multi-scenario movement simulation engine */
+    private final SimulationEngine simulationEngine;
+
     public CheckManager(WindfallPlugin plugin) {
         this.plugin = plugin;
         this.serverProtocol = plugin.getVersionManager().getProtocolVersion();
@@ -110,6 +121,9 @@ public class CheckManager {
         this.pluginDetector = plugin.getPluginDetector();
         this.foliaCompat = plugin.getFoliaCompat();
         this.purpurCompat = plugin.getPurpurCompat();
+        this.pingPongManager = plugin.getPingPongManager();
+        this.latencyCompensator = plugin.getLatencyCompensator();
+        this.simulationEngine = plugin.getSimulationEngine();
         registerChecks();
     }
 
@@ -272,15 +286,24 @@ public class CheckManager {
     /**
      * Per-tick processing: resets player tick state and applies VL/buffer decay.
      * Also decays punishment tiers for players whose VL has dropped.
+     * Calls PingPongManager for dual-ping sandwich tracking.
      * Called by {@link io.windfall.anticheat.core.scheduler.PlatformScheduler}.
      */
     public void onTick() {
         io.windfall.anticheat.core.punishment.PunishmentEngine pe = plugin.getPunishmentEngine();
         for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
             if (!player.isValid()) continue;
+
+            // Send first ping (pre-change state marker)
+            pingPongManager.onTickStart(player);
+
             player.resetTickState();
             player.getActionData().tick();
             player.updateCachedState();
+
+            // Process deferred block changes based on player latency
+            latencyCompensator.processDeferredChanges(player.getUuid(), player);
+
             for (Check check : checks) {
                 if (!check.isEnabled()) continue;
                 check.reward(player);
@@ -288,6 +311,9 @@ public class CheckManager {
             if (pe != null) {
                 pe.decayTierIfNeeded(player);
             }
+
+            // Send second ping (post-change state marker)
+            pingPongManager.onTickEnd(player);
         }
         if (tickCounter++ % 200 == 0) {
             ReachCheck.cleanup(10_000L);
@@ -322,6 +348,13 @@ public class CheckManager {
     public PluginDetector getPluginDetector() { return pluginDetector; }
     public FoliaCompat getFoliaCompat() { return foliaCompat; }
     public PurpurCompat getPurpurCompat() { return purpurCompat; }
+
+    /** Returns the ping-pong manager for dual-ping tracking */
+    public PingPongManager getPingPongManager() { return pingPongManager; }
+    /** Returns the latency compensator for deferred world changes */
+    public LatencyCompensator getLatencyCompensator() { return latencyCompensator; }
+    /** Returns the simulation engine for multi-scenario prediction */
+    public SimulationEngine getSimulationEngine() { return simulationEngine; }
 
     /**
      * Removes per-player state from all checks for the given UUID.

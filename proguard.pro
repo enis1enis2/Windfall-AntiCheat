@@ -78,6 +78,11 @@
 # --- PredictionContext (used as method param in kept checks) ---
 -keep class io.windfall.anticheat.core.physics.PredictionContext { *; }
 
+# --- Bypass resistance engine (called from CheckManager) ---
+-keep class io.windfall.anticheat.core.compensation.PingPongManager { *; }
+-keep class io.windfall.anticheat.core.compensation.LatencyCompensator { *; }
+-keep class io.windfall.anticheat.core.compensation.SimulationEngine { *; }
+
 # --- Public API (external plugins depend on these) ---
 -keep class io.windfall.anticheat.api.** {
     *;

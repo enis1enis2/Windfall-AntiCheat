@@ -24,6 +24,9 @@ import io.windfall.anticheat.core.severity.SeverityManager;
 import io.windfall.anticheat.core.version.ServerFork;
 import io.windfall.anticheat.core.version.VersionManager;
 import io.windfall.anticheat.core.compensation.TransactionManager;
+import io.windfall.anticheat.core.compensation.PingPongManager;
+import io.windfall.anticheat.core.compensation.LatencyCompensator;
+import io.windfall.anticheat.core.compensation.SimulationEngine;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -60,6 +63,9 @@ public final class WindfallPlugin extends JavaPlugin {
     private PlayerManager playerManager;
     private CheckManager checkManager;
     private TransactionManager transactionManager;
+    private PingPongManager pingPongManager;
+    private LatencyCompensator latencyCompensator;
+    private SimulationEngine simulationEngine;
     private VersionManager versionManager;
     private CommandManager commandManager;
     private WindfallConfig config;
@@ -99,6 +105,9 @@ public final class WindfallPlugin extends JavaPlugin {
         this.purpurCompat.init(serverFork, getLogger());
         this.playerManager = new PlayerManager();
         this.transactionManager = new TransactionManager(this);
+        this.pingPongManager = new PingPongManager(this);
+        this.latencyCompensator = new LatencyCompensator();
+        this.simulationEngine = new SimulationEngine(pingPongManager);
         this.geyserManager = GeyserManager.init(this);
         this.geysersTracker = new GeysersTracker();
         this.severityManager = SeverityManager.fromConfig(config);
@@ -146,6 +155,9 @@ public final class WindfallPlugin extends JavaPlugin {
     public PlayerManager getPlayerManager() { return playerManager; }
     public CheckManager getCheckManager() { return checkManager; }
     public TransactionManager getTransactionManager() { return transactionManager; }
+    public PingPongManager getPingPongManager() { return pingPongManager; }
+    public LatencyCompensator getLatencyCompensator() { return latencyCompensator; }
+    public SimulationEngine getSimulationEngine() { return simulationEngine; }
     public VersionManager getVersionManager() { return versionManager; }
     public WindfallConfig getWindfallConfig() { return config; }
     public AlertManager getAlertManager() { return alertManager; }
@@ -167,6 +179,12 @@ public final class WindfallPlugin extends JavaPlugin {
             java.util.UUID uuid = event.getPlayer().getUniqueId();
             if (transactionManager != null) {
                 transactionManager.onPlayerQuit(uuid);
+            }
+            if (pingPongManager != null) {
+                pingPongManager.onPlayerQuit(uuid);
+            }
+            if (latencyCompensator != null) {
+                latencyCompensator.onPlayerQuit(uuid);
             }
             if (punishmentEngine != null) {
                 punishmentEngine.cleanup(uuid);
