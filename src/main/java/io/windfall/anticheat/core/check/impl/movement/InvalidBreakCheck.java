@@ -5,6 +5,7 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.player.DiggingAction;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerDigging;
+import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
@@ -66,7 +67,7 @@ public class InvalidBreakCheck extends Check implements PacketCheck {
                 return;
             }
         } catch (Exception e) {
-            // World access failed — skip
+            WindfallPlugin.getInstance().getLogger().fine("InvalidBreakCheck: world-access exception — " + e.getMessage());
         }
     }
 

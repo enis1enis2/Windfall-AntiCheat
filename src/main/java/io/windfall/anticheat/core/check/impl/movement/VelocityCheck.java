@@ -15,9 +15,9 @@ import io.windfall.anticheat.core.platform.PurpurCompat;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import io.windfall.anticheat.core.physics.PhysicsConstants;
 import io.windfall.anticheat.core.version.VersionBracket;
-import java.util.ArrayDeque;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * Detects knockback (velocity) rejection — clients that receive an entity velocity packet but
@@ -69,7 +69,7 @@ public class VelocityCheck extends Check implements PacketCheck {
     private static final double KB_VERTICAL = 0.4;
 
     private static final class PlayerState {
-        final ArrayDeque<PendingVelocity> pendingVelocities = new ArrayDeque<>();
+        final ConcurrentLinkedDeque<PendingVelocity> pendingVelocities = new ConcurrentLinkedDeque<>();
         boolean velocityActive;
         double expectedDeltaX;
         double expectedDeltaY;
@@ -158,27 +158,28 @@ public class VelocityCheck extends Check implements PacketCheck {
         /**
          * If velocity is not yet active and there are pending velocities, activate the first one.
          * The velocity times out if not consumed within (500ms + ping) to handle missed packets.
+         * Uses pollFirst() for atomic poll to avoid TOCTOU race on the deque.
          */
-        if (!state.velocityActive && !state.pendingVelocities.isEmpty()) {
-            PendingVelocity pv = state.pendingVelocities.peekFirst();
-            if (pv == null) return;
+        if (!state.velocityActive) {
+            PendingVelocity pv;
+            while ((pv = state.pendingVelocities.peekFirst()) != null) {
+                long age = System.currentTimeMillis() - pv.receivedAt;
+                long timeout = 500L + player.getTransactionPing();
+                if (age > timeout) {
+                    state.pendingVelocities.pollFirst();
+                    continue;
+                }
+                state.pendingVelocities.pollFirst();
+                state.velocityActive = true;
 
-            long age = System.currentTimeMillis() - pv.receivedAt;
-            long timeout = 500L + player.getTransactionPing();
-            if (age > timeout) {
-                state.pendingVelocities.removeFirst();
+                /** Apply one tick of post-velocity physics to get expected deltas */
+                double[] postDrag = applyVersionAwarePostVelocityPhysics(pv.velX, pv.velY, pv.velZ, player);
+                state.expectedDeltaX = postDrag[0];
+                state.expectedDeltaY = postDrag[1];
+                state.expectedDeltaZ = postDrag[2];
+                state.velocityAge = 0;
                 return;
             }
-
-            state.velocityActive = true;
-            state.pendingVelocities.removeFirst();
-
-            /** Apply one tick of post-velocity physics to get expected deltas */
-            double[] postDrag = applyVersionAwarePostVelocityPhysics(pv.velX, pv.velY, pv.velZ, player);
-            state.expectedDeltaX = postDrag[0];
-            state.expectedDeltaY = postDrag[1];
-            state.expectedDeltaZ = postDrag[2];
-            state.velocityAge = 0;
             return;
         }
 

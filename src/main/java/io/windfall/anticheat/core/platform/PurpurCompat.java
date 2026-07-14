@@ -20,10 +20,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
  */
 public final class PurpurCompat {
 
-    private boolean isPurpur;
-    private boolean customKnockbackEnabled;
-    private double attackKnockbackMultiplier = 1.0;
-    private double knockbackVerticalMultiplier = 1.0;
+    private volatile boolean isPurpur;
+    private volatile boolean customKnockbackEnabled;
+    private volatile double attackKnockbackMultiplier = 1.0;
+    private volatile double knockbackVerticalMultiplier = 1.0;
 
     /** Reads knockback settings from purpur.yml if running on Purpur */
     public void init(ServerFork fork, Logger logger) {
@@ -33,7 +33,7 @@ public final class PurpurCompat {
         try {
             File purpurConfig = new File("purpur.yml");
             if (!purpurConfig.exists()) {
-                logger.info("[Windfall] purpur.yml not found — using vanilla knockback values");
+                logger.warning("[Windfall] purpur.yml not found — using vanilla knockback values");
                 return;
             }
 

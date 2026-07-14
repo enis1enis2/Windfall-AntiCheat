@@ -39,10 +39,10 @@ import io.windfall.anticheat.core.player.WindfallPlayer;
 public class RotationPlaceCheck extends Check implements PacketCheck {
 
     /** Maximum allowed yaw deviation in degrees before the placement is considered suspicious. */
-    private static final float MAX_YAW_DEVIATION = 90.0f;
+    private static final float MAX_YAW_DEVIATION = 45.0f;
 
     /** Maximum allowed pitch deviation in degrees before the placement is considered suspicious. */
-    private static final float MAX_PITCH_DEVIATION = 90.0f;
+    private static final float MAX_PITCH_DEVIATION = 45.0f;
 
     /**
      * Buffer must exceed this value before a flag is raised.

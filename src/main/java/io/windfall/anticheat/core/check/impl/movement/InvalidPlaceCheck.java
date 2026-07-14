@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerBlockPlacement;
+import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
@@ -124,6 +125,7 @@ public class InvalidPlaceCheck extends Check implements PacketCheck {
                 flagDetail(player, "placing block inside player");
             }
         } catch (Exception e) {
+            WindfallPlugin.getInstance().getLogger().fine("InvalidPlaceCheck: world-access exception — " + e.getMessage());
         }
     }
 

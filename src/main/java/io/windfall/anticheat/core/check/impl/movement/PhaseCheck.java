@@ -2,6 +2,7 @@ package io.windfall.anticheat.core.check.impl.movement;
 
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
+import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
@@ -109,7 +110,7 @@ public class PhaseCheck extends Check implements PacketCheck {
                 decreaseBuffer(player, 0.2);
             }
         } catch (Exception e) {
-            /** Silently handle chunk-load or world-access exceptions */
+            WindfallPlugin.getInstance().getLogger().fine("PhaseCheck: chunk-load or world-access exception — " + e.getMessage());
         }
     }
 

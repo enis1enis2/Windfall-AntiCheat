@@ -21,7 +21,7 @@ public final class MaterialUtils {
     private static final Map<Material, Boolean> SOUL_SAND_CACHE = new ConcurrentHashMap<>();
     private static final Map<Material, Boolean> BUBBLE_COLUMN_CACHE = new ConcurrentHashMap<>();
     private static final Map<Material, Boolean> POWDER_SNOW_CACHE = new ConcurrentHashMap<>();
-    private static final Map<Material, Boolean> REPLACABLE_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Material, Boolean> REPLACEABLE_CACHE = new ConcurrentHashMap<>();
     private static final Map<Material, Boolean> NON_FULL_SHAPE_CACHE = new ConcurrentHashMap<>();
 
     private MaterialUtils() {}
@@ -216,7 +216,7 @@ public final class MaterialUtils {
      */
     public static boolean isReplaceable(Material material) {
         if (material == null || material == Material.AIR) return true;
-        return REPLACABLE_CACHE.computeIfAbsent(material, m -> {
+        return REPLACEABLE_CACHE.computeIfAbsent(material, m -> {
             if (isFluid(m)) return true;
             try {
                 return m == Material.AIR || !m.isSolid();
@@ -314,7 +314,7 @@ public final class MaterialUtils {
         SOUL_SAND_CACHE.clear();
         BUBBLE_COLUMN_CACHE.clear();
         POWDER_SNOW_CACHE.clear();
-        REPLACABLE_CACHE.clear();
+        REPLACEABLE_CACHE.clear();
         NON_FULL_SHAPE_CACHE.clear();
     }
 }

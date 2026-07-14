@@ -8,7 +8,6 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +43,7 @@ public class MacroCheck extends Check implements PacketCheck {
 
     /** Per-player state holding the pattern buffer and historical pattern counts. */
     private static final class PlayerState {
-        final Map<String, Integer> movementPatterns = new HashMap<>();
+        final Map<String, Integer> movementPatterns = new ConcurrentHashMap<>();
         long lastPatternTime;
         StringBuilder patternBuffer = new StringBuilder();
         int totalPatterns;

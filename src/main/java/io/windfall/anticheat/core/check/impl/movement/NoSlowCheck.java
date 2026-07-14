@@ -79,9 +79,29 @@ public class NoSlowCheck extends Check implements PacketCheck {
      */
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
+        PacketTypeCommon type = event.getPacketType();
+
+        // Track USE_ITEM packets to toggle the usingItem flag
+        if (type == PacketType.Play.Client.USE_ITEM) {
+            PlayerState state = getState(player);
+            state.usingItem = true;
+            state.usingItemTicks = 0;
+            return;
+        }
+
         if (!isMovementPacket(event)) return;
 
         PlayerState state = getState(player);
+
+        // Decrement using item ticks — after 20 ticks (1s) without USE_ITEM, clear flag
+        if (state.usingItem) {
+            state.usingItemTicks++;
+            if (state.usingItemTicks > 20) {
+                state.usingItem = false;
+                state.usingItemTicks = 0;
+            }
+        }
+
         double deltaX = player.getDeltaX();
         double deltaZ = player.getDeltaZ();
         /** Pythagorean horizontal speed magnitude (blocks/tick). */
