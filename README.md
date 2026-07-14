@@ -29,6 +29,8 @@ Windfall intercepts incoming packets via [PacketEvents 2](https://github.com/ret
 
 **52 checks** across 4 categories, with a **5-layer compatibility system** that adapts detection thresholds per-player based on protocol version, server fork, installed plugins, and Bedrock status.
 
+**Public API** available via `WindfallAPI` for external plugins to query player data, violation levels, and check status.
+
 ---
 
 ## Checks
@@ -198,6 +200,7 @@ On first run Windfall generates `plugins/Windfall/config.yml`. All checks, thres
 | ViaRewind | Supported | Legacy client support |
 | Geyser / Floodgate | Supported | Bedrock-specific movement tolerances |
 | OldCombatMechanics | Supported | 1.8 combat emulation awareness |
+| WorldGuard 7.x | Supported | Optional region checks (PVP flags) |
 
 ---
 
@@ -205,6 +208,7 @@ On first run Windfall generates `plugins/Windfall/config.yml`. All checks, thres
 
 ```
 windfall/
+├── api/                   # Public API (WindfallAPI, WindfallProvider, PlayerData)
 ├── core/
 │   ├── check/           # Check registration, base classes, @CheckData
 │   │   └── impl/
@@ -213,21 +217,49 @@ windfall/
 │   │       ├── packet/      # 10 packet checks
 │   │       └── inventory/   # 1 inventory check
 │   ├── physics/         # Prediction engine, physics constants, version branching
-│   ├── player/          # WindfallPlayer state, PlayerManager, PlayerProfile
+│   ├── player/          # WindfallPlayer state, PlayerManager, PlayerProfile, ActionData
 │   ├── network/         # PacketListener, PacketCheck
 │   ├── config/          # WindfallConfig, config.yml parsing
 │   ├── punishment/      # PunishmentEngine (warn → kick → ban)
 │   ├── severity/        # SeverityManager, VL escalation
 │   ├── alert/           # AlertManager, Discord webhook
-│   ├── bedrock/         # Geyser detection, BedrockInfo
+│   ├── bedrock/         # Geyser detection, BedrockInfo, GeysersTracker
 │   ├── platform/        # FoliaCompat, PurpurCompat
 │   ├── version/         # VersionManager, VersionBracket, ServerFork
-│   ├── plugin/          # PluginDetector
+│   ├── plugin/          # PluginDetector (ViaVersion, Geyser, WorldGuard)
 │   ├── compensation/    # TransactionManager (ping measurement)
+│   ├── compat/          # WorldGuardCompat (reflection-based)
 │   └── util/            # MaterialUtils, MathUtil
 ├── gui/                 # CheckListGui (admin inventory UI)
 └── WindfallPlugin.java  # Plugin entry point
 ```
+
+---
+
+## Public API
+
+Windfall exposes a public API for external plugins:
+
+```java
+import io.windfall.anticheat.api.WindfallAPI;
+import io.windfall.anticheat.api.WindfallProvider;
+import io.windfall.anticheat.api.PlayerData;
+
+// Get API instance
+WindfallAPI api = WindfallProvider.getApi();
+
+// Query player data
+PlayerData data = api.getPlayerData(player.getUniqueId());
+if (data != null) {
+    int vl = data.getViolationLevel("windfall.combat.killaura");
+    boolean flagged = data.isFlagged();
+}
+```
+
+### API Features
+- **PlayerData**: Immutable snapshot of player state (VLs, flagged status, check states)
+- **WindfallAPI**: Query player data, check statuses, and plugin information
+- **Thread-safe**: All operations are safe for async access
 
 ---
 
