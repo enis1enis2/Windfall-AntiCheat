@@ -64,11 +64,11 @@ jobs:
 
       - name: Build with Maven
         env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
           if [ -n "$GPG_PRIVATE_KEY" ]; then
-            mvn -B clean package -Pobfuscate --file pom.xml -Dgpg.skip=false -Dgpg.passphrase="$GPG_PASSPHRASE"
+            mvn -B clean package -Pobfuscate --file pom.xml -Dgpg.skip=false
           else
             mvn -B clean package -Pobfuscate --file pom.xml
           fi
@@ -78,8 +78,8 @@ jobs:
           cd target
           # Rename obfuscated JAR to Windfall.jar (main release artifact)
           mv Windfall-obfuscated.jar Windfall.jar
-          # Rename ProGuard mapping file for release
-          mv proguard_map.txt mapping.txt
+          # Delete mapping file — must NOT be shipped (defeats obfuscation)
+          rm -f proguard_map.txt mapping.txt
           # Rebuild checksum for obfuscated JAR
           sha256sum Windfall.jar > Windfall.jar.sha256
           echo "=== SHA-256 Checksum (obfuscated) ==="
@@ -140,13 +140,12 @@ jobs:
             3. Restart the server
 
             ### Deobfuscation
-            Stack traces can be deobfuscated using `mapping.txt` (ProGuard mapping file).
+            This JAR is obfuscated. No mapping file is provided.
 
             **Requires:** Java 11+ · PacketEvents 2.13.0+ · MC 1.7–26.2+
           files: |
             target/Windfall.jar
             target/Windfall.jar.sha256
-            target/mapping.txt
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
