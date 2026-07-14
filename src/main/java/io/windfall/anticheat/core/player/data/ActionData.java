@@ -9,6 +9,7 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPl
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerBlockPlacement;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockChange;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import org.bukkit.Material;
 
 /**
  * Tracks block-level actions to provide exemptions for movement checks.

@@ -142,8 +142,11 @@ public class GeysersTracker {
         // Check for eruption states
         if (name.equals("POTENT_SULFUR")) {
             try {
-                // Use BlockData API (1.13+) — avoids deprecated BlockState.getData()
-                String blockDataStr = block.getBlockData().getAsString().toUpperCase();
+                // Use reflection for BlockData API (1.13+) — not available in spigot-api 1.8
+                java.lang.reflect.Method getBlockData = block.getClass().getMethod("getBlockData");
+                Object blockData = getBlockData.invoke(block);
+                java.lang.reflect.Method getAsString = blockData.getClass().getMethod("getAsString");
+                String blockDataStr = ((String) getAsString.invoke(blockData)).toUpperCase();
                 if (blockDataStr.contains("ERUPTING") || blockDataStr.contains("CONTINUOUS")) {
                     return true;
                 }

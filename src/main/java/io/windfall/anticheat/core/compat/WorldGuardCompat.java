@@ -71,14 +71,12 @@ public final class WorldGuardCompat {
      * @return true if the location is in at least one WorldGuard region
      */
     public boolean isInRegion(int x, int y, int z) {
-        if (!available || regionContainer == null) return false;
+        if (!available || worldGuardPlugin == null) return false;
         try {
-            com.sk89q.worldedit.bukkit.BukkitAdapter adapter = com.sk89q.worldedit.bukkit.BukkitAdapter.adapt(Bukkit.getWorlds().get(0));
-            com.sk89q.worldedit.Vector vec = com.sk89q.worldedit.Vector.at(x, y, z);
-            com.sk89q.worldedit.world.World world = adapter.getWorld();
-            com.sk89q.worldguard.protection.regions.RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-            com.sk89q.worldguard.protection.regions.RegionQuery query = container.createQuery();
-            return query.getRegions(com.sk89q.worldedit.util.Location.adapt(world, vec)).size() > 0;
+            org.bukkit.World world = Bukkit.getWorlds().get(0);
+            if (world == null) return false;
+            Location loc = new Location(world, x, y, z);
+            return queryRegions(null, loc);
         } catch (Exception e) {
             return false;
         }

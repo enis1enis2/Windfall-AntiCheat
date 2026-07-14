@@ -234,7 +234,7 @@ public abstract class Check {
         Location loc = new Location(
             player.getPlayer().getWorld(), tx, ty, tz,
             player.getYaw(), player.getPitch());
-        io.windfall.anticheat.core.platform.FoliaCompat.getInstance().teleportAsync(player.getPlayer(), loc);
+        WindfallPlugin.getInstance().getFoliaCompat().teleportAsync(player.getPlayer(), loc);
     }
 
     /** Returns this check's violation level for the given player */

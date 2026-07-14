@@ -538,7 +538,7 @@ public class WindfallPlayer {
 
     private double computePotionMultiplier(String nameContains, double perLevel, int maxLevel) {
         for (org.bukkit.potion.PotionEffect effect : player.getActivePotionEffects()) {
-            String effectName = effect.getType().getKey().getKey().toUpperCase();
+            String effectName = effect.getType().getName().toUpperCase();
             if (effectName.contains(nameContains)) {
                 int level = Math.min(effect.getAmplifier() + 1, maxLevel);
                 return 1.0 + (perLevel * level);
