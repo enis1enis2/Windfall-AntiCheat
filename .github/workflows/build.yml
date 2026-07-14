@@ -85,13 +85,14 @@ jobs:
         env:
           COMMIT_MSG: ${{ steps.commit.outputs.commit_msg }}
         run: |
-          # Match full semver: v1.2.2, v2.0.0-beta.1, etc.
-          if [[ "$COMMIT_MSG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
-            TAG=$(echo "$COMMIT_MSG" | grep -oP '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?')
+          # Match V:x.y.x + Summary format (MEMORYBANK commit naming rule)
+          # Example: "V:1.9.2 + Fix ReachCheck memory leak" → tag v1.9.2
+          if [[ "$COMMIT_MSG" =~ ^V:([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?) ]]; then
+            TAG="v${BASH_REMATCH[1]}"
             echo "is_version=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_version=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping release — commit message does not start with vX.Y.Z"
+            echo "Skipping release — commit message does not match V:x.y.x + Summary"
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Release tag: $TAG"
