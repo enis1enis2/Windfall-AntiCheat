@@ -15,9 +15,10 @@ import org.bukkit.entity.Player;
  * Stores position history, velocity, rotation, ground state, pose, and per-check
  * violation levels and buffers.
  *
- * <p>Thread safety: {@link #violationLevels} and {@link #buffers} use
- * {@link ConcurrentHashMap} because checks read from Netty threads while ticks
- * run on the main thread.
+ * <p>Thread safety: compound state groups (position, ground, rotation) are stored as
+ * immutable snapshots published via {@code volatile} references. This guarantees that
+ * readers (checks on Netty threads, ticks on the main thread) always see a consistent
+ * state — no torn reads are possible. Simple flags use {@code volatile} directly.
  *
  * <p>Position tracking uses a three-deep roll (current → last → lastLast)
  * to enable acceleration and jerk calculations in movement checks.
@@ -40,82 +41,135 @@ public class WindfallPlayer {
         LONG_JUMPING
     }
 
+    // === IMMUTABLE STATE SNAPSHOTS ===
+    // Each snapshot is a frozen, consistent view of a compound state group.
+    // Published via volatile reference — readers always see a complete, non-torn state.
+
+    /** Immutable position + delta + tick state — published atomically from Netty, read from checks and main thread */
+    static final class PositionState {
+        final double x, y, z;
+        final double lastX, lastY, lastZ;
+        final double lastLastX, lastLastY, lastLastZ;
+        final double deltaX, deltaY, deltaZ;
+        final int tickCount;
+
+        PositionState(double x, double y, double z,
+                      double lastX, double lastY, double lastZ,
+                      double lastLastX, double lastLastY, double lastLastZ,
+                      double deltaX, double deltaY, double deltaZ,
+                      int tickCount) {
+            this.x = x; this.y = y; this.z = z;
+            this.lastX = lastX; this.lastY = lastY; this.lastZ = lastZ;
+            this.lastLastX = lastLastX; this.lastLastY = lastLastY; this.lastLastZ = lastLastZ;
+            this.deltaX = deltaX; this.deltaY = deltaY; this.deltaZ = deltaZ;
+            this.tickCount = tickCount;
+        }
+    }
+
+    /** Immutable ground state — published atomically, prevents torn onGround/lastOnGround reads */
+    static final class GroundState {
+        final boolean onGround;
+        final boolean lastOnGround;
+        final double groundX, groundY, groundZ;
+
+        GroundState(boolean onGround, boolean lastOnGround,
+                    double groundX, double groundY, double groundZ) {
+            this.onGround = onGround;
+            this.lastOnGround = lastOnGround;
+            this.groundX = groundX;
+            this.groundY = groundY;
+            this.groundZ = groundZ;
+        }
+    }
+
+    /** Immutable rotation state — published atomically, prevents torn yaw/lastYaw reads */
+    static final class RotationState {
+        final float yaw, pitch;
+        final float lastYaw, lastPitch;
+
+        RotationState(float yaw, float pitch, float lastYaw, float lastPitch) {
+            this.yaw = yaw;
+            this.pitch = pitch;
+            this.lastYaw = lastYaw;
+            this.lastPitch = lastPitch;
+        }
+    }
+
+    // === CORE IDENTITY (immutable, thread-safe by construction) ===
+
     private final UUID uuid;
     private final String name;
     private final Player player;
     private final User user;
 
-    private ClientVersion clientVersion;
-    private int protocolVersion;
+    private volatile ClientVersion clientVersion;
+    private volatile int protocolVersion;
 
-    private double x, y, z;
-    private double lastX, lastY, lastZ;
-    // Three-deep history needed for acceleration and jerk calculations in movement checks
-    private double lastLastX, lastLastY, lastLastZ;
+    // === COMPOUND STATE (immutable snapshots, published atomically) ===
 
-    /** Per-tick position deltas: current - last */
-    private double deltaX, deltaY, deltaZ;
+    /** Position + deltas + tick count — updated from Netty, read from checks and main thread */
+    private volatile PositionState pos = new PositionState(0,0,0, 0,0,0, 0,0,0, 0,0,0, 0);
+
+    /** Ground state + fallback setback position — updated from Netty and main thread */
+    private volatile GroundState ground = new GroundState(false, false, 0,0,0);
+
+    /** Rotation state — updated from Netty, read from checks and main thread */
+    private volatile RotationState rotation = new RotationState(0, 0, 0, 0);
+
+    // === SIMPLE FLAGS (volatile for cross-thread visibility) ===
 
     // Standard player bounding box: 0.6 wide × 1.8 tall (MC default since 1.0)
-    private double width = 0.6;
-    private double height = 1.8;
+    private volatile double width = 0.6;
+    private volatile double height = 1.8;
 
-    private boolean onGround;
-    private boolean lastOnGround;
     /** Server-reported ground state — may lag behind client state by 1 tick */
-    private boolean serverOnGround;
+    private volatile boolean serverOnGround;
 
-    private boolean sprinting;
-    private boolean sneaking;
-    private boolean flying;
-    private boolean swimming;
-    private boolean climbing;
-    private boolean gliding;
-    private double elytraMomentum;
-    private int glideStartTick;
+    private volatile boolean sprinting;
+    private volatile boolean sneaking;
+    private volatile boolean flying;
+    private volatile boolean swimming;
+    private volatile boolean climbing;
+    private volatile boolean gliding;
+    private volatile double elytraMomentum;
+    private volatile int glideStartTick;
 
-    private Pose pose = Pose.STANDING;
+    private volatile Pose pose = Pose.STANDING;
 
     // Ping via our own transaction system, not Bukkit API — gives sub-tick accuracy
-    private int transactionPing;
-    private int transactionId;
+    private volatile int transactionPing;
+    private volatile int transactionId;
 
     /** Client-claimed velocity (from movement packets) */
-    private double velocityX, velocityY, velocityZ;
+    private volatile double velocityX, velocityY, velocityZ;
     /** Server-sent velocity (from ENTITY_VELOCITY packet) */
-    private double serverVelocityX, serverVelocityY, serverVelocityZ;
-    private boolean velocityReceived;
+    private volatile double serverVelocityX, serverVelocityY, serverVelocityZ;
+    private volatile boolean velocityReceived;
 
-    private boolean allowFlight;
+    private volatile boolean allowFlight;
 
-    private double teleportX, teleportY, teleportZ;
-
-    private double groundX, groundY, groundZ;
+    private volatile double teleportX, teleportY, teleportZ;
 
     // ConcurrentHashMap required: checks read from Netty, ticks run on main thread
     private final ConcurrentHashMap<String, Integer> violationLevels = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Double> buffers = new ConcurrentHashMap<>();
 
-    private int attackCooldown;
-    private long lastAttackTime;
+    private volatile int attackCooldown;
+    private volatile long lastAttackTime;
 
-    private int tickCount;
-    private long joinTime;
+    private volatile long joinTime;
 
-    private float yaw, pitch;
-    private float lastYaw, lastPitch;
+    private volatile boolean movedSinceTick;
+    private volatile boolean valid = true;
 
-    private boolean movedSinceTick;
-    private boolean valid = true;
-
-    private BedrockInfo bedrockInfo;
-    private boolean alertsEnabled = true;
+    private volatile BedrockInfo bedrockInfo;
+    private volatile boolean alertsEnabled = true;
 
     /** Tracks block-level actions (placement, breaking, piston pushes) for movement check exemptions */
     private final ActionData actionData = new ActionData(this);
 
     // Set after RESPAWN packet to suppress false-positive flags from ViaVersion respawn desync
-    private boolean respawned;
+    private volatile boolean respawned;
 
     // Cached Bukkit API state — updated on main thread, read from Netty packet threads.
     // Prevents thread-unsafe cross-thread Bukkit API access in PredictionEngine.
@@ -143,6 +197,8 @@ public class WindfallPlayer {
         this.protocolVersion = clientVersion.getProtocolVersion();
         this.joinTime = System.currentTimeMillis();
     }
+
+    // === POSITION: immutable snapshot published atomically ===
 
     /**
      * Returns the bounding box height for the current pose.
@@ -190,24 +246,24 @@ public class WindfallPlayer {
         }
     }
 
-    public double getDeltaX() { return deltaX; }
-    public double getDeltaZ() { return deltaZ; }
+    public double getDeltaX() { return pos.deltaX; }
+    public double getDeltaZ() { return pos.deltaZ; }
 
     /** Returns horizontal speed: sqrt(deltaX² + deltaZ²) */
     public double getHorizontalSpeed() {
-        return Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
+        return Math.sqrt(pos.deltaX * pos.deltaX + pos.deltaZ * pos.deltaZ);
     }
 
     /** Returns absolute vertical speed: |deltaY| */
     public double getVerticalSpeed() {
-        return Math.abs(deltaY);
+        return Math.abs(pos.deltaY);
     }
 
     /** Returns squared distance from this player to the given point — avoids sqrt for comparisons */
     public double getDistanceSq(double x, double y, double z) {
-        double dx = this.x - x;
-        double dy = this.y - y;
-        double dz = this.z - z;
+        double dx = this.pos.x - x;
+        double dy = this.pos.y - y;
+        double dz = this.pos.z - z;
         return dx * dx + dy * dy + dz * dz;
     }
 
@@ -215,23 +271,18 @@ public class WindfallPlayer {
      * Updates position and rolls the three-deep history.
      *
      * <p>Called from {@link io.windfall.anticheat.core.network.PacketListener} on each
-     * position packet. Automatically computes deltas (current - last) and increments tickCount.
+     * position packet. Creates a new immutable snapshot and publishes it atomically —
+     * readers always see a consistent position/delta/tick state.
      */
-    // Position roll: lastLast ← last ← current each tick
     public void setPosition(double x, double y, double z) {
-        this.lastLastX = this.lastX;
-        this.lastLastY = this.lastY;
-        this.lastLastZ = this.lastZ;
-        this.lastX = this.x;
-        this.lastY = this.y;
-        this.lastZ = this.z;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.deltaX = x - this.lastX;
-        this.deltaY = y - this.lastY;
-        this.deltaZ = z - this.lastZ;
-        this.tickCount++;
+        PositionState old = this.pos;
+        this.pos = new PositionState(
+            x, y, z,
+            old.x, old.y, old.z,
+            old.lastX, old.lastY, old.lastZ,
+            x - old.x, y - old.y, z - old.z,
+            old.tickCount + 1
+        );
     }
 
     /**
@@ -239,22 +290,30 @@ public class WindfallPlayer {
      *
      * <p>Must run BEFORE checks each tick so that {@link #isLastOnGround()} reflects
      * the previous tick's ground state. Called by {@link io.windfall.anticheat.core.check.CheckManager#onTick()}.
+     *
+     * <p>Creates new immutable snapshots for ground and rotation with rolled history —
+     * guarantees atomic transition from current → last state.
      */
-    // Must run BEFORE checks each tick so lastOnGround reflects previous tick state
     public void resetTickState() {
         this.movedSinceTick = false;
-        this.lastOnGround = this.onGround;
-        this.lastYaw = this.yaw;
-        this.lastPitch = this.pitch;
+        // Roll ground history atomically
+        GroundState g = this.ground;
+        this.ground = new GroundState(g.onGround, g.onGround, g.groundX, g.groundY, g.groundZ);
+        // Roll rotation history atomically
+        RotationState r = this.rotation;
+        this.rotation = new RotationState(r.yaw, r.pitch, r.yaw, r.pitch);
     }
 
-    /** Records the current position as the last known ground position (used for setbacks) */
-    public void updateGroundPosition() {
-        if (onGround) {
-            this.groundX = x;
-            this.groundY = y;
-            this.groundZ = z;
-        }
+    /**
+     * Updates ground state and records ground position if now grounded.
+     * Creates a new immutable snapshot — prevents torn onGround/lastOnGround reads.
+     */
+    public void setOnGround(boolean onGround) {
+        GroundState old = this.ground;
+        double gx = onGround ? pos.x : old.groundX;
+        double gy = onGround ? pos.y : old.groundY;
+        double gz = onGround ? pos.z : old.groundZ;
+        this.ground = new GroundState(onGround, old.onGround, gx, gy, gz);
     }
 
     public UUID getUuid() { return uuid; }
@@ -265,34 +324,34 @@ public class WindfallPlayer {
     public void setClientVersion(ClientVersion clientVersion) { this.clientVersion = clientVersion; this.protocolVersion = clientVersion.getProtocolVersion(); }
     public int getProtocolVersion() { return protocolVersion; }
 
-    public double getX() { return x; }
-    public double getY() { return y; }
-    public double getZ() { return z; }
-    public double getLastX() { return lastX; }
-    public double getLastY() { return lastY; }
-    public double getLastZ() { return lastZ; }
-    public double getLastLastX() { return lastLastX; }
-    public double getLastLastY() { return lastLastY; }
-    public double getLastLastZ() { return lastLastZ; }
-    public double getDeltaY() { return deltaY; }
+    // Position getters — read from immutable snapshot
+    public double getX() { return pos.x; }
+    public double getY() { return pos.y; }
+    public double getZ() { return pos.z; }
+    public double getLastX() { return pos.lastX; }
+    public double getLastY() { return pos.lastY; }
+    public double getLastZ() { return pos.lastZ; }
+    public double getLastLastX() { return pos.lastLastX; }
+    public double getLastLastY() { return pos.lastLastY; }
+    public double getLastLastZ() { return pos.lastLastZ; }
+    public double getDeltaY() { return pos.deltaY; }
+    public int getTickCount() { return pos.tickCount; }
 
+    // Ground getters — read from immutable snapshot
     public double getWidth() { return width; }
     public void setHeight(double height) { this.height = height; }
 
-    public boolean isOnGround() { return onGround; }
-    /**
-     * Updates ground state and records ground position if now grounded.
-     * Also rolls lastOnGround for previous-tick access.
-     */
-    public void setOnGround(boolean onGround) {
-        this.lastOnGround = this.onGround;
-        this.onGround = onGround;
-        if (onGround) updateGroundPosition();
-    }
-    public boolean isLastOnGround() { return lastOnGround; }
+    public boolean isOnGround() { return ground.onGround; }
+    public boolean isLastOnGround() { return ground.lastOnGround; }
     public boolean isServerOnGround() { return serverOnGround; }
     public void setServerOnGround(boolean serverOnGround) { this.serverOnGround = serverOnGround; }
 
+    // Ground position getters — read from immutable snapshot
+    public double getGroundX() { return ground.groundX; }
+    public double getGroundY() { return ground.groundY; }
+    public double getGroundZ() { return ground.groundZ; }
+
+    // State flag getters/setters — volatile for cross-thread visibility
     public boolean isSprinting() { return sprinting; }
     public void setSprinting(boolean sprinting) { this.sprinting = sprinting; }
     public boolean isSneaking() { return sneaking; }
@@ -347,6 +406,7 @@ public class WindfallPlayer {
     public int getTransactionId() { return transactionId; }
     public void setTransactionId(int transactionId) { this.transactionId = transactionId; }
 
+    // Velocity getters/setters — volatile for cross-thread visibility
     public double getVelocityX() { return velocityX; }
     public void setVelocityX(double velocityX) { this.velocityX = velocityX; }
     public double getVelocityY() { return velocityY; }
@@ -369,16 +429,12 @@ public class WindfallPlayer {
 
     public void setProtocolVersion(int protocolVersion) { this.protocolVersion = protocolVersion; }
 
+    // Teleport position — volatile for cross-thread visibility
     /** Returns the X coordinate of the last server-initiated teleport (used for setbacks) */
     public double getTeleportX() { return teleportX; }
     public double getTeleportY() { return teleportY; }
     public double getTeleportZ() { return teleportZ; }
     public void setTeleportPosition(double x, double y, double z) { this.teleportX = x; this.teleportY = y; this.teleportZ = z; }
-
-    /** Returns the X coordinate of the last known ground position (fallback for setbacks) */
-    public double getGroundX() { return groundX; }
-    public double getGroundY() { return groundY; }
-    public double getGroundZ() { return groundZ; }
 
     /** Returns the per-check violation levels map (keyed by stableKey) */
     public ConcurrentHashMap<String, Integer> getViolationLevels() { return violationLevels; }
@@ -390,15 +446,21 @@ public class WindfallPlayer {
     public long getLastAttackTime() { return lastAttackTime; }
     public void setLastAttackTime(long lastAttackTime) { this.lastAttackTime = lastAttackTime; }
 
-    public int getTickCount() { return tickCount; }
     public long getJoinTime() { return joinTime; }
 
-    public float getYaw() { return yaw; }
-    public void setYaw(float yaw) { this.yaw = yaw; }
-    public float getPitch() { return pitch; }
-    public void setPitch(float pitch) { this.pitch = pitch; }
-    public float getLastYaw() { return lastYaw; }
-    public float getLastPitch() { return lastPitch; }
+    // Rotation getters — read from immutable snapshot
+    public float getYaw() { return rotation.yaw; }
+    public void setYaw(float yaw) {
+        RotationState old = this.rotation;
+        this.rotation = new RotationState(yaw, old.pitch, old.yaw, old.lastPitch);
+    }
+    public float getPitch() { return rotation.pitch; }
+    public void setPitch(float pitch) {
+        RotationState old = this.rotation;
+        this.rotation = new RotationState(old.yaw, pitch, old.lastYaw, old.lastPitch);
+    }
+    public float getLastYaw() { return rotation.lastYaw; }
+    public float getLastPitch() { return rotation.lastPitch; }
 
     public boolean isMovedSinceTick() { return movedSinceTick; }
     public void setMovedSinceTick(boolean movedSinceTick) { this.movedSinceTick = movedSinceTick; }
@@ -426,7 +488,6 @@ public class WindfallPlayer {
      * Sums all check violation levels for this player.
      * Called frequently by PunishmentEngine and SeverityManager for tier evaluation.
      */
-    // Iterates all check VLs — called frequently by PunishmentEngine and SeverityManager
     public int getTotalViolationLevel() {
         int total = 0;
         for (int v : violationLevels.values()) {
