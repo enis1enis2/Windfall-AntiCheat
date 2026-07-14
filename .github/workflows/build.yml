@@ -77,7 +77,7 @@ jobs:
         run: |
           cd target
           # Rename obfuscated JAR to Windfall.jar (main release artifact)
-          mv Windfall-*-obfuscated.jar Windfall.jar
+          mv Windfall-obfuscated.jar Windfall.jar
           # Rename ProGuard mapping file for release
           mv proguard_map.txt mapping.txt
           # Rebuild checksum for obfuscated JAR
