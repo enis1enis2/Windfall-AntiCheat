@@ -45,19 +45,20 @@ public class GeysersTracker {
 
     /**
      * Per-player cached geyser detection state to avoid re-scanning every packet.
+     * Immutable — new instance created on each update, published atomically via ConcurrentHashMap.put().
      */
     private static final class GeyserState {
         /** Whether the player is currently within range of an active geyser */
-        volatile boolean beingPushed;
+        final boolean beingPushed;
         /** Last tick when the scan was performed (to enforce tick interval) */
-        volatile long lastCheckTick;
+        final long lastCheckTick;
         /** Number of active geyser blocks found near the player */
-        volatile int geyserCount;
+        final int geyserCount;
 
-        GeyserState() {
-            this.beingPushed = false;
-            this.lastCheckTick = 0;
-            this.geyserCount = 0;
+        GeyserState(boolean beingPushed, long lastCheckTick, int geyserCount) {
+            this.beingPushed = beingPushed;
+            this.lastCheckTick = lastCheckTick;
+            this.geyserCount = geyserCount;
         }
     }
 
@@ -72,7 +73,7 @@ public class GeysersTracker {
         GeyserState state = playerStates.get(uuid);
 
         if (state == null) {
-            state = new GeyserState();
+            state = new GeyserState(false, 0, 0);
             playerStates.put(uuid, state);
         }
 
@@ -83,16 +84,16 @@ public class GeysersTracker {
             return state.beingPushed;
         }
 
-        state.lastCheckTick = currentTick;
-        state.beingPushed = false;
-        state.geyserCount = 0;
-
         // Only active on 26.2+ — POTENT_SULFUR doesn't exist in older versions
         // We check by trying to find the material, which will be null on older servers
         try {
             Material potentSulfur = Material.matchMaterial("POTENT_SULFUR");
-            if (potentSulfur == null) return false;
+            if (potentSulfur == null) {
+                playerStates.put(uuid, new GeyserState(false, currentTick, 0));
+                return false;
+            }
         } catch (Throwable e) {
+            playerStates.put(uuid, new GeyserState(false, currentTick, 0));
             return false;
         }
 
@@ -100,6 +101,9 @@ public class GeysersTracker {
         int playerX = loc.getBlockX();
         int playerY = loc.getBlockY();
         int playerZ = loc.getBlockZ();
+
+        int geyserCount = 0;
+        boolean beingPushed = false;
 
         for (int dx = -SCAN_RANGE_XZ; dx <= SCAN_RANGE_XZ; dx++) {
             for (int dz = -SCAN_RANGE_XZ; dz <= SCAN_RANGE_XZ; dz++) {
@@ -111,14 +115,16 @@ public class GeysersTracker {
                     );
 
                     if (isGeyserBlock(block)) {
-                        state.geyserCount++;
-                        state.beingPushed = true;
+                        geyserCount++;
+                        beingPushed = true;
+                        playerStates.put(uuid, new GeyserState(true, currentTick, geyserCount));
                         return true;
                     }
                 }
             }
         }
 
+        playerStates.put(uuid, new GeyserState(false, currentTick, 0));
         return false;
     }
 
@@ -136,9 +142,8 @@ public class GeysersTracker {
         // Check for eruption states
         if (name.equals("POTENT_SULFUR")) {
             try {
-                Object blockData = block.getState().getData();
-                String blockDataStr = blockData.toString().toUpperCase();
-
+                // Use BlockData API (1.13+) — avoids deprecated BlockState.getData()
+                String blockDataStr = block.getBlockData().getAsString().toUpperCase();
                 if (blockDataStr.contains("ERUPTING") || blockDataStr.contains("CONTINUOUS")) {
                     return true;
                 }

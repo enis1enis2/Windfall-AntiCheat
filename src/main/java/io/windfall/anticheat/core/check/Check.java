@@ -43,18 +43,18 @@ public abstract class Check {
     protected final String name;
     // stableKey maps 1:1 to config.yml — never rename without updating all config files
     protected final String stableKey;
-    protected boolean enabled;
-    protected boolean punishable;
+    protected volatile boolean enabled;
+    protected volatile boolean punishable;
     /** Buffer decay rate per tick — higher = faster confidence decay */
-    protected double decay;
+    protected volatile double decay;
     /** Maximum violation level — VL is capped at this value */
-    protected int maxVl;
+    protected volatile int maxVl;
     /** VL threshold that triggers a setback teleport */
-    protected int setbackVl;
+    protected volatile int setbackVl;
     /** Minimum server protocol version to enable this check */
-    protected int minVersion;
+    protected volatile int minVersion;
     /** Maximum server protocol version to enable this check */
-    protected int maxVersion;
+    protected volatile int maxVersion;
     protected final CompatFlag[] compatFlags;
     /** Buffer multiplier when RELAX_ON_MISMATCH is active — 1.0 = no relaxation */
     protected final double relaxMultiplier;
@@ -222,6 +222,7 @@ public abstract class Check {
     protected void performSetback(WindfallPlayer player) {
         // Skip setback during respawn desync — position is (0,0,0) until first post-respawn position packet
         if (player.isRespawned()) return;
+        if (player.getPlayer() == null || !player.getPlayer().isOnline()) return;
         double tx = player.getTeleportX();
         double ty = player.getTeleportY();
         double tz = player.getTeleportZ();
@@ -233,7 +234,7 @@ public abstract class Check {
         Location loc = new Location(
             player.getPlayer().getWorld(), tx, ty, tz,
             player.getYaw(), player.getPitch());
-        player.getPlayer().teleport(loc);
+        io.windfall.anticheat.core.platform.FoliaCompat.getInstance().teleportAsync(player.getPlayer(), loc);
     }
 
     /** Returns this check's violation level for the given player */

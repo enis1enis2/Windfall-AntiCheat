@@ -225,4 +225,14 @@ public class ActionData {
     private static boolean isPistonBlock(int blockId) {
         return blockId == 29 || blockId == 33 || blockId == 34 || blockId == 36;
     }
+
+    /**
+     * Returns true if the given Material is a piston-type block.
+     * Works on all MC versions (1.7-26.2+).
+     */
+    private static boolean isPistonMaterial(Material material) {
+        if (material == null) return false;
+        String name = material.name();
+        return name.contains("PISTON");
+    }
 }

@@ -37,6 +37,9 @@ public class PunishmentEngine {
     // Tracks highest tier applied — prevents re-punishing at the same tier
     private final ConcurrentHashMap<UUID, Integer> appliedTiers = new ConcurrentHashMap<>();
 
+    // Cache the correct BanList.Type to avoid deprecation warnings on Paper 1.20.4+
+    private final BanList.Type banListType;
+
     private final boolean enabled;
     private final int warnVl;
     private final int kickVl;
@@ -61,6 +64,24 @@ public class PunishmentEngine {
         this.kickMessage = cfg.getPunishmentKickMessage();
         this.tempbanReason = cfg.getPunishmentTempbanReason();
         this.permbanReason = cfg.getPunishmentPermbanReason();
+
+        // Use PROFILE on Paper 1.20.4+ (where NAME is deprecated), fall back to NAME on older servers
+        this.banListType = resolveBanListType();
+    }
+
+    /**
+     * Resolves the correct BanList.Type via reflection.
+     * Paper 1.20.4+ deprecates NAME in favor of PROFILE.
+     */
+    private static BanList.Type resolveBanListType() {
+        try {
+            // Try to access PROFILE enum constant — only exists on Paper 1.20.4+
+            BanList.Type.valueOf("PROFILE");
+            return BanList.Type.valueOf("PROFILE");
+        } catch (IllegalArgumentException e) {
+            // Older server — PROFILE doesn't exist, use NAME
+            return BanList.Type.NAME;
+        }
     }
 
     /**
@@ -131,12 +152,12 @@ public class PunishmentEngine {
             } else if (tier == tempbanVl) {
                 long durationMs = parseDuration(tempbanDuration);
                 Date expiry = new Date(System.currentTimeMillis() + durationMs);
-                Bukkit.getBanList(BanList.Type.NAME).addBan(
+                Bukkit.getBanList(banListType).addBan(
                     bukkitPlayer.getName(),
                     ChatColor.translateAlternateColorCodes('&', tempbanReason),
                     expiry, "Windfall");
             } else if (tier == permbanVl) {
-                Bukkit.getBanList(BanList.Type.NAME).addBan(
+                Bukkit.getBanList(banListType).addBan(
                     bukkitPlayer.getName(),
                     ChatColor.translateAlternateColorCodes('&', permbanReason),
                     (Date) null, "Windfall");

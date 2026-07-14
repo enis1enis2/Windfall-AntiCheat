@@ -23,6 +23,11 @@ public final class CompensatedEntities {
         entities.remove(entityId);
     }
 
+    /** Clears all tracked entities — called on player disconnect to free memory */
+    public void clear() {
+        entities.clear();
+    }
+
     public double[] getEntityPosition(int entityId) {
         History history = entities.get(entityId);
         if (history == null || history.size() == 0) return null;

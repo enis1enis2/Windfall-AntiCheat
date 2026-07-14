@@ -71,9 +71,10 @@ public class DiscordWebhook {
         String payload = json.toString();
 
         plugin.getScheduler().runAsync(() -> {
+            HttpURLConnection conn = null;
             try {
                 URL url = URI.create(webhookUrl).toURL();
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
                 conn.setRequestProperty("User-Agent", "Windfall-AntiCheat/1.0");
@@ -89,9 +90,10 @@ public class DiscordWebhook {
                 if (responseCode != 204 && responseCode != 200) {
                     plugin.getLogger().warning("Discord webhook returned HTTP " + responseCode);
                 }
-                conn.disconnect();
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to send Discord webhook: " + e.getMessage());
+            } finally {
+                if (conn != null) conn.disconnect();
             }
         });
     }

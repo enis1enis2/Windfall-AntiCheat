@@ -356,7 +356,7 @@ public class WindfallPlayer {
     public void setSprinting(boolean sprinting) { this.sprinting = sprinting; }
     public boolean isSneaking() { return sneaking; }
     /** Updates sneak state and automatically transitions pose between SNEAKING ↔ STANDING */
-    public void setSneaking(boolean sneaking) {
+    public synchronized void setSneaking(boolean sneaking) {
         this.sneaking = sneaking;
         if (sneaking && pose == Pose.STANDING) pose = Pose.SNEAKING;
         else if (!sneaking && pose == Pose.SNEAKING) pose = Pose.STANDING;
@@ -365,7 +365,7 @@ public class WindfallPlayer {
     public void setFlying(boolean flying) { this.flying = flying; }
     public boolean isSwimming() { return swimming; }
     /** Updates swim state and automatically transitions pose between SWIMMING ↔ STANDING */
-    public void setSwimming(boolean swimming) {
+    public synchronized void setSwimming(boolean swimming) {
         this.swimming = swimming;
         if (swimming) pose = Pose.SWIMMING;
         else if (pose == Pose.SWIMMING) pose = Pose.STANDING;
@@ -374,7 +374,7 @@ public class WindfallPlayer {
     public void setClimbing(boolean climbing) { this.climbing = climbing; }
     public boolean isGliding() { return gliding; }
     /** Updates glide state and automatically transitions pose between FALL_FLYING ↔ STANDING */
-    public void setGliding(boolean gliding) {
+    public synchronized void setGliding(boolean gliding) {
         this.gliding = gliding;
         if (gliding) pose = Pose.FALL_FLYING;
         else if (pose == Pose.FALL_FLYING) pose = Pose.STANDING;
@@ -538,7 +538,8 @@ public class WindfallPlayer {
 
     private double computePotionMultiplier(String nameContains, double perLevel, int maxLevel) {
         for (org.bukkit.potion.PotionEffect effect : player.getActivePotionEffects()) {
-            if (effect.getType().getName().toUpperCase().contains(nameContains)) {
+            String effectName = effect.getType().getKey().getKey().toUpperCase();
+            if (effectName.contains(nameContains)) {
                 int level = Math.min(effect.getAmplifier() + 1, maxLevel);
                 return 1.0 + (perLevel * level);
             }

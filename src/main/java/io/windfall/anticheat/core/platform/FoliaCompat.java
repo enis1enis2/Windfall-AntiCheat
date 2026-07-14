@@ -115,7 +115,9 @@ public final class FoliaCompat {
                 Method teleportAsync = Player.class.getMethod("teleportAsync", Location.class);
                 teleportAsync.invoke(player, location);
                 return;
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Bukkit.getLogger().warning("Windfall: Folia teleportAsync failed, falling back to sync: " + e.getMessage());
+            }
         }
         player.teleport(location);
     }

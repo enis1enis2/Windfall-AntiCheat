@@ -84,7 +84,9 @@ public final class TransactionManager {
                         0, id, false);
                 PacketEvents.getAPI().getPlayerManager().sendPacket(player.getPlayer(), confirm);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("Windfall: Failed to send transaction packet: " + e.getMessage());
+        }
     }
 
     /**
@@ -172,7 +174,9 @@ public final class TransactionManager {
                         0, id, false);
                 PacketEvents.getAPI().getPlayerManager().sendPacket(player.getPlayer(), confirm);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("Windfall: Failed to send transaction packet: " + e.getMessage());
+        }
 
         return id;
     }

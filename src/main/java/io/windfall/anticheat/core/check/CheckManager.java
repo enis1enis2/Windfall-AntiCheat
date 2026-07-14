@@ -331,7 +331,9 @@ public class CheckManager {
         for (Check check : checks) {
             try {
                 check.removePlayer(uuid);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                plugin.getLogger().fine("Failed to remove player from check " + check.getCheckName() + ": " + e.getMessage());
+            }
         }
     }
 }
