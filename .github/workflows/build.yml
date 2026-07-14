@@ -65,12 +65,18 @@ jobs:
       - name: Build with Maven
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: mvn -B clean package --file pom.xml -Dgpg.passphrase="$GPG_PASSPHRASE"
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          if [ -n "$GPG_PRIVATE_KEY" ]; then
+            mvn -B clean package --file pom.xml -Dgpg.skip=false -Dgpg.passphrase="$GPG_PASSPHRASE"
+          else
+            mvn -B clean package --file pom.xml
+          fi
 
       - name: OWASP Dependency-Check
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: mvn -B dependency-check:check --file pom.xml -DnvdApiKey="$NVD_API_KEY" -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" || true
+        run: mvn -B dependency-check:check --file pom.xml -DnvdApiKey="$NVD_API_KEY" || true
 
       - name: Generate checksum
         run: |
@@ -119,7 +125,7 @@ jobs:
             ### Verification
             1. Download `Windfall.jar` and `Windfall.jar.sha256`
             2. Verify checksum: `sha256sum -c Windfall.jar.sha256`
-            3. Verify GPG signature: `gpg --verify Windfall.jar.asc Windfall.jar`
+            3. (If `.asc` is present) Verify GPG signature: `gpg --verify Windfall.jar.asc Windfall.jar`
 
             ### Installation
             1. Download `Windfall.jar` from below
@@ -130,7 +136,6 @@ jobs:
           files: |
             target/Windfall.jar
             target/Windfall.jar.sha256
-            target/Windfall.jar.asc
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

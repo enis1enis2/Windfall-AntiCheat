@@ -2,12 +2,60 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
     <!--
         Known false positives for Windfall dependencies.
-        Geyser/Spigot publish SNAPSHOT stubs — CVEs against the full Geyser runtime
-        do not apply to the API-only stub we compile against.
+        These are compile-time-only transitive dependencies that never execute
+        at runtime on the server. CVEs against full runtime distributions
+        do not apply to API stubs and bundled libraries.
     -->
+
+    <!-- Geyser API stub — runtime CVEs do not apply to compile-only API -->
     <suppress>
         <notes>Suppress CVEs against geyser-api SNAPSHOT — runtime vulnerability, not API stub</notes>
         <packageUrl regex="true">pkg:maven/org\.geysermc\.geyser/api@.*-SNAPSHOT</packageUrl>
         <cve>CVE-2026-42188</cve>
+    </suppress>
+
+    <!-- Geyser transitive: base-api — compile-time only, never runs on server -->
+    <suppress>
+        <notes>Suppress CVEs against geyser base-api — compile-time only transitive dependency</notes>
+        <packageUrl>pkg:maven/org.geysermc.base/base-api@1.0.3</packageUrl>
+        <cve>CVE-2021-39177</cve>
+    </suppress>
+
+    <!-- Geyser transitive: cumulus — compile-time only, never runs on server -->
+    <suppress>
+        <notes>Suppress CVEs against geyser cumulus — compile-time only transitive dependency</notes>
+        <packageUrl regex="true">pkg:maven/org\.geysermc\.cumulus/cumulus@.*</packageUrl>
+        <cve>CVE-2021-39177</cve>
+    </suppress>
+
+    <!-- Geyser transitive: events — compile-time only, never runs on server -->
+    <suppress>
+        <notes>Suppress CVEs against geyser events — compile-time only transitive dependency</notes>
+        <packageUrl regex="true">pkg:maven/org\.geysermc\.geyser/events@.*</packageUrl>
+        <cve>CVE-2021-39177</cve>
+    </suppress>
+
+    <!-- Bukkit/Spigot transitive: guava — compile-time only, server provides its own -->
+    <suppress>
+        <notes>Suppress CVEs against Guava — compile-time only, Spigot server provides its own version</notes>
+        <packageUrl regex="true">pkg:maven/com\.google\.guava/guava@.*</packageUrl>
+        <cve>CVE-2023-2976</cve>
+    </suppress>
+    <suppress>
+        <notes>Suppress CVEs against Guava — compile-time only, Spigot server provides its own version</notes>
+        <packageUrl regex="true">pkg:maven/com\.google\.guava/guava@.*</packageUrl>
+        <cve>CVE-2018-10237</cve>
+    </suppress>
+    <suppress>
+        <notes>Suppress CVEs against Guava — compile-time only, Spigot server provides its own version</notes>
+        <packageUrl regex="true">pkg:maven/com\.google\.guava/guava@.*</packageUrl>
+        <cve>CVE-2020-8908</cve>
+    </suppress>
+
+    <!-- WorldGuard/WorldEdit transitive: icu4j — compile-time only, never runs on server -->
+    <suppress>
+        <notes>Suppress CVEs against ICU4J — compile-time only transitive from WorldGuard/WorldEdit</notes>
+        <packageUrl regex="true">pkg:maven/com\.ibm\.icu/icu4j@.*</packageUrl>
+        <cve>CVE-2025-5222</cve>
     </suppress>
 </suppressions>
