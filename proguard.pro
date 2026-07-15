@@ -16,7 +16,9 @@
 -dontusemixedcaseclassnames
 
 # --- Obfuscation settings ---
--overloadaggressively
+# NOTE: -overloadaggressively REMOVED — incompatible with Paper/Purpur PluginRemapper
+# (PaperMC/Paper#11005, NeoForged/AutoRenamingTool#11)
+# It causes "Duplicate key" errors when AutoRenamingTool builds reverse mappings
 -repackageclasses ''
 -allowaccessmodification
 
