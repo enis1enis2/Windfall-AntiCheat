@@ -136,6 +136,9 @@ public final class WindfallPlugin extends JavaPlugin {
         this.running = true;
         this.scheduler.startGlobalTick();
 
+        // Initialize bStats metrics (after all managers are ready)
+        WindfallMetrics.init(this);
+
         long elapsed = (System.nanoTime() - start) / 1_000_000;
         getLogger().info("Windfall v" + getDescription().getVersion() + " enabled in " + elapsed + "ms ("
             + versionManager.getServerVersion() + ", " + serverFork.getDisplayName() + ")");

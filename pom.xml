@@ -120,6 +120,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!-- bStats metrics — compile scope, shaded into final JAR -->
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.2.1</version>
+            <scope>compile</scope>
+        </dependency>
         <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -204,7 +212,33 @@
                     </archive>
                 </configuration>
             </plugin>
-            <!-- NO shade plugin. PacketEvents must remain external. -->
+            <!-- Shade bStats only — PacketEvents and all other deps remain external -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <artifactSet>
+                        <includes>
+                            <include>org.bstats:*</include>
+                        </includes>
+                    </artifactSet>
+                    <relocations>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>io.windfall.anticheat.lib.bstats</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- GPG signing for release integrity -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
