@@ -58,4 +58,11 @@
         <packageUrl regex="true">pkg:maven/com\.ibm\.icu/icu4j@.*</packageUrl>
         <cve>CVE-2025-5222</cve>
     </suppress>
+
+    <!-- PacketEvents transitive: Netty — server provides at runtime, plugin never loads Netty classes directly -->
+    <suppress>
+        <notes>Suppress ALL Netty CVEs — provided by server at runtime, packetevents-netty-common is compile-only API stub</notes>
+        <packageUrl regex="true">pkg:maven/io\.netty/.*</packageUrl>
+        <cpe>cpe:/a:netty:netty</cpe>
+    </suppress>
 </suppressions>
