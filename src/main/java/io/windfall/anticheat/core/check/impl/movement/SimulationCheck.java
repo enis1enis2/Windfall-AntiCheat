@@ -4,10 +4,12 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
+import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
+import io.windfall.anticheat.core.compensation.SimulationEngine;
 import io.windfall.anticheat.core.physics.PhysicsConstants;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import io.windfall.anticheat.core.version.VersionBracket;
@@ -119,6 +121,21 @@ public class SimulationCheck extends Check implements PacketCheck {
         double predictedDeltaY = (state.expectedDeltaY - gravity) * airDrag;
 
         double verticalDeviation = Math.abs(deltaY - predictedDeltaY);
+
+        // Bypass resistance: when unconfirmed state changes exist, use SimulationEngine
+        // to test multiple scenarios — if any scenario matches, reduce deviation
+        SimulationEngine simEngine = WindfallPlugin.getInstance().getSimulationEngine();
+        if (simEngine != null && simEngine.needsSimulation(player)) {
+            SimulationEngine.SimulationResult result = simEngine.simulate(player, player.getLastX() + player.getDeltaX(), player.getLastY() + deltaY, player.getLastZ() + player.getDeltaZ());
+            if (result.matches) {
+                // Client's movement matches at least one possible world state — likely legitimate
+                state.samples = Math.max(0, state.samples - 2);
+                decreaseBuffer(player, 0.2);
+                state.expectedDeltaY = deltaY;
+                return;
+            }
+        }
+
         checkDeviation(player, verticalDeviation, deltaX, deltaZ, state);
 
         /** Store the actual deltaY as the basis for the next tick's prediction */

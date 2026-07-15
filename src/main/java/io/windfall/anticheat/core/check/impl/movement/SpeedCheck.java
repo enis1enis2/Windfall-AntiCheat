@@ -2,10 +2,12 @@ package io.windfall.anticheat.core.check.impl.movement;
 
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
+import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
+import io.windfall.anticheat.core.compensation.SimulationEngine;
 import io.windfall.anticheat.core.player.data.ActionData;
 import io.windfall.anticheat.core.physics.PredictionContext;
 import io.windfall.anticheat.core.physics.PredictionEngine;
@@ -44,6 +46,8 @@ public class SpeedCheck extends Check implements PacketCheck {
 
     /** Multiplier applied to the predicted max speed before flagging — 1.05 allows 5% headroom for float rounding */
     private static final double SPEED_TOLERANCE = 1.05;
+    /** Widened tolerance when unconfirmed state changes exist — prevents false positives from latency-delayed world changes */
+    private static final double SPEED_TOLERANCE_UNCONFIRMED = 1.20;
     /** Minimum horizontal speed on pre-1.18.2 clients; smaller values indicate protocol-version-specific float compression artifacts */
     private static final double PRE_1_18_2_THRESHOLD = 0.03;
     /** Buffer level at which a gradual speed violation triggers a flag */
@@ -123,7 +127,13 @@ public class SpeedCheck extends Check implements PacketCheck {
         /** Server-predicted maximum horizontal speed for this tick */
         double maxSpeed = ctx.predictedMaxHorizontalSpeed;
 
-        if (actualSpeed > maxSpeed * SPEED_TOLERANCE) {
+        // Bypass resistance: widen tolerance when client has unconfirmed state changes
+        // (e.g., potion effect applied but client hasn't processed it yet)
+        SimulationEngine simEngine = WindfallPlugin.getInstance().getSimulationEngine();
+        boolean unconfirmedChanges = simEngine != null && simEngine.needsSimulation(player);
+        double tolerance = unconfirmedChanges ? SPEED_TOLERANCE_UNCONFIRMED : SPEED_TOLERANCE;
+
+        if (actualSpeed > maxSpeed * tolerance) {
             /**
              * exceedRatio = how many times the actual speed exceeds the predicted max.
              * A ratio of 2.0+ is blatant and triggers an immediate flag.

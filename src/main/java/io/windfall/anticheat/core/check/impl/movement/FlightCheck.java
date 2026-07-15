@@ -2,10 +2,12 @@ package io.windfall.anticheat.core.check.impl.movement;
 
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
+import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
+import io.windfall.anticheat.core.compensation.SimulationEngine;
 import io.windfall.anticheat.core.player.data.ActionData;
 import io.windfall.anticheat.core.physics.PredictionContext;
 import io.windfall.anticheat.core.physics.PredictionEngine;
@@ -44,6 +46,8 @@ public class FlightCheck extends Check implements PacketCheck {
     private static final double JUMP_MOMENTUM = 0.42;
     /** Maximum allowed deviation between predicted and actual deltaY before it's considered suspicious */
     private static final double VERTICAL_TOLERANCE = 0.05;
+    /** Widened tolerance when unconfirmed state changes exist — prevents false positives from deferred world changes */
+    private static final double VERTICAL_TOLERANCE_UNCONFIRMED = 0.15;
     /** Number of consecutive ticks a player must hover before hover detection activates */
     private static final int HOVER_TICK_THRESHOLD = 20;
     /** Maximum vertical displacement per tick to count as "hovering" (near-zero movement) */
@@ -147,7 +151,14 @@ public class FlightCheck extends Check implements PacketCheck {
 
         /** Deviation between predicted and actual vertical movement */
         double verticalDelta = deltaY - predictedDeltaY;
-        boolean verticalDeviation = Math.abs(verticalDelta) > VERTICAL_TOLERANCE
+
+        // Bypass resistance: widen tolerance when client has unconfirmed state changes
+        // (e.g., block broken under player that client hasn't processed yet)
+        SimulationEngine simEngine = WindfallPlugin.getInstance().getSimulationEngine();
+        boolean unconfirmedChanges = simEngine != null && simEngine.needsSimulation(player);
+        double tolerance = unconfirmedChanges ? VERTICAL_TOLERANCE_UNCONFIRMED : VERTICAL_TOLERANCE;
+
+        boolean verticalDeviation = Math.abs(verticalDelta) > tolerance
                 && Math.abs(deltaY) > 0.01;
 
         if (verticalDeviation && !isFallFlying && !hasRiptide && !ctx.hasLevitation) {
