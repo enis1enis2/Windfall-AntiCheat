@@ -7,6 +7,7 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
+import io.windfall.anticheat.core.compensation.SimulationEngine;
 import io.windfall.anticheat.core.physics.PredictionContext;
 import io.windfall.anticheat.core.physics.PredictionEngine;
 import io.windfall.anticheat.core.player.WindfallPlayer;
@@ -92,6 +93,20 @@ public class PhaseCheck extends Check implements PacketCheck {
             boolean headInside = headBlock.getType().isSolid();
 
             if (feetInside || headInside) {
+                // Bypass resistance: if unconfirmed world changes exist (e.g., block breaks),
+                // the player might legitimately be in open space — check simulation engine
+                SimulationEngine simEngine = WindfallPlugin.getInstance().getSimulationEngine();
+                if (simEngine != null && simEngine.needsSimulation(player)) {
+                    SimulationEngine.SimulationResult result = simEngine.simulate(
+                        player, ctx.x, ctx.y, ctx.z);
+                    if (result.matches) {
+                        // Movement matches an alternate world state — suppress clipping penalty
+                        state.clippingTicks = Math.max(0, state.clippingTicks - 1);
+                        decreaseBuffer(player, 0.3);
+                        return;
+                    }
+                }
+
                 state.clippingTicks++;
                 if (state.clippingTicks >= MIN_CLIPPING_TICKS) {
                     /** Player is inside a solid block and still moving — phase hack */

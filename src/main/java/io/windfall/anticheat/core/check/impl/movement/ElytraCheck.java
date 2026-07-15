@@ -8,6 +8,7 @@ import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
+import io.windfall.anticheat.core.compensation.SimulationEngine;
 import io.windfall.anticheat.core.physics.VersionPhysics;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.UUID;
@@ -138,6 +139,19 @@ public class ElytraCheck extends Check implements PacketCheck {
 
         /** Check 1: Horizontal speed exceeding the elytra maximum. */
         if (horizontalSpeed > ELYTRA_MAX_HORIZONTAL_SPEED) {
+            // Bypass resistance: velocity changes (knockback, explosions) during elytra flight
+            // can legitimately increase horizontal speed — check simulation engine first
+            SimulationEngine simEngine = io.windfall.anticheat.WindfallPlugin.getInstance().getSimulationEngine();
+            if (simEngine != null && simEngine.needsSimulation(player)) {
+                SimulationEngine.SimulationResult result = simEngine.simulate(
+                    player, player.getLastX() + deltaX, player.getY(), player.getLastZ() + deltaZ);
+                if (result.matches) {
+                    decreaseBuffer(player, 0.2);
+                    state.lastElytraDeltaY = deltaY;
+                    return;
+                }
+            }
+
             double ratio = horizontalSpeed / ELYTRA_MAX_HORIZONTAL_SPEED;
             if (ratio > 2.0) {
                 flag(player);

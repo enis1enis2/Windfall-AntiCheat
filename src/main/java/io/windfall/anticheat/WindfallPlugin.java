@@ -107,7 +107,7 @@ public final class WindfallPlugin extends JavaPlugin {
         this.transactionManager = new TransactionManager(this);
         this.pingPongManager = new PingPongManager(this);
         this.latencyCompensator = new LatencyCompensator();
-        this.simulationEngine = new SimulationEngine(pingPongManager);
+        this.simulationEngine = new SimulationEngine(pingPongManager, latencyCompensator);
         this.geyserManager = GeyserManager.init(this);
         this.geysersTracker = new GeysersTracker();
         this.severityManager = SeverityManager.fromConfig(config);

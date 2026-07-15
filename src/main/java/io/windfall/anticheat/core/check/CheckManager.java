@@ -363,6 +363,7 @@ public class CheckManager {
         if (tickCounter % 6000 == 0) {
             packetFingerprint.onTick(tickCounter);
             violationPattern.pruneOldHistories();
+            latencyCompensator.pruneTickHistory((int) tickCounter);
         }
     }
 
