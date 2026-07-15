@@ -150,7 +150,7 @@ public final class LatencyCompensator {
     private static final class BlockChange {
         final int x, y, z;
         final Material material;
-        final long timestamp;
+        long timestamp;
 
         BlockChange(int x, int y, int z, Material material, long timestamp) {
             this.x = x;

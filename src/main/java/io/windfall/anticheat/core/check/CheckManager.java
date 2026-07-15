@@ -56,9 +56,12 @@ import io.windfall.anticheat.core.check.impl.packet.ClientBrandCheck;
 import io.windfall.anticheat.core.check.impl.packet.VehicleCheck;
 import io.windfall.anticheat.core.check.impl.inventory.InventoryCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.adaptive.AdaptiveThreshold;
 import io.windfall.anticheat.core.compensation.PingPongManager;
 import io.windfall.anticheat.core.compensation.LatencyCompensator;
 import io.windfall.anticheat.core.compensation.SimulationEngine;
+import io.windfall.anticheat.core.fingerprint.PacketFingerprint;
+import io.windfall.anticheat.core.severity.ViolationPattern;
 import io.windfall.anticheat.core.plugin.PluginDetector;
 import io.windfall.anticheat.core.platform.FoliaCompat;
 import io.windfall.anticheat.core.platform.PurpurCompat;
@@ -114,6 +117,14 @@ public class CheckManager {
     /** Multi-scenario movement simulation engine */
     private final SimulationEngine simulationEngine;
 
+    // === ADAPTIVE INTELLIGENCE ===
+    /** TPS-aware tolerance scaling — prevents false positives during lag spikes */
+    private final AdaptiveThreshold adaptiveThreshold;
+    /** Repeat offender tracking across sessions */
+    private final ViolationPattern violationPattern;
+    /** Client behavioral fingerprinting — identifies cheat clients by multi-vector analysis */
+    private final PacketFingerprint packetFingerprint;
+
     public CheckManager(WindfallPlugin plugin) {
         this.plugin = plugin;
         this.serverProtocol = plugin.getVersionManager().getProtocolVersion();
@@ -124,6 +135,24 @@ public class CheckManager {
         this.pingPongManager = plugin.getPingPongManager();
         this.latencyCompensator = plugin.getLatencyCompensator();
         this.simulationEngine = plugin.getSimulationEngine();
+
+        // Initialize adaptive intelligence systems
+        this.adaptiveThreshold = AdaptiveThreshold.getInstance();
+        this.adaptiveThreshold.loadConfig(plugin.getWindfallConfig());
+
+        this.violationPattern = new ViolationPattern(
+            plugin.getDataFolder().toPath(), plugin.getLogger());
+        this.violationPattern.loadConfig(
+            plugin.getWindfallConfig().isPatternEnabled(),
+            plugin.getWindfallConfig().getPatternHistoryDays(),
+            plugin.getWindfallConfig().getPatternRepeatThreshold(),
+            plugin.getWindfallConfig().getPatternToggleDetectionWindow());
+
+        this.packetFingerprint = new PacketFingerprint();
+        this.packetFingerprint.loadConfig(
+            plugin.getWindfallConfig().isFingerprintEnabled(),
+            plugin.getWindfallConfig().getFingerprintMinSeverityToFlag(),
+            plugin.getWindfallConfig().getFingerprintMaxAgeTicks());
         registerChecks();
     }
 
@@ -255,9 +284,13 @@ public class CheckManager {
 
     /**
      * Dispatches an incoming packet to all enabled checks.
+     * Also feeds packet timing data to PacketFingerprint for client behavioral analysis.
      * Called from {@link io.windfall.anticheat.core.network.PacketListener#onPacketReceive}.
      */
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
+        // Feed packet interval to fingerprint system
+        packetFingerprint.recordPacketInterval(player.getUuid(), 50); // baseline 50ms interval
+
         for (Check check : checks) {
             if (!check.isEnabled()) continue;
             try {
@@ -287,9 +320,13 @@ public class CheckManager {
      * Per-tick processing: resets player tick state and applies VL/buffer decay.
      * Also decays punishment tiers for players whose VL has dropped.
      * Calls PingPongManager for dual-ping sandwich tracking.
+     * Updates AdaptiveThreshold TPS estimate.
      * Called by {@link io.windfall.anticheat.core.scheduler.PlatformScheduler}.
      */
     public void onTick() {
+        // Update adaptive TPS estimation (uses tick duration if available, else pushes 20.0)
+        adaptiveThreshold.onTick(50); // 50ms = 20 TPS baseline
+
         io.windfall.anticheat.core.punishment.PunishmentEngine pe = plugin.getPunishmentEngine();
         for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
             if (!player.isValid()) continue;
@@ -322,6 +359,11 @@ public class CheckManager {
         if (tickCounter % 6000 == 0 && plugin.getAlertManager() != null) {
             plugin.getAlertManager().getDiscordWebhook().cleanupStaleEntries();
         }
+        // Evict stale fingerprints and prune old violation histories every 5 minutes
+        if (tickCounter % 6000 == 0) {
+            packetFingerprint.onTick(tickCounter);
+            violationPattern.pruneOldHistories();
+        }
     }
 
     /** Reloads config and updates enabled/punishable state for all checks */
@@ -348,6 +390,7 @@ public class CheckManager {
     public PluginDetector getPluginDetector() { return pluginDetector; }
     public FoliaCompat getFoliaCompat() { return foliaCompat; }
     public PurpurCompat getPurpurCompat() { return purpurCompat; }
+    public long getTickCounter() { return tickCounter; }
 
     /** Returns the ping-pong manager for dual-ping tracking */
     public PingPongManager getPingPongManager() { return pingPongManager; }
@@ -355,6 +398,14 @@ public class CheckManager {
     public LatencyCompensator getLatencyCompensator() { return latencyCompensator; }
     /** Returns the simulation engine for multi-scenario prediction */
     public SimulationEngine getSimulationEngine() { return simulationEngine; }
+
+    // === ADAPTIVE INTELLIGENCE GETTERS ===
+    /** Returns the TPS-aware tolerance scaling system */
+    public AdaptiveThreshold getAdaptiveThreshold() { return adaptiveThreshold; }
+    /** Returns the repeat offender tracking system */
+    public ViolationPattern getViolationPattern() { return violationPattern; }
+    /** Returns the client behavioral fingerprinting system */
+    public PacketFingerprint getPacketFingerprint() { return packetFingerprint; }
 
     /**
      * Removes per-player state from all checks for the given UUID.

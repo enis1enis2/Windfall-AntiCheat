@@ -97,7 +97,7 @@ The built JAR will be at `target/Windfall.jar`.
 mvn test
 ```
 
-All 515 tests must pass before submitting a PR.
+All 553 tests must pass before submitting a PR.
 
 ### Project Structure
 
@@ -254,7 +254,7 @@ public class ReachCheck extends Check {
 
 ### Requirements
 
-- All **515 existing tests must pass** before submitting
+- All **553 existing tests must pass** before submitting
 - New checks should include unit tests
 - Tests use JUnit 6.1.1 + Mockito 5.23.0
 

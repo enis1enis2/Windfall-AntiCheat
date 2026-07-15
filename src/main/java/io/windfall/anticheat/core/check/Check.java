@@ -139,6 +139,12 @@ public abstract class Check {
             vl = maxVl;
         }
 
+        // Record violation for repeat-offender pattern analysis
+        if (plugin.getCheckManager() != null) {
+            plugin.getCheckManager().getViolationPattern()
+                .recordViolation(player.getUuid(), stableKey, vl, plugin.getCheckManager().getTickCounter());
+        }
+
         AlertManager alertManager = plugin.getAlertManager();
         if (alertManager != null && player.isAlertsEnabled() && vl > 0) {
             alertManager.sendAlert(player, this, "VL=" + vl);

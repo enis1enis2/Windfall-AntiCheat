@@ -191,6 +191,9 @@ public final class WindfallPlugin extends JavaPlugin {
             }
             if (checkManager != null) {
                 checkManager.removePlayer(uuid);
+                // Save violation history and clean fingerprint on disconnect
+                checkManager.getViolationPattern().savePlayerHistory(uuid);
+                checkManager.getPacketFingerprint().removePlayer(uuid);
             }
             if (playerManager != null) {
                 playerManager.remove(uuid);

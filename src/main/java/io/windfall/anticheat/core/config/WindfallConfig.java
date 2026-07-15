@@ -25,6 +25,9 @@ import java.util.Set;
  *   <li><b>Bedrock</b>: tolerance multipliers for Bedrock/Geyser players</li>
  *   <li><b>Severity</b>: VL escalation multiplier tiers</li>
  *   <li><b>Punishments</b>: warn → kick → tempban → permban thresholds</li>
+ *   <li><b>Adaptive</b>: TPS-aware tolerance scaling during lag spikes</li>
+ *   <li><b>Pattern</b>: repeat offender detection across sessions</li>
+ *   <li><b>Fingerprint</b>: client behavioral identification vectors</li>
  *   <li><b>Checks</b>: per-check enable/disable, maxVL, setbackVL, decay, punishable</li>
  * </ul>
  *
@@ -40,6 +43,7 @@ public class WindfallConfig {
 
     public WindfallConfig(WindfallPlugin plugin) {
         this.plugin = plugin;
+        if (plugin == null) return; // Skip init for test mocks
         plugin.saveDefaultConfig();
         this.config = plugin.getConfig();
         setDefaults();
@@ -104,6 +108,24 @@ public class WindfallConfig {
         config.addDefault("punishments.kick-message", "&c[Windfall] Kicked for cheating.");
         config.addDefault("punishments.tempban-reason", "[Windfall] Temporarily banned for cheating.");
         config.addDefault("punishments.permban-reason", "[Windfall] Permanently banned for cheating.");
+
+        // Adaptive Threshold — TPS-aware tolerance scaling
+        config.addDefault("adaptive.enabled", true);
+        config.addDefault("adaptive.tps-threshold", 19.0);
+        config.addDefault("adaptive.scale-factor", 0.02);
+        config.addDefault("adaptive.max-tolerance-multiplier", 2.0);
+        config.addDefault("adaptive.safe-mode-threshold", 12.0);
+
+        // Violation Pattern — repeat offender tracking
+        config.addDefault("pattern.enabled", true);
+        config.addDefault("pattern.history-days", 30);
+        config.addDefault("pattern.repeat-threshold", 3);
+        config.addDefault("pattern.toggle-detection-window", 6000);
+
+        // Packet Fingerprint — client behavioral fingerprinting
+        config.addDefault("fingerprint.enabled", true);
+        config.addDefault("fingerprint.min-severity-to-flag", 60);
+        config.addDefault("fingerprint.max-fingerprint-age-ticks", 6000);
 
         // Check defaults — per-check values override these if set
         config.addDefault("checks.default.enabled", true);
@@ -321,6 +343,57 @@ public class WindfallConfig {
     public String getPunishmentPermbanReason() {
         return config.getString("punishments.permban-reason",
             "[Windfall] Permanently banned for cheating.");
+    }
+
+    // === Adaptive Threshold config ===
+    public boolean isAdaptiveEnabled() {
+        return config.getBoolean("adaptive.enabled", true);
+    }
+
+    public double getAdaptiveTpsThreshold() {
+        return config.getDouble("adaptive.tps-threshold", 19.0);
+    }
+
+    public double getAdaptiveScaleFactor() {
+        return config.getDouble("adaptive.scale-factor", 0.02);
+    }
+
+    public double getAdaptiveMaxToleranceMultiplier() {
+        return config.getDouble("adaptive.max-tolerance-multiplier", 2.0);
+    }
+
+    public double getAdaptiveSafeModeThreshold() {
+        return config.getDouble("adaptive.safe-mode-threshold", 12.0);
+    }
+
+    // === Violation Pattern config ===
+    public boolean isPatternEnabled() {
+        return config.getBoolean("pattern.enabled", true);
+    }
+
+    public int getPatternHistoryDays() {
+        return config.getInt("pattern.history-days", 30);
+    }
+
+    public int getPatternRepeatThreshold() {
+        return config.getInt("pattern.repeat-threshold", 3);
+    }
+
+    public int getPatternToggleDetectionWindow() {
+        return config.getInt("pattern.toggle-detection-window", 6000);
+    }
+
+    // === Packet Fingerprint config ===
+    public boolean isFingerprintEnabled() {
+        return config.getBoolean("fingerprint.enabled", true);
+    }
+
+    public int getFingerprintMinSeverityToFlag() {
+        return config.getInt("fingerprint.min-severity-to-flag", 60);
+    }
+
+    public int getFingerprintMaxAgeTicks() {
+        return config.getInt("fingerprint.max-fingerprint-age-ticks", 6000);
     }
 
     // === Check config — falls back to default.* if per-check key not set ===
