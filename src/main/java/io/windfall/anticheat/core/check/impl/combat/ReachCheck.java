@@ -12,6 +12,8 @@ import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.physics.VersionPhysics;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerRotation;
 import java.util.ArrayDeque;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,12 +76,42 @@ public class ReachCheck extends Check implements PacketCheck {
     /** Number of recent reach samples kept for averaging (rolling window). */
     private static final int ROLLING_WINDOW = 20;
 
+    /**
+     * Maximum number of attacker position snapshots kept for multi-snapshot
+     * lag compensation. Adapted from ArrowAntiCheat's InteractD approach of
+     * trying multiple attacker positions to find the best-matching one.
+     */
+    private static final int ATTACKER_SNAPSHOT_WINDOW = 5;
+
+    /** Maximum age (ms) for attacker snapshots to be considered during reach calculation. */
+    private static final long ATTACKER_SNAPSHOT_MAX_AGE_MS = 250L;
+
     /** Shared cache of tracked entity positions, populated by spawn/move/remove handlers. */
     private static final ConcurrentHashMap<Integer, TrackedEntity> trackedEntities = new ConcurrentHashMap<>();
 
     /** Per-player state holding recent reach distance samples for averaging. */
     private static final class PlayerState {
         final ArrayDeque<Double> reachSamples = new ArrayDeque<>();
+        final ArrayDeque<AttackerSnapshot> attackerSnapshots = new ArrayDeque<>();
+    }
+
+    /**
+     * Captured attacker state at the moment of a rotation/position packet.
+     * Used for multi-snapshot lag compensation — when an attack arrives,
+     * multiple recent snapshots are tried and the one yielding the shortest
+     * reach distance is used. This prevents false positives when the attacker
+     * has moved between sending the attack packet and server processing.
+     */
+    private static final class AttackerSnapshot {
+        final double eyeX, eyeY, eyeZ;
+        final long timestamp;
+
+        AttackerSnapshot(double eyeX, double eyeY, double eyeZ, long timestamp) {
+            this.eyeX = eyeX;
+            this.eyeY = eyeY;
+            this.eyeZ = eyeZ;
+            this.timestamp = timestamp;
+        }
     }
 
     private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
@@ -149,17 +181,25 @@ public class ReachCheck extends Check implements PacketCheck {
     }
 
     /**
-     * Processes attack packets to compute and evaluate reach distance. Uses the player's
-     * eye position and the target's bounding box (with lag-compensated position when available)
-     * to calculate the Euclidean distance. Flags immediately on hard violations, or accumulates
-     * buffer for sustained borderline cases.
+     * Processes incoming packets: records attacker position snapshots on rotation/
+     * movement packets, and evaluates reach distance on attack packets using
+     * multi-snapshot lag compensation (adapted from ArrowAntiCheat InteractD).
      *
-     * @param player the attacking player
-     * @param event  the incoming interact-entity packet
+     * @param player the player associated with the packet
+     * @param event  the incoming packet event
      */
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
-        if (event.getPacketType() != PacketType.Play.Client.INTERACT_ENTITY) return;
+        PacketTypeCommon type = event.getPacketType();
+
+        /* Record attacker position snapshot on rotation/movement packets. */
+        if (type == PacketType.Play.Client.PLAYER_ROTATION
+                || type == PacketType.Play.Client.PLAYER_POSITION_AND_ROTATION) {
+            recordAttackerSnapshot(player);
+            return;
+        }
+
+        if (type != PacketType.Play.Client.INTERACT_ENTITY) return;
 
         WrapperPlayClientInteractEntity wrapper = new WrapperPlayClientInteractEntity(event);
         if (wrapper.getAction() != WrapperPlayClientInteractEntity.InteractAction.ATTACK) return;
@@ -182,16 +222,44 @@ public class ReachCheck extends Check implements PacketCheck {
         }
         if (targetBB == null) return;
 
-        double eyeX = player.getX();
-        double eyeY = player.getY() + getEyeHeight(player);
-        double eyeZ = player.getZ();
+        /*
+         * Multi-snapshot reach calculation (InteractD adaptation).
+         * Try each recent attacker position snapshot and use the shortest
+         * reach distance. This compensates for attacker movement between
+         * sending the attack packet and server processing, and for
+         * under-block eye-height discrepancies.
+         */
+        double bestReach = Double.MAX_VALUE;
+        long now = System.currentTimeMillis();
 
-        double reach = calculateReachDistance(
-                eyeX, eyeY, eyeZ,
-                targetBB[0], targetBB[1], targetBB[2],
-                targetBB[3], targetBB[4], targetBB[5]);
+        ArrayDeque<AttackerSnapshot> snapshots = state.attackerSnapshots;
 
-        state.reachSamples.addLast(reach);
+        if (snapshots.isEmpty()) {
+            /* Fallback: use current position if no snapshots are available. */
+            bestReach = computeReachFromPosition(
+                    player.getX(), player.getY() + getEyeHeight(player), player.getZ(),
+                    targetBB);
+        } else {
+            for (AttackerSnapshot snap : snapshots) {
+                long age = now - snap.timestamp;
+                if (age > ATTACKER_SNAPSHOT_MAX_AGE_MS) continue;
+
+                double reach = computeReachFromPosition(snap.eyeX, snap.eyeY, snap.eyeZ, targetBB);
+                if (reach < bestReach) {
+                    bestReach = reach;
+                }
+            }
+
+            /* Also try current position — it may be more accurate for very recent attacks. */
+            double currentReach = computeReachFromPosition(
+                    player.getX(), player.getY() + getEyeHeight(player), player.getZ(),
+                    targetBB);
+            if (currentReach < bestReach) {
+                bestReach = currentReach;
+            }
+        }
+
+        state.reachSamples.addLast(bestReach);
         if (state.reachSamples.size() > ROLLING_WINDOW) {
             state.reachSamples.removeFirst();
         }
@@ -202,7 +270,7 @@ public class ReachCheck extends Check implements PacketCheck {
         double protocolMargin = getProtocolMargin(player);
         double effectiveLimit = limit + TOLERANCE + pingTolerance + protocolMargin;
 
-        if (reach > effectiveLimit) {
+        if (bestReach > effectiveLimit) {
             flag(player);
             return;
         }
@@ -225,6 +293,40 @@ public class ReachCheck extends Check implements PacketCheck {
 
     @Override
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
+    }
+
+    /**
+     * Records the attacker's current eye position as a snapshot for multi-snapshot
+     * lag compensation. Called on every rotation or position-and-rotation packet.
+     *
+     * @param player the player whose position to record
+     */
+    private void recordAttackerSnapshot(WindfallPlayer player) {
+        PlayerState state = getState(player);
+        double eyeX = player.getX();
+        double eyeY = player.getY() + getEyeHeight(player);
+        double eyeZ = player.getZ();
+        state.attackerSnapshots.addLast(new AttackerSnapshot(eyeX, eyeY, eyeZ, System.currentTimeMillis()));
+
+        while (state.attackerSnapshots.size() > ATTACKER_SNAPSHOT_WINDOW) {
+            state.attackerSnapshots.removeFirst();
+        }
+    }
+
+    /**
+     * Computes the reach distance from a given eye position to the target's bounding box.
+     *
+     * @param eyeX     attacker eye X
+     * @param eyeY     attacker eye Y (already includes eye height)
+     * @param eyeZ     attacker eye Z
+     * @param targetBB target bounding box [minX, minY, minZ, maxX, maxY, maxZ]
+     * @return the Euclidean distance from the eye to the closest point on the bounding box
+     */
+    private double computeReachFromPosition(double eyeX, double eyeY, double eyeZ, double[] targetBB) {
+        return calculateReachDistance(
+                eyeX, eyeY, eyeZ,
+                targetBB[0], targetBB[1], targetBB[2],
+                targetBB[3], targetBB[4], targetBB[5]);
     }
 
     /**

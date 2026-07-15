@@ -58,13 +58,20 @@ public class HitboxesCheck extends Check implements PacketCheck {
     private static final double PLAYER_BOX_EXPANSION = 0.15;
 
     /** Minimum attack count before the hit-ratio evaluation is performed. */
-    private static final int MIN_ATTACKS_PER_EVAL = 10;
+    private static final int MIN_ATTACKS_PER_EVAL = 16;
 
     /**
      * Hit-ratio threshold above which the player is flagged. 0.8 means 80% of
      * attacks land, which is inhumanly consistent at maximum reach.
      */
     private static final double HIT_RATIO_FLAG_THRESHOLD = 0.8;
+
+    /**
+     * Hard-flag threshold for blatant violations. If any single attack distance
+     * exceeds this value (blocks), a flag is raised immediately regardless of
+     * hit ratio. Adapted from ArrowAntiCheat's HitboxA center-angle threshold.
+     */
+    private static final double BLATANT_FLAG_THRESHOLD = 5.0;
 
     /** Vanilla maximum melee reach distance in blocks. */
     private static final double MAX_REACH = 3.5;
@@ -145,6 +152,15 @@ public class HitboxesCheck extends Check implements PacketCheck {
 
         /* Euclidean distance from eye to projected endpoint. */
         double hitDistance = Math.sqrt(lookX * lookX + lookY * lookY + lookZ * lookZ);
+
+        /* Hard-flag: blatant hitbox extension detected on a single attack. */
+        if (hitDistance > BLATANT_FLAG_THRESHOLD) {
+            flag(player);
+            resetBuffer(player);
+            state.attacksOnTarget = 0;
+            state.totalAttacks = 0;
+            return;
+        }
 
         if (hitDistance < maxReach) {
             state.attacksOnTarget++;

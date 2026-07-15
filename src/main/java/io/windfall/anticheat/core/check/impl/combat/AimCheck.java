@@ -16,7 +16,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * Detects inhuman aim patterns consistent with aim-assist or aimbot cheats.
  *
  * <p>This check monitors player rotation packets and applies two complementary
- * detection strategies:</p>
+ * detection strategies. False-positive reductions are applied by skipping
+ * negligible rotations and stationary-player states (adapted from
+ * ArrowAntiCheat AimE/G/H FP fixes).</p>
+ *
+ * <h3>0. Pre-filters (False-Positive Reductions)</h3>
+ * <p>Rotation packets are skipped when:</p>
+ * <ul>
+ *   <li>Both yaw and pitch deltas are below {@value #MIN_DELTA_THRESHOLD}
+ *       degrees (negligible mouse jitter).</li>
+ *   <li>The player has not changed position since the last packet
+ *       (stationary player making small aim adjustments).</li>
+ * </ul>
  *
  * <h3>1. Instant-Snap Detection</h3>
  * <p>Flags rotation deltas exceeding {@value #INSTANT_SNAP_THRESHOLD} degrees per
@@ -63,6 +74,14 @@ public class AimCheck extends Check implements PacketCheck {
      * correction.
      */
     private static final double AIMBOT_YAW_VARIANCE_THRESHOLD = 0.5;
+
+    /**
+     * Minimum rotation delta (degrees) required for both yaw and pitch.
+     * Packets where both deltas are below this threshold are considered
+     * negligible mouse jitter and are skipped to reduce false positives.
+     * Value adapted from ArrowAntiCheat's common 0.015 threshold.
+     */
+    private static final double MIN_DELTA_THRESHOLD = 0.015;
 
     /** Buffer level at which the snap-detection heuristic triggers a flag. */
     private static final double SNAP_BUFFER_FLAG_THRESHOLD = 3.0;
@@ -139,6 +158,22 @@ public class AimCheck extends Check implements PacketCheck {
 
         double absDeltaYaw = Math.abs(deltaYaw);
         double absDeltaPitch = Math.abs(deltaPitch);
+
+        /* Pre-filter: skip negligible mouse jitter (both deltas below threshold). */
+        if (absDeltaYaw < MIN_DELTA_THRESHOLD && absDeltaPitch < MIN_DELTA_THRESHOLD) {
+            state.lastYaw = yaw;
+            state.lastPitch = pitch;
+            return;
+        }
+
+        /* Pre-filter: skip when player is stationary (position unchanged since last packet). */
+        if (player.getX() == player.getLastX()
+                && player.getY() == player.getLastY()
+                && player.getZ() == player.getLastZ()) {
+            state.lastYaw = yaw;
+            state.lastPitch = pitch;
+            return;
+        }
 
         /* Strategy 1: Instant-snap — a single rotation delta exceeding the threshold. */
         if (absDeltaYaw > INSTANT_SNAP_THRESHOLD || absDeltaPitch > 90.0) {
