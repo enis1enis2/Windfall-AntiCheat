@@ -127,6 +127,11 @@ public class WindfallConfig {
         config.addDefault("fingerprint.min-severity-to-flag", 60);
         config.addDefault("fingerprint.max-fingerprint-age-ticks", 6000);
 
+        // Prometheus Metrics
+        config.addDefault("prometheus.enabled", false);
+        config.addDefault("prometheus.host", "127.0.0.1");
+        config.addDefault("prometheus.port", 9211);
+
         // Check defaults — per-check values override these if set
         config.addDefault("checks.default.enabled", true);
         config.addDefault("checks.default.max-vl", 100);
@@ -152,7 +157,9 @@ public class WindfallConfig {
             "windfall.packet.bad", "windfall.packet.cheststealer",
             "windfall.packet.creative", "windfall.packet.order",
             "windfall.packet.chat", "windfall.packet.crash",
-            "windfall.packet.sprint", "windfall.packet.exploit"
+            "windfall.packet.sprint", "windfall.packet.exploit",
+            "windfall.packet.clientbrand", "windfall.packet.vehicle",
+            "windfall.packet.transaction"
         };
         for (String key : allChecks) {
             config.addDefault("checks." + key + ".enabled", true);
@@ -394,6 +401,19 @@ public class WindfallConfig {
 
     public int getFingerprintMaxAgeTicks() {
         return config.getInt("fingerprint.max-fingerprint-age-ticks", 6000);
+    }
+
+    // === Prometheus Metrics config ===
+    public boolean isPrometheusEnabled() {
+        return config.getBoolean("prometheus.enabled", false);
+    }
+
+    public String getPrometheusHost() {
+        return config.getString("prometheus.host", "127.0.0.1");
+    }
+
+    public int getPrometheusPort() {
+        return config.getInt("prometheus.port", 9211);
     }
 
     // === Check config — falls back to default.* if per-check key not set ===

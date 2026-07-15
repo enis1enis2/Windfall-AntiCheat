@@ -54,6 +54,7 @@ import io.windfall.anticheat.core.check.impl.packet.SprintCheck;
 import io.windfall.anticheat.core.check.impl.packet.ExploitCheck;
 import io.windfall.anticheat.core.check.impl.packet.ClientBrandCheck;
 import io.windfall.anticheat.core.check.impl.packet.VehicleCheck;
+import io.windfall.anticheat.core.check.impl.packet.TransactionCheck;
 import io.windfall.anticheat.core.check.impl.inventory.InventoryCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import io.windfall.anticheat.core.adaptive.AdaptiveThreshold;
@@ -63,6 +64,7 @@ import io.windfall.anticheat.core.compensation.SimulationEngine;
 import io.windfall.anticheat.core.fingerprint.PacketFingerprint;
 import io.windfall.anticheat.core.severity.ViolationPattern;
 import io.windfall.anticheat.core.plugin.PluginDetector;
+import io.windfall.anticheat.core.metrics.WindfallPrometheus;
 import io.windfall.anticheat.core.platform.FoliaCompat;
 import io.windfall.anticheat.core.platform.PurpurCompat;
 import io.windfall.anticheat.core.version.ServerFork;
@@ -125,6 +127,10 @@ public class CheckManager {
     /** Client behavioral fingerprinting — identifies cheat clients by multi-vector analysis */
     private final PacketFingerprint packetFingerprint;
 
+    // === PROMETHEUS METRICS ===
+    /** Self-contained Prometheus HTTP endpoint for anti-cheat telemetry */
+    private final WindfallPrometheus prometheus;
+
     public CheckManager(WindfallPlugin plugin) {
         this.plugin = plugin;
         this.serverProtocol = plugin.getVersionManager().getProtocolVersion();
@@ -153,6 +159,8 @@ public class CheckManager {
             plugin.getWindfallConfig().isFingerprintEnabled(),
             plugin.getWindfallConfig().getFingerprintMinSeverityToFlag(),
             plugin.getWindfallConfig().getFingerprintMaxAgeTicks());
+
+        this.prometheus = new WindfallPrometheus(plugin);
         registerChecks();
     }
 
@@ -217,6 +225,7 @@ public class CheckManager {
         allChecks.add(new ClientBrandCheck());
         allChecks.add(new VehicleCheck());
         allChecks.add(new InventoryCheck());
+        allChecks.add(new TransactionCheck());
 
         int skippedVersion = 0;
         int skippedFork = 0;
@@ -327,6 +336,9 @@ public class CheckManager {
         // Update adaptive TPS estimation (uses tick duration if available, else pushes 20.0)
         adaptiveThreshold.onTick(50); // 50ms = 20 TPS baseline
 
+        // Update Prometheus metrics every tick
+        prometheus.tick();
+
         io.windfall.anticheat.core.punishment.PunishmentEngine pe = plugin.getPunishmentEngine();
         for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
             if (!player.isValid()) continue;
@@ -344,6 +356,13 @@ public class CheckManager {
             for (Check check : checks) {
                 if (!check.isEnabled()) continue;
                 check.reward(player);
+                // Tick-based checks (ScaffoldCheck tower detection, TransactionCheck skip detection)
+                if (check instanceof io.windfall.anticheat.core.check.impl.movement.ScaffoldCheck) {
+                    ((io.windfall.anticheat.core.check.impl.movement.ScaffoldCheck) check).onTick(player, tickCounter);
+                }
+                if (check instanceof io.windfall.anticheat.core.check.impl.packet.TransactionCheck) {
+                    ((io.windfall.anticheat.core.check.impl.packet.TransactionCheck) check).onTick(player);
+                }
             }
             if (pe != null) {
                 pe.decayTierIfNeeded(player);
@@ -407,6 +426,10 @@ public class CheckManager {
     public ViolationPattern getViolationPattern() { return violationPattern; }
     /** Returns the client behavioral fingerprinting system */
     public PacketFingerprint getPacketFingerprint() { return packetFingerprint; }
+
+    // === PROMETHEUS METRICS ===
+    /** Returns the Prometheus metrics endpoint */
+    public WindfallPrometheus getPrometheus() { return prometheus; }
 
     /**
      * Removes per-player state from all checks for the given UUID.

@@ -83,6 +83,15 @@
 -keep class io.windfall.anticheat.core.compensation.LatencyCompensator { *; }
 -keep class io.windfall.anticheat.core.compensation.SimulationEngine { *; }
 
+# --- Prometheus metrics endpoint (self-contained HTTP server) ---
+-keep class io.windfall.anticheat.core.metrics.WindfallPrometheus { *; }
+
+# --- Prometheus HTTP server classes (used via reflection by simpleclient) ---
+-keep class io.prometheus.exporter.httpserver.HTTPServer { *; }
+-keep class io.prometheus.client.exporter.HTTPServer { *; }
+-keep class io.prometheus.client.* { *; }
+-keep class io.prometheus.exporter.* { *; }
+
 # --- Public API (external plugins depend on these) ---
 -keep class io.windfall.anticheat.api.** {
     *;

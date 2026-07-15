@@ -86,6 +86,14 @@ compatibility:
     # Extra ticks of tolerance for timing-based checks
     packet-delay-tolerance: 1
 
+# === Prometheus Metrics ===
+# Exposes anti-cheat telemetry for Grafana/Prometheus monitoring.
+# Requires a separate Prometheus server scraping this endpoint.
+prometheus:
+  enabled: false
+  host: "127.0.0.1"
+  port: 9211
+
 # === Checks ===
 # Each check has: enabled, max-vl, setback-vl, punishable
 # - enabled: whether the check runs at all

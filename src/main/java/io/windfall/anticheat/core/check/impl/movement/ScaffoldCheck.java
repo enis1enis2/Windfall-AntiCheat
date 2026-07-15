@@ -4,7 +4,7 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity;
+import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.bedrock.BedrockInfo;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
@@ -15,115 +15,103 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Detects scaffold (auto-bridge) hacks by measuring block placement speed over time.
+ * Detects scaffold (auto-bridge) hacks via three complementary detection vectors:
+ * placement speed, tick-based tower detection, and rotation consistency.
  *
- * <p>Scaffold hacks automatically place blocks beneath the player as they move, typically at a
- * rate significantly higher than what a legitimate player can achieve. This check tracks blocks
- * placed per second using a sliding window and compares against platform-specific maximums.
+ * <p><b>Detection vector 1 — Placement speed:</b>
+ * Tracks blocks placed per second in a sliding window and compares against
+ * platform-specific thresholds (Java 12.0, Bedrock touch 8.0, controller 9.0, keyboard 10.0).
+ * Sprinting players have a lower threshold (4.0 BPS) since sprinting reduces placement precision.
  *
- * <p><b>Detection algorithm:</b>
- * <ol>
- *   <li>Count block placements within a {@value #PLACE_WINDOW_MS} ms sliding window.</li>
- *   <li>Compute blocks-per-second (BPS) from the count and elapsed time.</li>
- *   <li>Compare against platform-specific thresholds:
- *     <ul>
- *       <li>Java: {@value #JAVA_MAX_BLOCK_PLACE_PER_SECOND} BPS (12.0)</li>
- *       <li>Bedrock keyboard: {@value #BEDROCK_KB_MAX_BLOCKS_PER_SEC} BPS (10.0)</li>
- *       <li>Bedrock controller: {@value #BEDROCK_CONTROLLER_MAX_BLOCKS_PER_SEC} BPS (9.0)</li>
- *       <li>Bedrock touch: {@value #BEDROCK_TOUCH_MAX_BLOCKS_PER_SEC} BPS (8.0)</li>
- *     </ul>
- *   </li>
- *   <li>Java players also have a secondary check: sprinting + BPS &gt; 4.0 is suspicious
- *       (scaffold while sprinting requires faster-than-normal placement).</li>
- * </ol>
+ * <p><b>Detection vector 2 — Tick-based tower detection:</b>
+ * Scaffold hacks placing blocks vertically (tower) place one block per game tick. Legitimate
+ * tower building requires at least 6 ticks between placements (placing too fast is inhuman).
+ * This vector tracks tick intervals and flags placements within {@value #TOWER_TICK_THRESHOLD}
+ * ticks of each other.
  *
- * <p><b>Buffer logic:</b> Java violations add 1.0 (flag at &gt; 5.0); sprinting adds 0.5 (flag at
- * &gt; 3.0); Bedrock adds 0.5 with a higher flag threshold of 8.0 to account for platform latency.
+ * <p><b>Detection vector 3 — Rotation consistency:</b>
+ * Scaffold bots rotate the player's view to face the block being placed, typically snapping
+ * to exact yaw/pitch values at inhuman speeds. This vector detects rotation deltas that
+ * exceed {@value #ROTATION_SNAP_THRESHOLD} degrees between consecutive placements.
  *
- * <p><b>Compatibility:</b> Marked {@link CompatFlag#FOLIA_UNSAFE} because it uses
- * {@link System#currentTimeMillis()} rather than tick-based timing. Also uses
- * {@link CompatFlag#RELAX_ON_MISMATCH} with a {@code relaxMultiplier} of 1.3 to reduce false
- * positives on high-latency connections.
+ * <p><b>Buffer logic:</b>
+ * <ul>
+ *   <li>Speed violations: +1.0 buffer, flag at &gt; 5.0</li>
+ *   <li>Sprint violations: +0.5 buffer, flag at &gt; 3.0</li>
+ *   <li>Tower violations: +1.5 buffer, flag at &gt; 4.0</li>
+ *   <li>Rotation violations: +1.0 buffer, flag at &gt; 5.0</li>
+ *   <li>Bedrock: +0.5 buffer, flag at &gt; 8.0 (higher threshold for latency)</li>
+ * </ul>
+ *
+ * <p><b>Compatibility:</b> Uses {@link CompatFlag#RELAX_ON_MISMATCH} with 1.3x multiplier.
+ * Tower detection uses tick-based timing (via {@link #onTick}), rotation uses
+ * {@link System#currentTimeMillis()} for packet timestamps.
  *
  * @see MultiPlaceCheck — companion check for per-tick placement rate
- * @see InvalidPlaceCheck — companion check for occupied-block and self-intersection violations
+ * @see InvalidPlaceCheck — companion check for occupied-block violations
  */
-@CheckData(name = "Scaffold A", stableKey = "windfall.movement.scaffold", decay = 0.005, setbackVl = 30, compat = {CompatFlag.FOLIA_UNSAFE, CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3, disableOnFolia = false)
+@CheckData(name = "Scaffold A", stableKey = "windfall.movement.scaffold", decay = 0.005, setbackVl = 30, compat = {CompatFlag.RELAX_ON_MISMATCH}, relaxMultiplier = 1.3, disableOnFolia = false)
 public class ScaffoldCheck extends Check implements PacketCheck {
 
-    /** Maximum blocks per second a legitimate Java player can place. */
+    // === Speed detection thresholds ===
     private static final double JAVA_MAX_BLOCK_PLACE_PER_SECOND = 12.0;
-
-    /** Maximum blocks per second for Bedrock touch-device players (slower input method). */
     private static final double BEDROCK_TOUCH_MAX_BLOCKS_PER_SEC = 8.0;
-
-    /** Maximum blocks per second for Bedrock keyboard players. */
     private static final double BEDROCK_KB_MAX_BLOCKS_PER_SEC = 10.0;
-
-    /** Maximum blocks per second for Bedrock controller players. */
     private static final double BEDROCK_CONTROLLER_MAX_BLOCKS_PER_SEC = 9.0;
-
-    /**
-     * Secondary threshold for Java players: placing blocks faster than this while sprinting
-     * is suspicious because sprinting reduces placement precision.
-     */
     private static final double SPRINTING_BLOCKS_PER_SEC_THRESHOLD = 4.0;
-
-    /**
-     * Size of the rolling window for accumulated BPS samples. Currently unused in the
-     * threshold logic but retained for future averaging enhancements.
-     */
-    private static final int ROLLING_WINDOW_SIZE = 10;
-
-    /** Duration of the sliding placement window in milliseconds (1 second). */
     private static final long PLACE_WINDOW_MS = 1000;
 
+    // === Tower detection thresholds ===
+    /** Minimum ticks between block placements for legitimate tower building */
+    private static final int TOWER_TICK_THRESHOLD = 6;
+    /** Number of consecutive fast placements before flagging tower */
+    private static final int TOWER_FAST_PLACEMENT_THRESHOLD = 3;
+
+    // === Rotation consistency thresholds ===
+    /** Maximum yaw/pitch delta (degrees) between consecutive placements for legit players */
+    private static final float ROTATION_SNAP_THRESHOLD = 45.0f;
+    /** Number of rotation snap violations before flagging */
+    private static final int ROTATION_VIOLATION_THRESHOLD = 3;
+
     /**
-     * Per-player mutable state for tracking block placement rate.
+     * Per-player mutable state for tracking scaffold indicators.
      */
     private static final class PlayerState {
-        /** Number of blocks placed within the current window. */
+        // === Speed tracking ===
         int blocksPlacedThisWindow;
-        /** Start timestamp (ms) of the current sliding window. */
         long windowStartTime;
-        /** Last observed hotbar slot (for future slot-change heuristics). */
         int lastSlot;
-        /** Accumulated blocks-per-second values for computing average BPS. */
         double blocksPerSecondAccum;
-        /** Number of BPS samples collected in the current session. */
         int samplesCollected;
+
+        // === Tower detection (tick-based) ===
+        /** Game tick of the last block placement */
+        long lastPlacementTick;
+        /** Count of consecutive placements within TOWER_TICK_THRESHOLD ticks */
+        int consecutiveFastPlacements;
+
+        // === Rotation consistency ===
+        /** Yaw of the last block placement */
+        float lastYaw;
+        /** Pitch of the last block placement */
+        float lastPitch;
+        /** Timestamp of the last placement for rotation rate calculation */
+        long lastPlacementTimeMs;
+        /** Count of rotation snap violations in the current window */
+        int rotationSnapViolations;
     }
 
     private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
 
-    /**
-     * Retrieves or lazily initialises the per-player state for this check.
-     *
-     * @param player the player whose state to retrieve
-     * @return the current {@link PlayerState} for the player
-     */
     private PlayerState getState(WindfallPlayer player) {
         return stateMap.computeIfAbsent(player.getUuid(), k -> new PlayerState());
     }
 
-    /**
-     * Removes cached state for a disconnected player to prevent memory leaks.
-     *
-     * @param uuid the UUID of the player being removed
-     */
     @Override
     public void removePlayer(UUID uuid) {
         stateMap.remove(uuid);
     }
 
-    /**
-     * Processes incoming packets for this check.
-     *
-     * <p>Delegates to {@link #handleBlockPlace} when a block placement packet is detected.
-     *
-     * @param player the player associated with the packet
-     * @param event  the incoming packet event
-     */
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
         if (isBlockPlacePacket(event)) {
@@ -136,23 +124,28 @@ public class ScaffoldCheck extends Check implements PacketCheck {
     }
 
     /**
-     * Checks whether the packet is a block placement packet.
+     * Per-tick callback for tower detection. Called from the tick loop to check
+     * whether consecutive placements are happening faster than humanly possible.
      *
-     * @param event the incoming packet event
-     * @return {@code true} if the packet type is {@link PacketType.Play.Client#PLAYER_BLOCK_PLACEMENT}
+     * @param player the player to check
+     * @param currentTick the current server tick count
      */
+    public void onTick(WindfallPlayer player, long currentTick) {
+        PlayerState state = getState(player);
+
+        // If last placement was more than TOWER_TICK_THRESHOLD ticks ago, reset fast counter
+        if (state.lastPlacementTick > 0 && currentTick - state.lastPlacementTick > TOWER_TICK_THRESHOLD) {
+            state.consecutiveFastPlacements = 0;
+        }
+    }
+
     private boolean isBlockPlacePacket(PacketReceiveEvent event) {
         PacketTypeCommon type = event.getPacketType();
         return type == PacketType.Play.Client.PLAYER_BLOCK_PLACEMENT;
     }
 
     /**
-     * Handles a block placement event: updates the sliding window, computes BPS, and
-     * dispatches to the appropriate platform-specific check.
-     *
-     * <p>When the current window expires, the previous window's BPS is recorded as a sample,
-     * the counter is reset, and a new window starts. Real-time BPS is computed as
-     * {@code count / elapsed_seconds} and passed to the platform checker.
+     * Handles a block placement event: runs all three detection vectors.
      *
      * @param player the player who placed a block
      */
@@ -160,7 +153,21 @@ public class ScaffoldCheck extends Check implements PacketCheck {
         PlayerState state = getState(player);
         long now = System.currentTimeMillis();
 
-        /* Start a new window if this is the first placement or the window has expired */
+        // Vector 1: Speed-based detection (sliding window BPS)
+        checkPlacementSpeed(player, state, now);
+
+        // Vector 2: Tower detection (tick-based)
+        checkTowerDetection(player, state);
+
+        // Vector 3: Rotation consistency
+        checkRotationConsistency(player, state, now);
+    }
+
+    /**
+     * Vector 1: Measures blocks-per-second in a sliding window.
+     * Flags if BPS exceeds platform-specific thresholds.
+     */
+    private void checkPlacementSpeed(WindfallPlayer player, PlayerState state, long now) {
         if (state.windowStartTime == 0 || now - state.windowStartTime > PLACE_WINDOW_MS) {
             if (state.blocksPlacedThisWindow > 0) {
                 double bps = state.blocksPlacedThisWindow;
@@ -172,8 +179,6 @@ public class ScaffoldCheck extends Check implements PacketCheck {
         }
 
         state.blocksPlacedThisWindow++;
-
-        /* Real-time BPS = blocks placed / seconds elapsed in current window */
         double bps = state.blocksPlacedThisWindow / Math.max(1.0, (now - state.windowStartTime) / 1000.0);
 
         if (player.isBedrock()) {
@@ -184,17 +189,71 @@ public class ScaffoldCheck extends Check implements PacketCheck {
     }
 
     /**
-     * Checks Java-edition players for scaffold behaviour based on placement speed.
-     *
-     * <p>Two heuristics:
-     * <ul>
-     *   <li>Absolute speed: BPS &gt; {@value #JAVA_MAX_BLOCK_PLACE_PER_SECOND} (hard cheat indicator).</li>
-     *   <li>Sprint speed: BPS &gt; {@value #SPRINTING_BLOCKS_PER_SEC_THRESHOLD} while sprinting
-     *       (soft cheat indicator — harder to place precisely while sprinting).</li>
-     * </ul>
-     *
-     * @param player the Java-edition player to check
-     * @param bps    current blocks-per-second rate
+     * Vector 2: Detects inhuman tower-building speed by measuring tick intervals
+     * between consecutive block placements. Legitimate tower building requires
+     * at least {@value #TOWER_TICK_THRESHOLD} ticks between placements.
+     */
+    private void checkTowerDetection(WindfallPlayer player, PlayerState state) {
+        WindfallPlugin plugin = WindfallPlugin.getInstance();
+        if (plugin == null) return;
+
+        long currentTick = plugin.getCheckManager().getTickCounter();
+        long tickDelta = currentTick - state.lastPlacementTick;
+
+        if (state.lastPlacementTick > 0 && tickDelta <= TOWER_TICK_THRESHOLD) {
+            state.consecutiveFastPlacements++;
+            if (state.consecutiveFastPlacements >= TOWER_FAST_PLACEMENT_THRESHOLD) {
+                increaseBuffer(player, 1.5);
+                if (getBuffer(player) > 4.0) {
+                    flag(player);
+                    resetBuffer(player);
+                    state.consecutiveFastPlacements = 0;
+                }
+            }
+        } else {
+            state.consecutiveFastPlacements = Math.max(0, state.consecutiveFastPlacements - 1);
+        }
+
+        state.lastPlacementTick = currentTick;
+    }
+
+    /**
+     * Vector 3: Detects inhuman rotation snapping between consecutive placements.
+     * Scaffold bots typically snap the player's view to face the block being placed,
+     * producing large yaw/pitch deltas between consecutive placements.
+     */
+    private void checkRotationConsistency(WindfallPlayer player, PlayerState state, long now) {
+        float yaw = player.getYaw();
+        float pitch = player.getPitch();
+
+        if (state.lastPlacementTimeMs > 0) {
+            float deltaYaw = Math.abs(yaw - state.lastYaw);
+            // Normalize yaw delta to [0, 180]
+            if (deltaYaw > 180) deltaYaw = 360 - deltaYaw;
+            float deltaPitch = Math.abs(pitch - state.lastPitch);
+
+            if (deltaYaw > ROTATION_SNAP_THRESHOLD || deltaPitch > ROTATION_SNAP_THRESHOLD) {
+                state.rotationSnapViolations++;
+                if (state.rotationSnapViolations >= ROTATION_VIOLATION_THRESHOLD) {
+                    increaseBuffer(player, 1.0);
+                    if (getBuffer(player) > 5.0) {
+                        flag(player);
+                        resetBuffer(player);
+                        state.rotationSnapViolations = 0;
+                    }
+                }
+            } else {
+                state.rotationSnapViolations = Math.max(0, state.rotationSnapViolations - 1);
+            }
+        }
+
+        state.lastYaw = yaw;
+        state.lastPitch = pitch;
+        state.lastPlacementTimeMs = now;
+    }
+
+    /**
+     * Checks Java-edition players for scaffold based on placement speed.
      */
     private void checkJavaScaffold(WindfallPlayer player, double bps) {
         if (bps > JAVA_MAX_BLOCK_PLACE_PER_SECOND) {
@@ -215,20 +274,7 @@ public class ScaffoldCheck extends Check implements PacketCheck {
     }
 
     /**
-     * Checks Bedrock-edition players for scaffold behaviour based on input device.
-     *
-     * <p>Different input methods have different maximum placement speeds:
-     * <ul>
-     *   <li>Touch: slowest — {@value #BEDROCK_TOUCH_MAX_BLOCKS_PER_SEC} BPS</li>
-     *   <li>Controller: moderate — {@value #BEDROCK_CONTROLLER_MAX_BLOCKS_PER_SEC} BPS</li>
-     *   <li>Keyboard: fastest — {@value #BEDROCK_KB_MAX_BLOCKS_PER_SEC} BPS</li>
-     * </ul>
-     *
-     * <p>Uses a higher buffer threshold ({@code 8.0}) than Java to account for Bedrock
-     * platform latency variability.
-     *
-     * @param player the Bedrock-edition player to check
-     * @param bps    current blocks-per-second rate
+     * Checks Bedrock-edition players for scaffold based on input device thresholds.
      */
     private void checkBedrockScaffold(WindfallPlayer player, double bps) {
         BedrockInfo info = player.getBedrockInfo();

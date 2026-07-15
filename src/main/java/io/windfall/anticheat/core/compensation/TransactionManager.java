@@ -48,6 +48,14 @@ public final class TransactionManager {
     /** Thread-safe map of player UUID to their transaction tracking state */
     private final Map<UUID, TransactionState> playerTransactions = new ConcurrentHashMap<>();
 
+    // === Transaction health metrics (exposed for TransactionCheck + Prometheus) ===
+    /** Total transactions sent but never responded to within timeout */
+    private final AtomicInteger skippedTransactions = new AtomicInteger(0);
+    /** Total responses received with IDs that don't match any pending transaction */
+    private final AtomicInteger unknownResponses = new AtomicInteger(0);
+    /** Total no-response timeout events */
+    private final AtomicInteger noResponseCount = new AtomicInteger(0);
+
     /**
      * Creates a new TransactionManager.
      *
@@ -123,6 +131,9 @@ public final class TransactionManager {
              * NanoTime / 1_000_000 gives millisecond-precision ping */
             long pingNanos = receiveTime - matched.sendTime;
             player.setTransactionPing((int) (pingNanos / 1_000_000));
+        } else {
+            /* Response ID didn't match any pending transaction — likely fabricated or reordered */
+            unknownResponses.incrementAndGet();
         }
 
         Runnable callback = state.callbacks.remove(id);
@@ -224,6 +235,45 @@ public final class TransactionManager {
      */
     public void onPlayerQuit(UUID uuid) {
         playerTransactions.remove(uuid);
+    }
+
+    // === Transaction health metrics (for TransactionCheck + Prometheus) ===
+
+    /** Increments the skipped transaction counter (timeout with no response) */
+    public void incrementSkippedTransactions() {
+        skippedTransactions.incrementAndGet();
+    }
+
+    /** Increments the no-response counter */
+    public void incrementNoResponseCount() {
+        noResponseCount.incrementAndGet();
+    }
+
+    /** Returns total transactions that were skipped (no response within timeout) */
+    public int getSkippedTransactions() {
+        return skippedTransactions.get();
+    }
+
+    /** Returns total responses with unknown/unmatched transaction IDs */
+    public int getUnknownResponses() {
+        return unknownResponses.get();
+    }
+
+    /** Returns total no-response timeout events */
+    public int getNoResponseCount() {
+        return noResponseCount.get();
+    }
+
+    /**
+     * Returns the number of pending transactions for a given player.
+     * Used by TransactionCheck to detect stuck/queued transactions.
+     *
+     * @param uuid the player UUID
+     * @return number of pending transactions, or 0 if no state
+     */
+    public int getPendingCount(UUID uuid) {
+        TransactionState state = playerTransactions.get(uuid);
+        return state != null ? state.pendingTransactions.size() : 0;
     }
 
     /**

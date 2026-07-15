@@ -139,6 +139,11 @@ public final class WindfallPlugin extends JavaPlugin {
         // Initialize bStats metrics (after all managers are ready)
         WindfallMetrics.init(this);
 
+        // Initialize Prometheus metrics endpoint (after CheckManager)
+        if (checkManager != null && checkManager.getPrometheus() != null) {
+            checkManager.getPrometheus().init(this);
+        }
+
         long elapsed = (System.nanoTime() - start) / 1_000_000;
         getLogger().info("Windfall v" + getDescription().getVersion() + " enabled in " + elapsed + "ms ("
             + versionManager.getServerVersion() + ", " + serverFork.getDisplayName() + ")");
@@ -149,6 +154,9 @@ public final class WindfallPlugin extends JavaPlugin {
         this.running = false;
         WindfallProvider.unregister();
         if (scheduler != null) scheduler.shutdown();
+        if (checkManager != null && checkManager.getPrometheus() != null) {
+            checkManager.getPrometheus().shutdown();
+        }
         PacketEvents.getAPI().terminate();
         getLogger().info("Windfall disabled.");
     }

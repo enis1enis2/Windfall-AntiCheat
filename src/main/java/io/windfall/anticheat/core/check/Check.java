@@ -5,6 +5,7 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.alert.AlertManager;
 import io.windfall.anticheat.core.config.WindfallConfig;
+import io.windfall.anticheat.core.metrics.WindfallPrometheus;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import org.bukkit.Location;
 
@@ -143,6 +144,12 @@ public abstract class Check {
         if (plugin.getCheckManager() != null) {
             plugin.getCheckManager().getViolationPattern()
                 .recordViolation(player.getUuid(), stableKey, vl, plugin.getCheckManager().getTickCounter());
+
+            // Increment Prometheus flag counter
+            WindfallPrometheus prometheus = plugin.getCheckManager().getPrometheus();
+            if (prometheus != null) {
+                prometheus.incrementFlags(stableKey);
+            }
         }
 
         AlertManager alertManager = plugin.getAlertManager();
