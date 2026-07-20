@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-07-19 01:29:04 UTC
+**Generated:** 2026-07-20 01:55:08 UTC
 
 ---
 
@@ -277,12 +277,12 @@
   - `DRAG = 0.9800000190734863D`
 - `movement` **GravityD** → `windfall.movement.gravity d`
   - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityD.java`
-  - `GRAVITY = 0.08D`
+  - `transTicks = getLagCompensationTicks()`
+  - `DEFAULT_GRAVITY = 0.08D`
   - `AIR_DRAG = 0.9800000190734863D`
-  - `TERMINAL_VELOCITY = -3.92D`
 - `movement` **IllegalMoveC** → `windfall.movement.illegal move c`
   - Source: `src/main/java/me/arrow/checks/impl/movement/illegalmove/IllegalMoveC.java`
-  - `maxBuffer1 = 13`
+  - `maxBuffer = 13`
   - `resetRate1 = 0.4`
 
 **Matched with existing Windfall checks:**
@@ -312,6 +312,7 @@
 - `AimF` → `Aim A`
 - `KillauraA` → `Kill Aura A`
 - `HitboxA` → `Hitboxes A`
+- `MacroB` → `Macro A`
 - `AutoClickerG` → `Autoclicker A`
 - `AutoClickerD` → `Autoclicker A`
 - `AutoClickerC` → `Autoclicker A`
