@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 /**
  * Folia compatibility layer — handles regionised multithreading safely.
@@ -42,25 +43,41 @@ public final class FoliaCompat {
 
     /**
      * Initialises the reflection handle for EntityScheduler.run().
-     * Must be called after Folia is detected — silently no-ops on non-Folia.
+     * Tries multiple known method signatures and falls back to method-name scanning
+     * for compatibility with Folia forks (Luminol, etc.).
      */
     public void init(Logger logger) {
         if (!isFolia) return;
+        Class<?> entitySchedulerClass;
         try {
-            entitySchedulerRun = Class.forName("io.papermc.paper.threadedregions.scheduler.EntityScheduler")
-                .getMethod("run", org.bukkit.plugin.Plugin.class, java.util.function.Consumer.class, Runnable.class);
-            initialized = true;
-        } catch (NoSuchMethodException e) {
-            try {
-                entitySchedulerRun = Class.forName("io.papermc.paper.threadedregions.scheduler.EntityScheduler")
-                    .getMethod("run", Object.class, java.util.function.Consumer.class, Runnable.class);
-                initialized = true;
-            } catch (Exception fallback) {
-                logger.log(Level.WARNING, "Failed to init Folia EntityScheduler reflection", fallback);
-            }
+            entitySchedulerClass = Class.forName("io.papermc.paper.threadedregions.scheduler.EntityScheduler");
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Failed to init Folia EntityScheduler reflection", e);
+            logger.log(Level.WARNING, "Folia EntityScheduler class not found", e);
+            return;
         }
+        // Known signatures in preference order
+        Class<?>[][] signatures = {
+            {Plugin.class, java.util.function.Consumer.class, Runnable.class},
+            {Object.class, java.util.function.Consumer.class, Runnable.class}
+        };
+        for (Class<?>[] params : signatures) {
+            try {
+                entitySchedulerRun = entitySchedulerClass.getMethod("run", params);
+                initialized = true;
+                return;
+            } catch (NoSuchMethodException ignored) {
+                // try next
+            }
+        }
+        // Fallback: scan all methods named "run" with 3 parameters
+        for (java.lang.reflect.Method m : entitySchedulerClass.getMethods()) {
+            if (!m.getName().equals("run") || m.getParameterCount() != 3) continue;
+            entitySchedulerRun = m;
+            initialized = true;
+            logger.info("Windfall: Resolved EntityScheduler#run via method scan: " + m);
+            return;
+        }
+        logger.warning("Windfall: No viable EntityScheduler#run method found — entity scheduling degraded");
     }
 
     /**

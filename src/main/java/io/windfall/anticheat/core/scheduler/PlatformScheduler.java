@@ -2,6 +2,9 @@ package io.windfall.anticheat.core.scheduler;
 
 import io.windfall.anticheat.WindfallPlugin;
 import java.lang.reflect.Method;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.bukkit.Bukkit;
@@ -12,6 +15,8 @@ public class PlatformScheduler {
     private final WindfallPlugin plugin;
     private final boolean folia;
     private Object globalTask;
+    private ScheduledExecutorService fallbackExecutor;
+    private ScheduledFuture<?> fallbackFuture;
 
     public PlatformScheduler(WindfallPlugin plugin) {
         this.plugin = plugin;
@@ -38,21 +43,51 @@ public class PlatformScheduler {
 
     // Folia has no global sync scheduler; async + 50ms fixed rate as proxy for anti-cheat heartbeat
     private void startFoliaGlobalTick() {
+        // Try Folia AsyncScheduler first
+        if (tryFoliaAsyncScheduler()) return;
+        // Fallback: use a standalone ScheduledExecutorService
+        plugin.getLogger().warning("Windfall: Folia AsyncScheduler unavailable, falling back to own executor");
+        fallbackExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "Windfall-Folia-Tick");
+            t.setDaemon(true);
+            return t;
+        });
+        fallbackFuture = fallbackExecutor.scheduleAtFixedRate(this::tick, 50L, 50L, TimeUnit.MILLISECONDS);
+    }
+
+    private boolean tryFoliaAsyncScheduler() {
         try {
             Method getAsyncScheduler = Bukkit.class.getMethod("getAsyncScheduler");
             Object asyncScheduler = getAsyncScheduler.invoke(null);
-            Method runAtFixedRate;
-            try {
-                runAtFixedRate = asyncScheduler.getClass().getMethod(
-                    "runAtFixedRate", org.bukkit.plugin.Plugin.class, Consumer.class, long.class, long.class, TimeUnit.class);
-            } catch (NoSuchMethodException e) {
-                runAtFixedRate = asyncScheduler.getClass().getMethod(
-                    "runAtFixedRate", Object.class, Consumer.class, long.class, long.class, TimeUnit.class);
+            // Known signatures in preference order
+            Class<?>[][] signatures = {
+                {org.bukkit.plugin.Plugin.class, Consumer.class, long.class, long.class, TimeUnit.class},
+                {Object.class, Consumer.class, long.class, long.class, TimeUnit.class},
+                {Object.class, Consumer.class, long.class, long.class, Object.class}
+            };
+            Method runAtFixedRate = null;
+            for (Class<?>[] params : signatures) {
+                try {
+                    runAtFixedRate = asyncScheduler.getClass().getMethod("runAtFixedRate", params);
+                    break;
+                } catch (NoSuchMethodException ignored) {}
             }
+            if (runAtFixedRate == null) {
+                // Scan for any 5-param runAtFixedRate method
+                for (Method m : asyncScheduler.getClass().getMethods()) {
+                    if (m.getName().equals("runAtFixedRate") && m.getParameterCount() == 5) {
+                        runAtFixedRate = m;
+                        break;
+                    }
+                }
+            }
+            if (runAtFixedRate == null) return false;
             globalTask = runAtFixedRate.invoke(
                 asyncScheduler, plugin, (Consumer<Object>) task -> tick(), 50L, 50L, TimeUnit.MILLISECONDS);
+            return true;
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to start Folia global tick: " + e.getMessage());
+            plugin.getLogger().warning("Windfall: Folia AsyncScheduler init failed: " + e.getMessage());
+            return false;
         }
     }
 
@@ -141,6 +176,14 @@ public class PlatformScheduler {
                 ((BukkitTask) globalTask).cancel();
             }
             globalTask = null;
+        }
+        if (fallbackFuture != null) {
+            fallbackFuture.cancel(false);
+            fallbackFuture = null;
+        }
+        if (fallbackExecutor != null) {
+            fallbackExecutor.shutdown();
+            fallbackExecutor = null;
         }
     }
 

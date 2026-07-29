@@ -44,6 +44,7 @@ import io.windfall.anticheat.core.check.impl.movement.AirLiquidPlaceCheck;
 import io.windfall.anticheat.core.check.impl.movement.RotationPlaceCheck;
 import io.windfall.anticheat.core.check.impl.movement.PositionPlaceCheck;
 import io.windfall.anticheat.core.check.impl.movement.MultiPlaceCheck;
+import io.windfall.anticheat.core.check.impl.movement.IllegalMoveCheck;
 import io.windfall.anticheat.core.check.impl.packet.BadPacketsCheck;
 import io.windfall.anticheat.core.check.impl.packet.ChestStealerCheck;
 import io.windfall.anticheat.core.check.impl.packet.CreativeCheck;
@@ -199,6 +200,7 @@ public class CheckManager {
         allChecks.add(new SimulationCheck());
         allChecks.add(new NoSlowCheck());
         allChecks.add(new MotionCheck());
+        allChecks.add(new IllegalMoveCheck());
         allChecks.add(new FastBreakCheck());
         allChecks.add(new FarBreakCheck());
         allChecks.add(new FarPlaceCheck());
