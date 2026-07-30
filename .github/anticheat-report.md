@@ -1,12 +1,12 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-07-29 01:27:46 UTC
+**Generated:** 2026-07-30 01:20:23 UTC
 
 ---
 
 ## Windfall Current Checks
 
-**Total: 53 checks**
+**Total: 54 checks**
 
 ### Combat
 - `windfall.combat.swordblock` — Sword Block A
@@ -27,6 +27,7 @@
 - `windfall.movement.multiplace` — Multi Place
 - `windfall.movement.phase` — Phase A
 - `windfall.movement.speed` — Speed A
+- `windfall.movement.illegalmove` — Illegal Move
 - `windfall.movement.scaffold` — Scaffold A
 - `windfall.movement.airliquidbreak` — Air Liquid Break
 - `windfall.movement.step` — Step A
@@ -264,12 +265,8 @@
 
 ### Arrow
 
-**Missing from Windfall (5 checks):**
+**Missing from Windfall (4 checks):**
 
-- `movement` **IllegalMoveC** → `windfall.movement.illegal move c`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/illegalmove/IllegalMoveC.java`
-  - `maxBuffer = 13`
-  - `resetRate1 = 0.4`
 - `movement` **GravityD** → `windfall.movement.gravity d`
   - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityD.java`
   - `transTicks = getLagCompensationTicks()`
@@ -318,6 +315,7 @@
 - `OmniSprintA` → `Sprint A`
 - `SpeedB` → `Speed A`
 - `SpeedA` → `Speed A`
+- `IllegalMoveC` → `Illegal Move`
 - `IllegalMoveB` → `Phase A`
 - `GroundA` → `Ground Spoof A`
 - `GroundB` → `Ground Spoof A`
@@ -330,7 +328,6 @@
 - `InventoryB` → `Inventory A`
 - `TimerA` → `Timer A`
 - `TimerB` → `Timer A`
-- `TimerC` → `Timer A`
 - `InteractD` → `Reach A`
 - `InteractA` → `Self Interact A`
 - `InteractC` → `Self Interact A`
@@ -343,8 +340,8 @@
 
 ## Summary
 
-- Windfall has **53 checks**
-- Found **5 new checks** across competitors that Windfall doesn't have
+- Windfall has **54 checks**
+- Found **4 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 

@@ -188,22 +188,6 @@
   "Arrow": {
     "new_checks": [
       {
-        "name": "illegal move c",
-        "raw_name": "IllegalMoveC",
-        "category": "movement",
-        "stable_key": "windfall.movement.illegal move c",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/illegalmove/IllegalMoveC.java",
-        "constants": {
-          "maxBuffer": "13",
-          "resetRate1": "0.4"
-        },
-        "methods": [
-          "handle",
-          "handle",
-          "getLimitFrictionMultiplier"
-        ]
-      },
-      {
         "name": "gravity d",
         "raw_name": "GravityD",
         "category": "movement",
@@ -399,6 +383,7 @@
       "OmniSprintA": "Sprint A",
       "SpeedB": "Speed A",
       "SpeedA": "Speed A",
+      "IllegalMoveC": "Illegal Move",
       "IllegalMoveB": "Phase A",
       "GroundA": "Ground Spoof A",
       "GroundB": "Ground Spoof A",
@@ -411,7 +396,6 @@
       "InventoryB": "Inventory A",
       "TimerA": "Timer A",
       "TimerB": "Timer A",
-      "TimerC": "Timer A",
       "InteractD": "Reach A",
       "InteractA": "Self Interact A",
       "InteractC": "Self Interact A",
