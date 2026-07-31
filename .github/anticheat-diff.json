@@ -9,7 +9,6 @@
       "MultiInteractB": "Multi Interact A",
       "Reach": "Reach A",
       "SelfInteract": "Self Interact A",
-      "Hitboxes": "Hitboxes A",
       "MultiActionsG": "Multi Interact A",
       "MultiActionsD": "Multi Interact A",
       "MultiActionsA": "Multi Interact A",
@@ -103,7 +102,79 @@
     }
   },
   "TruthfulAC": {
-    "new_checks": [],
+    "new_checks": [
+      {
+        "name": "lag c",
+        "raw_name": "LagC",
+        "category": "combat",
+        "stable_key": "windfall.combat.lag c",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagC.java",
+        "constants": {
+          "MIN_SAMPLES": "20",
+          "MIN_CORRELATION": "0.85D",
+          "PING_BIN_COUNT": "4",
+          "MIN_PING_SPREAD_MS": "60L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "evaluate",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "lag a",
+        "raw_name": "LagA",
+        "category": "combat",
+        "stable_key": "windfall.combat.lag a",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagA.java",
+        "constants": {
+          "MAX_ATTACK_AGE_TICKS": "40",
+          "BACKTRACK_TOLERANCE": "0.45D",
+          "HARD_CEILING": "7.5D",
+          "RAY_MAX_DIST": "6.5D"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onRelMove",
+          "rayMin",
+          "rayEntryDistance",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "lag b",
+        "raw_name": "LagB",
+        "category": "combat",
+        "stable_key": "windfall.combat.lag b",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagB.java",
+        "constants": {
+          "MIN_REACH_TO_TRIGGER": "3.1D",
+          "WINDOW_MS": "8000",
+          "MIN_DESYNC_HITS": "3"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "rayHitDistance",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "scaffold support",
+        "raw_name": "ScaffoldSupport",
+        "category": "movement",
+        "stable_key": "windfall.movement.scaffold support",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldSupport.java",
+        "constants": {
+          "MAX_SLOTS": "40",
+          "MAX": "60"
+        },
+        "methods": [
+          "trim",
+          "trim",
+          "trim"
+        ]
+      }
+    ],
     "existing_matches": {
       "AimB": "Aim A",
       "AimL": "Aim A",
@@ -114,6 +185,7 @@
       "AimJ": "Aim A",
       "AimH": "Aim A",
       "AimF": "Aim A",
+      "AimX": "Aim A",
       "AimG": "Aim A",
       "AimD": "Aim A",
       "ReachA": "Reach A",
@@ -132,7 +204,14 @@
       "AutoClickerC": "Autoclicker A",
       "AutoClickerE": "Autoclicker A",
       "AutoClickerA": "Autoclicker A",
+      "ScaffoldB": "Scaffold A",
+      "ScaffoldE": "Scaffold A",
+      "ScaffoldH": "Scaffold A",
+      "ScaffoldD": "Scaffold A",
+      "ScaffoldF": "Scaffold A",
+      "ScaffoldC": "Scaffold A",
       "ScaffoldA": "Scaffold A",
+      "ScaffoldG": "Scaffold A",
       "PhaseA": "Phase A",
       "FastBreakA": "Fast Break A",
       "RaycastA": "Reach A",
@@ -148,6 +227,8 @@
       "GroundSpoofE": "Ground Spoof A",
       "InventoryA": "Inventory A",
       "SimulationB": "Simulation A",
+      "SimulationF": "Simulation A",
+      "SimulationE": "Simulation A",
       "SimulationA": "Simulation A",
       "SimulationD": "Simulation A",
       "SimulationC": "Simulation A",

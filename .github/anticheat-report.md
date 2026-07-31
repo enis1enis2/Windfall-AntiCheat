@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-07-30 01:20:23 UTC
+**Generated:** 2026-07-31 01:47:09 UTC
 
 ---
 
@@ -84,7 +84,6 @@
 - `MultiInteractB` → `Multi Interact A`
 - `Reach` → `Reach A`
 - `SelfInteract` → `Self Interact A`
-- `Hitboxes` → `Hitboxes A`
 - `MultiActionsG` → `Multi Interact A`
 - `MultiActionsD` → `Multi Interact A`
 - `MultiActionsA` → `Multi Interact A`
@@ -178,7 +177,27 @@
 
 ### TruthfulAC
 
-**No new checks detected.**
+**Missing from Windfall (4 checks):**
+
+- `combat` **LagC** → `windfall.combat.lag c`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagC.java`
+  - `MIN_SAMPLES = 20`
+  - `MIN_CORRELATION = 0.85D`
+  - `PING_BIN_COUNT = 4`
+- `combat` **LagA** → `windfall.combat.lag a`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagA.java`
+  - `MAX_ATTACK_AGE_TICKS = 40`
+  - `BACKTRACK_TOLERANCE = 0.45D`
+  - `HARD_CEILING = 7.5D`
+- `combat` **LagB** → `windfall.combat.lag b`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagB.java`
+  - `MIN_REACH_TO_TRIGGER = 3.1D`
+  - `WINDOW_MS = 8000`
+  - `MIN_DESYNC_HITS = 3`
+- `movement` **ScaffoldSupport** → `windfall.movement.scaffold support`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldSupport.java`
+  - `MAX_SLOTS = 40`
+  - `MAX = 60`
 
 **Matched with existing Windfall checks:**
 
@@ -191,6 +210,7 @@
 - `AimJ` → `Aim A`
 - `AimH` → `Aim A`
 - `AimF` → `Aim A`
+- `AimX` → `Aim A`
 - `AimG` → `Aim A`
 - `AimD` → `Aim A`
 - `ReachA` → `Reach A`
@@ -209,7 +229,14 @@
 - `AutoClickerC` → `Autoclicker A`
 - `AutoClickerE` → `Autoclicker A`
 - `AutoClickerA` → `Autoclicker A`
+- `ScaffoldB` → `Scaffold A`
+- `ScaffoldE` → `Scaffold A`
+- `ScaffoldH` → `Scaffold A`
+- `ScaffoldD` → `Scaffold A`
+- `ScaffoldF` → `Scaffold A`
+- `ScaffoldC` → `Scaffold A`
 - `ScaffoldA` → `Scaffold A`
+- `ScaffoldG` → `Scaffold A`
 - `PhaseA` → `Phase A`
 - `FastBreakA` → `Fast Break A`
 - `RaycastA` → `Reach A`
@@ -225,6 +252,8 @@
 - `GroundSpoofE` → `Ground Spoof A`
 - `InventoryA` → `Inventory A`
 - `SimulationB` → `Simulation A`
+- `SimulationF` → `Simulation A`
+- `SimulationE` → `Simulation A`
 - `SimulationA` → `Simulation A`
 - `SimulationD` → `Simulation A`
 - `SimulationC` → `Simulation A`
@@ -341,7 +370,7 @@
 ## Summary
 
 - Windfall has **54 checks**
-- Found **4 new checks** across competitors that Windfall doesn't have
+- Found **8 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 
