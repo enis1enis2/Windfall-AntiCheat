@@ -219,9 +219,10 @@ public class ChecklistGUI implements Listener {
     // Detection via reflection avoids compile-time dependency on Adventure
     private static boolean hasModernMeta() {
         try {
-            ItemMeta.class.getMethod("displayName", net.kyori.adventure.text.Component.class);
+            Class<?> componentClass = Class.forName("net.kyori.adventure.text.Component");
+            ItemMeta.class.getMethod("displayName", componentClass);
             return true;
-        } catch (NoSuchMethodException e) {
+        } catch (Throwable e) {
             return false;
         }
     }
