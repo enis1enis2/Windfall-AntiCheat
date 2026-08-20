@@ -424,6 +424,30 @@
           "getPlacedBlockCollisionTolerance",
           "getExpectedJumpMotion"
         ]
+      },
+      {
+        "name": "linear regression",
+        "raw_name": "LinearRegression",
+        "category": "combat",
+        "stable_key": "windfall.combat.linear regression",
+        "file_path": "src/main/java/me/arrow/checks/impl/combat/aimassist/aimassistUtil/LinearRegression.java",
+        "constants": {
+          "n": "x.length",
+          "xbar": "sumx / n",
+          "ybar": "sumy / n",
+          "fit": "this.slope * x[k] + this.intercept",
+          "degreesOfFreedom": "n - 2",
+          "svar": "rss / degreesOfFreedom"
+        },
+        "methods": [
+          "intercept",
+          "slope",
+          "R2",
+          "interceptStdErr",
+          "slopeStdErr",
+          "predict",
+          "predict"
+        ]
       }
     ],
     "existing_matches": {
