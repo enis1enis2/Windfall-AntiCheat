@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-08-20 00:35:42 UTC
+**Generated:** 2026-08-21 00:38:10 UTC
 
 ---
 
@@ -327,7 +327,6 @@
 - `FlyA` → `Fly A`
 - `ElytraA` → `Elytra A`
 - `MotionD` → `Motion A`
-- `MotionF` → `Motion A`
 - `MotionA` → `Motion A`
 - `MotionB` → `Motion A`
 - `MotionE` → `Motion A`
@@ -338,7 +337,6 @@
 - `TimerA` → `Timer A`
 - `TimerC` → `Timer A`
 - `InventoryA` → `Inventory A`
-- `InventoryB` → `Inventory A`
 - `VehicleA` → `Vehicle A`
 - `ScaffoldC` → `Scaffold A`
 - `ScaffoldB` → `Scaffold A`
@@ -346,7 +344,6 @@
 - `InteractA` → `Multi Interact A`
 - `InteractD` → `Reach A`
 - `InteractC` → `Multi Interact A`
-- `PhaseA` → `Phase A`
 - `HitboxA` → `Hitboxes A`
 - `BackTrackA` → `Backtrack A`
 - `BackTrackB` → `Backtrack A`
