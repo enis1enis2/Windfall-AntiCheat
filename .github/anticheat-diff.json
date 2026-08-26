@@ -269,6 +269,18 @@
   "Arrow": {
     "new_checks": [
       {
+        "name": "movement",
+        "raw_name": "Movement",
+        "category": "movement",
+        "stable_key": "windfall.movement.movement",
+        "file_path": "src/main/java/me/arrow/checks/impl/simulation/Movement.java",
+        "constants": {},
+        "methods": [
+          "handle",
+          "handle"
+        ]
+      },
+      {
         "name": "gravity b",
         "raw_name": "GravityB",
         "category": "movement",
@@ -423,6 +435,18 @@
           "isHorizontallyOverPlacedBlock",
           "getPlacedBlockCollisionTolerance",
           "getExpectedJumpMotion"
+        ]
+      },
+      {
+        "name": "aim h2",
+        "raw_name": "AimH2",
+        "category": "combat",
+        "stable_key": "windfall.combat.aim h2",
+        "file_path": "src/main/java/me/arrow/checks/impl/combat/aimassist/AimH2.java",
+        "constants": {},
+        "methods": [
+          "handle",
+          "handle"
         ]
       },
       {
