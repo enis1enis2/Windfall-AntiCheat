@@ -1,6 +1,43 @@
 {
   "Grim": {
-    "new_checks": [],
+    "new_checks": [
+      {
+        "name": "invalid place cursor",
+        "raw_name": "InvalidPlaceCursor",
+        "category": "movement",
+        "stable_key": "windfall.movement.invalid place cursor",
+        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceCursor.java",
+        "constants": {},
+        "methods": [
+          "onBlockPlace"
+        ]
+      },
+      {
+        "name": "invalid place face",
+        "raw_name": "InvalidPlaceFace",
+        "category": "movement",
+        "stable_key": "windfall.movement.invalid place face",
+        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceFace.java",
+        "constants": {},
+        "methods": [
+          "onBlockPlace"
+        ]
+      },
+      {
+        "name": "invalid interact cursor",
+        "raw_name": "InvalidInteractCursor",
+        "category": "combat",
+        "stable_key": "windfall.combat.invalid interact cursor",
+        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/combat/InvalidInteractCursor.java",
+        "constants": {
+          "scale": "(float) packetEntity.getAttributeValue(Attributes.SCALE)"
+        },
+        "methods": [
+          "isApplicable",
+          "onPacketReceive"
+        ]
+      }
+    ],
     "existing_matches": {
       "VehicleTimer": "Timer A",
       "TickTimer": "Timer A",
@@ -50,8 +87,6 @@
       "DuplicateRotPlace": "Rotation Place",
       "MultiPlace": "Multi Place",
       "PositionPlace": "Position Place",
-      "InvalidPlaceA": "Invalid Place A",
-      "InvalidPlaceB": "Invalid Place A",
       "ElytraC": "Elytra A",
       "ElytraE": "Elytra A",
       "ElytraG": "Elytra A",

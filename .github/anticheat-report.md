@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-08-29 04:41:30 UTC
+**Generated:** 2026-08-30 02:15:14 UTC
 
 ---
 
@@ -73,7 +73,15 @@
 
 ### Grim
 
-**No new checks detected.**
+**Missing from Windfall (3 checks):**
+
+- `movement` **InvalidPlaceCursor** → `windfall.movement.invalid place cursor`
+  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceCursor.java`
+- `movement` **InvalidPlaceFace** → `windfall.movement.invalid place face`
+  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceFace.java`
+- `combat` **InvalidInteractCursor** → `windfall.combat.invalid interact cursor`
+  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/combat/InvalidInteractCursor.java`
+  - `scale = (float) packetEntity.getAttributeValue(Attributes.SCALE)`
 
 **Matched with existing Windfall checks:**
 
@@ -125,8 +133,6 @@
 - `DuplicateRotPlace` → `Rotation Place`
 - `MultiPlace` → `Multi Place`
 - `PositionPlace` → `Position Place`
-- `InvalidPlaceA` → `Invalid Place A`
-- `InvalidPlaceB` → `Invalid Place A`
 - `ElytraC` → `Elytra A`
 - `ElytraE` → `Elytra A`
 - `ElytraG` → `Elytra A`
@@ -365,7 +371,7 @@
 ## Summary
 
 - Windfall has **54 checks**
-- Found **11 new checks** across competitors that Windfall doesn't have
+- Found **14 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 
