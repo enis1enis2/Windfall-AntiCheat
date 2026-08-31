@@ -461,6 +461,19 @@
         ]
       },
       {
+        "name": "interact e",
+        "raw_name": "InteractE",
+        "category": "packet",
+        "stable_key": "windfall.packet.interact e",
+        "file_path": "src/main/java/me/arrow/checks/impl/misc/interact/InteractE.java",
+        "constants": {},
+        "methods": [
+          "handle",
+          "isAir",
+          "handle"
+        ]
+      },
+      {
         "name": "aim h2",
         "raw_name": "AimH2",
         "category": "combat",

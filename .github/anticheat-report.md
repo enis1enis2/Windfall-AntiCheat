@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-08-30 02:15:14 UTC
+**Generated:** 2026-08-31 02:10:29 UTC
 
 ---
 
@@ -288,7 +288,7 @@
 
 ### Arrow
 
-**Missing from Windfall (7 checks):**
+**Missing from Windfall (8 checks):**
 
 - `movement` **Movement** → `windfall.movement.movement`
   - Source: `src/main/java/me/arrow/checks/impl/simulation/Movement.java`
@@ -306,6 +306,8 @@
   - `JUMP_TOL = 0.046D`
   - `G = 0.08D`
   - `DRAG = 0.9800000190734863D`
+- `packet` **InteractE** → `windfall.packet.interact e`
+  - Source: `src/main/java/me/arrow/checks/impl/misc/interact/InteractE.java`
 - `combat` **AimH2** → `windfall.combat.aim h2`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimH2.java`
 - `combat` **LinearRegression** → `windfall.combat.linear regression`
@@ -371,7 +373,7 @@
 ## Summary
 
 - Windfall has **54 checks**
-- Found **14 new checks** across competitors that Windfall doesn't have
+- Found **15 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 
