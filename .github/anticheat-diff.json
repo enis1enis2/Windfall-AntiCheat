@@ -369,7 +369,8 @@
           "getPlacedBlockCollisionTolerance",
           "getExpectedJumpMotion",
           "getPrediction",
-          "computeAllowedDelta"
+          "computeAllowedDelta",
+          "resetGravityBuffer"
         ]
       },
       {
@@ -480,7 +481,8 @@
           "getPlacedBlockJumpPrediction",
           "isHorizontallyOverPlacedBlock",
           "getPlacedBlockCollisionTolerance",
-          "getExpectedJumpMotion"
+          "getExpectedJumpMotion",
+          "resetGravityBuffer"
         ]
       },
       {
@@ -502,6 +504,7 @@
           "handle",
           "handle",
           "GravityPredictionC",
+          "resetGravityBuffer",
           "getPlacedBlockLandingPrediction",
           "getPlacedBlockJumpPrediction",
           "isHorizontallyOverPlacedBlock",
