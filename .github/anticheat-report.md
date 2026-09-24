@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-09-23 02:17:33 UTC
+**Generated:** 2026-09-24 02:04:42 UTC
 
 ---
 
@@ -9,63 +9,63 @@
 **Total: 54 checks**
 
 ### Combat
-- `windfall.combat.hitboxes` — Hitboxes A
-- `windfall.combat.killaura` — Kill Aura A
+- `windfall.combat.criticals` — Criticals A
+- `windfall.combat.selfinteract` — Self Interact A
+- `windfall.combat.macro` — Macro A
+- `windfall.combat.aim` — Aim A
 - `windfall.combat.multiinteract` — Multi Interact A
 - `windfall.combat.autoclicker` — Autoclicker A
-- `windfall.combat.selfinteract` — Self Interact A
-- `windfall.combat.aim` — Aim A
-- `windfall.combat.backtrack` — Backtrack A
-- `windfall.combat.criticals` — Criticals A
-- `windfall.combat.reach` — Reach A
 - `windfall.combat.fastheal` — Fast Heal A
+- `windfall.combat.hitboxes` — Hitboxes A
+- `windfall.combat.killaura` — Kill Aura A
+- `windfall.combat.backtrack` — Backtrack A
+- `windfall.combat.reach` — Reach A
 - `windfall.combat.swordblock` — Sword Block A
-- `windfall.combat.macro` — Macro A
 
 ### Movement
-- `windfall.movement.airliquidbreak` — Air Liquid Break
-- `windfall.movement.phase` — Phase A
-- `windfall.movement.rotationbreak` — Rotation Break A
-- `windfall.movement.fly` — Fly A
-- `windfall.movement.airliquidplace` — Air Liquid Place
-- `windfall.movement.positionbreak` — Position Break
-- `windfall.movement.fastbreak` — Fast Break A
-- `windfall.movement.step` — Step A
 - `windfall.movement.noslow` — NoSlow A
-- `windfall.movement.timer` — Timer A
-- `windfall.movement.invalidbreak` — Invalid Break A
-- `windfall.movement.speed` — Speed A
-- `windfall.movement.invalidplace` — Invalid Place A
-- `windfall.movement.illegalmove` — Illegal Move
-- `windfall.movement.velocity` — Velocity A
+- `windfall.movement.phase` — Phase A
 - `windfall.movement.noswing` — No Swing A
-- `windfall.movement.simulation` — Simulation A
-- `windfall.movement.multiplace` — Multi Place
-- `windfall.movement.elytra` — Elytra A
-- `windfall.movement.multibreak` — Multi Break
-- `windfall.movement.farbreak` — Far Break A
-- `windfall.movement.nofall` — NoFall A
-- `windfall.movement.scaffold` — Scaffold A
+- `windfall.movement.step` — Step A
 - `windfall.movement.motion` — Motion A
-- `windfall.movement.rotationplace` — Rotation Place
 - `windfall.movement.baritone` — Baritone A
-- `windfall.movement.farplace` — Far Place A
-- `windfall.movement.wrongbreak` — Wrong Break
+- `windfall.movement.simulation` — Simulation A
+- `windfall.movement.multibreak` — Multi Break
+- `windfall.movement.invalidplace` — Invalid Place A
+- `windfall.movement.multiplace` — Multi Place
+- `windfall.movement.fly` — Fly A
+- `windfall.movement.rotationplace` — Rotation Place
+- `windfall.movement.farbreak` — Far Break A
+- `windfall.movement.fastbreak` — Fast Break A
 - `windfall.movement.positionplace` — Position Place
+- `windfall.movement.nofall` — NoFall A
+- `windfall.movement.rotationbreak` — Rotation Break A
+- `windfall.movement.timer` — Timer A
 - `windfall.movement.groundspoof` — Ground Spoof A
+- `windfall.movement.airliquidplace` — Air Liquid Place
+- `windfall.movement.velocity` — Velocity A
+- `windfall.movement.scaffold` — Scaffold A
+- `windfall.movement.invalidbreak` — Invalid Break A
+- `windfall.movement.wrongbreak` — Wrong Break
+- `windfall.movement.positionbreak` — Position Break
+- `windfall.movement.speed` — Speed A
+- `windfall.movement.illegalmove` — Illegal Move
+- `windfall.movement.elytra` — Elytra A
+- `windfall.movement.farplace` — Far Place A
+- `windfall.movement.airliquidbreak` — Air Liquid Break
 
 ### Packet
-- `windfall.packet.chat` — Chat A
-- `windfall.packet.transaction` — Transaction A
-- `windfall.packet.vehicle` — Vehicle A
+- `windfall.packet.creative` — Creative A
 - `windfall.packet.order` — Packet Order A
+- `windfall.packet.crash` — Crash A
+- `windfall.packet.vehicle` — Vehicle A
 - `windfall.packet.cheststealer` — Chest Stealer A
 - `windfall.packet.exploit` — Exploit A
-- `windfall.packet.brand` — Client Brand A
-- `windfall.packet.creative` — Creative A
-- `windfall.packet.bad` — Bad Packets A
-- `windfall.packet.crash` — Crash A
 - `windfall.packet.sprint` — Sprint A
+- `windfall.packet.bad` — Bad Packets A
+- `windfall.packet.brand` — Client Brand A
+- `windfall.packet.chat` — Chat A
+- `windfall.packet.transaction` — Transaction A
 
 ---
 
@@ -78,118 +78,113 @@
 - `combat` **InvalidInteractCursor** → `windfall.combat.invalid interact cursor`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/combat/InvalidInteractCursor.java`
   - `scale = (float) packetEntity.getAttributeValue(Attributes.SCALE)`
-- `movement` **InvalidPlaceFace** → `windfall.movement.invalid place face`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceFace.java`
 - `movement` **InvalidPlaceCursor** → `windfall.movement.invalid place cursor`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceCursor.java`
+- `movement` **InvalidPlaceFace** → `windfall.movement.invalid place face`
+  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceFace.java`
 
 **Matched with existing Windfall checks:**
 
-- `PacketOrderE` → `Packet Order A`
-- `PacketOrderM` → `Packet Order A`
-- `PacketOrderC` → `Packet Order A`
-- `PacketOrderG` → `Packet Order A`
-- `PacketOrderP` → `Packet Order A`
-- `PacketOrderB` → `Packet Order A`
-- `PacketOrderN` → `Packet Order A`
-- `PacketOrderH` → `Packet Order A`
-- `PacketOrderL` → `Packet Order A`
-- `PacketOrderA` → `Packet Order A`
-- `PacketOrderJ` → `Packet Order A`
-- `PacketOrderF` → `Packet Order A`
-- `PacketOrderD` → `Packet Order A`
-- `PacketOrderI` → `Packet Order A`
-- `PacketOrderK` → `Packet Order A`
-- `PacketOrderO` → `Packet Order A`
-- `MultiInteractA` → `Multi Interact A`
-- `MultiInteractB` → `Multi Interact A`
-- `SelfInteract` → `Self Interact A`
-- `Reach` → `Reach A`
-- `MultiActionsE` → `Multi Interact A`
-- `MultiActionsD` → `Multi Interact A`
-- `MultiActionsA` → `Multi Interact A`
-- `MultiActionsG` → `Multi Interact A`
-- `MultiActionsB` → `Multi Interact A`
-- `MultiActionsC` → `Multi Interact A`
-- `MultiActionsF` → `Multi Interact A`
-- `CrashF` → `Crash A`
-- `CrashB` → `Crash A`
-- `CrashD` → `Crash A`
-- `CrashC` → `Crash A`
-- `CrashH` → `Crash A`
-- `CrashG` → `Crash A`
-- `CrashE` → `Crash A`
-- `CrashA` → `Crash A`
-- `CrashI` → `Crash A`
-- `ExploitA` → `Exploit A`
-- `ExploitB` → `Exploit A`
-- `VehicleF` → `Vehicle A`
-- `VehicleB` → `Vehicle A`
-- `VehicleE` → `Vehicle A`
-- `VehicleD` → `Vehicle A`
-- `VehicleA` → `Vehicle A`
-- `ChatC` → `Chat A`
-- `ChatA` → `Chat A`
-- `ChatD` → `Chat A`
-- `ChatB` → `Chat A`
-- `VehicleTimer` → `Timer A`
-- `Timer` → `Timer A`
-- `NegativeTimer` → `Timer A`
-- `TimerLimit` → `Timer A`
-- `TickTimer` → `Timer A`
+- `SprintA` → `Sprint A`
 - `SprintG` → `Sprint A`
-- `SprintF` → `Sprint A`
 - `SprintC` → `Sprint A`
 - `SprintB` → `Sprint A`
-- `SprintE` → `Sprint A`
-- `SprintA` → `Sprint A`
+- `SprintF` → `Sprint A`
 - `SprintD` → `Sprint A`
-- `Baritone` → `Baritone A`
-- `ClientBrand` → `Client Brand A`
+- `SprintE` → `Sprint A`
+- `SelfInteract` → `Self Interact A`
+- `Reach` → `Reach A`
+- `MultiInteractA` → `Multi Interact A`
+- `MultiInteractB` → `Multi Interact A`
 - `Post` → `No Swing A`
-- `NoSlow` → `NoSlow A`
-- `AimModulo360` → `Aim A`
-- `AimDuplicateLook` → `Aim A`
-- `Phase` → `Phase A`
-- `GroundSpoof` → `Ground Spoof A`
-- `RotationBreak` → `Rotation Break A`
-- `PositionBreakA` → `Position Break`
-- `FarBreak` → `Far Break A`
-- `NoSwingBreak` → `No Swing A`
-- `PositionBreakB` → `Position Break`
-- `AirLiquidBreak` → `Air Liquid Break`
-- `InvalidBreak` → `Invalid Break A`
-- `MultiBreak` → `Multi Break`
-- `WrongBreak` → `Wrong Break`
-- `FastBreak` → `Fast Break A`
-- `MultiPlace` → `Multi Place`
-- `FarPlace` → `Far Place A`
-- `DuplicateRotPlace` → `Rotation Place`
-- `RotationPlace` → `Rotation Place`
-- `PositionPlace` → `Position Place`
-- `FabricatedPlace` → `Invalid Place A`
-- `AirLiquidPlace` → `Air Liquid Place`
-- `ElytraH` → `Elytra A`
-- `ElytraI` → `Elytra A`
-- `ElytraG` → `Elytra A`
+- `ClientBrand` → `Client Brand A`
+- `ElytraD` → `Elytra A`
 - `ElytraF` → `Elytra A`
 - `ElytraE` → `Elytra A`
 - `ElytraA` → `Elytra A`
 - `ElytraC` → `Elytra A`
+- `ElytraH` → `Elytra A`
 - `ElytraB` → `Elytra A`
-- `ElytraD` → `Elytra A`
-- `FlightA` → `Fly A`
+- `ElytraG` → `Elytra A`
+- `ElytraI` → `Elytra A`
+- `VehicleE` → `Vehicle A`
+- `VehicleF` → `Vehicle A`
+- `VehicleA` → `Vehicle A`
+- `VehicleD` → `Vehicle A`
+- `VehicleB` → `Vehicle A`
+- `ChatA` → `Chat A`
+- `ChatB` → `Chat A`
+- `ChatC` → `Chat A`
+- `ChatD` → `Chat A`
+- `Baritone` → `Baritone A`
+- `InvalidBreak` → `Invalid Break A`
+- `PositionBreakA` → `Position Break`
+- `NoSwingBreak` → `No Swing A`
+- `FastBreak` → `Fast Break A`
+- `AirLiquidBreak` → `Air Liquid Break`
+- `FarBreak` → `Far Break A`
+- `WrongBreak` → `Wrong Break`
+- `MultiBreak` → `Multi Break`
+- `PositionBreakB` → `Position Break`
+- `RotationBreak` → `Rotation Break A`
+- `AirLiquidPlace` → `Air Liquid Place`
+- `PositionPlace` → `Position Place`
+- `FarPlace` → `Far Place A`
+- `MultiPlace` → `Multi Place`
+- `RotationPlace` → `Rotation Place`
+- `DuplicateRotPlace` → `Rotation Place`
+- `FabricatedPlace` → `Invalid Place A`
+- `CrashH` → `Crash A`
+- `CrashE` → `Crash A`
+- `CrashC` → `Crash A`
+- `CrashD` → `Crash A`
+- `CrashG` → `Crash A`
+- `CrashA` → `Crash A`
+- `CrashF` → `Crash A`
+- `CrashI` → `Crash A`
+- `CrashB` → `Crash A`
+- `ExploitA` → `Exploit A`
+- `ExploitB` → `Exploit A`
+- `Phase` → `Phase A`
+- `GroundSpoof` → `Ground Spoof A`
+- `TimerLimit` → `Timer A`
+- `TickTimer` → `Timer A`
+- `VehicleTimer` → `Timer A`
+- `NegativeTimer` → `Timer A`
+- `Timer` → `Timer A`
 - `NoFall` → `NoFall A`
+- `NoSlow` → `NoSlow A`
+- `AimModulo360` → `Aim A`
+- `AimDuplicateLook` → `Aim A`
+- `PacketOrderA` → `Packet Order A`
+- `PacketOrderB` → `Packet Order A`
+- `PacketOrderL` → `Packet Order A`
+- `PacketOrderF` → `Packet Order A`
+- `PacketOrderO` → `Packet Order A`
+- `PacketOrderK` → `Packet Order A`
+- `PacketOrderM` → `Packet Order A`
+- `PacketOrderG` → `Packet Order A`
+- `PacketOrderI` → `Packet Order A`
+- `PacketOrderJ` → `Packet Order A`
+- `PacketOrderC` → `Packet Order A`
+- `PacketOrderN` → `Packet Order A`
+- `PacketOrderH` → `Packet Order A`
+- `PacketOrderD` → `Packet Order A`
+- `PacketOrderP` → `Packet Order A`
+- `PacketOrderE` → `Packet Order A`
+- `MultiActionsG` → `Multi Interact A`
+- `MultiActionsB` → `Multi Interact A`
+- `MultiActionsD` → `Multi Interact A`
+- `MultiActionsE` → `Multi Interact A`
+- `MultiActionsA` → `Multi Interact A`
+- `MultiActionsF` → `Multi Interact A`
+- `MultiActionsC` → `Multi Interact A`
+- `FlightA` → `Fly A`
 
 ### TruthfulAC
 
 **Missing from Windfall (4 checks):**
 
-- `combat` **LagA** → `windfall.combat.lag a`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagA.java`
-  - `MAX_ATTACK_AGE_TICKS = 40`
-  - `BACKTRACK_TOLERANCE = 0.45D`
-  - `HARD_CEILING = 7.5D`
 - `combat` **LagB** → `windfall.combat.lag b`
   - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagB.java`
   - `MIN_REACH_TO_TRIGGER = 3.1D`
@@ -200,6 +195,11 @@
   - `MIN_SAMPLES = 20`
   - `MIN_CORRELATION = 0.85D`
   - `PING_BIN_COUNT = 4`
+- `combat` **LagA** → `windfall.combat.lag a`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagA.java`
+  - `MAX_ATTACK_AGE_TICKS = 40`
+  - `BACKTRACK_TOLERANCE = 0.45D`
+  - `HARD_CEILING = 7.5D`
 - `movement` **ScaffoldSupport** → `windfall.movement.scaffold support`
   - Source: `src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldSupport.java`
   - `MAX_SLOTS = 40`
@@ -207,76 +207,76 @@
 
 **Matched with existing Windfall checks:**
 
-- `CrystalAuraA` → `Kill Aura A`
-- `ReachA` → `Reach A`
 - `AnchorAuraA` → `Kill Aura A`
 - `HitboxA` → `Hitboxes A`
-- `KillAuraD` → `Kill Aura A`
-- `KillAuraB` → `Kill Aura A`
-- `KillAuraF` → `Kill Aura A`
-- `KillAuraG` → `Kill Aura A`
-- `KillAuraC` → `Kill Aura A`
-- `KillAuraH` → `Kill Aura A`
-- `KillAuraE` → `Kill Aura A`
-- `AutoClickerD` → `Autoclicker A`
+- `AutoClickerE` → `Autoclicker A`
 - `AutoClickerC` → `Autoclicker A`
+- `AutoClickerD` → `Autoclicker A`
 - `AutoClickerB` → `Autoclicker A`
 - `AutoClickerA` → `Autoclicker A`
-- `AutoClickerE` → `Autoclicker A`
+- `ReachA` → `Reach A`
+- `CrystalAuraA` → `Kill Aura A`
+- `KillAuraD` → `Kill Aura A`
+- `KillAuraH` → `Kill Aura A`
+- `KillAuraF` → `Kill Aura A`
+- `KillAuraE` → `Kill Aura A`
+- `KillAuraB` → `Kill Aura A`
+- `KillAuraG` → `Kill Aura A`
+- `KillAuraC` → `Kill Aura A`
 - `RaycastA` → `Reach A`
-- `ScaffoldB` → `Scaffold A`
-- `ScaffoldF` → `Scaffold A`
-- `ScaffoldE` → `Scaffold A`
-- `ScaffoldH` → `Scaffold A`
-- `ScaffoldD` → `Scaffold A`
-- `ScaffoldA` → `Scaffold A`
-- `ScaffoldG` → `Scaffold A`
-- `ScaffoldC` → `Scaffold A`
-- `PhaseA` → `Phase A`
-- `FastBreakA` → `Fast Break A`
-- `BFlyA` → `Fly A`
-- `BSpeedA` → `Speed A`
-- `BReachA` → `Reach A`
 - `MovementCheckSupport` → `Phase A`
-- `InventoryA` → `Inventory A`
-- `VelocityC` → `Velocity A`
-- `VelocityB` → `Velocity A`
-- `VelocityD` → `Velocity A`
-- `VelocityA` → `Velocity A`
-- `BaritoneA` → `Baritone A`
-- `BaritoneC` → `Baritone A`
 - `BaritoneB` → `Baritone A`
-- `SimulationC` → `Simulation A`
-- `SimulationF` → `Simulation A`
-- `SimulationD` → `Simulation A`
+- `BaritoneC` → `Baritone A`
+- `BaritoneA` → `Baritone A`
+- `VelocityD` → `Velocity A`
+- `VelocityC` → `Velocity A`
+- `VelocityA` → `Velocity A`
+- `VelocityB` → `Velocity A`
 - `SimulationE` → `Simulation A`
+- `SimulationC` → `Simulation A`
 - `SimulationB` → `Simulation A`
+- `SimulationD` → `Simulation A`
+- `SimulationF` → `Simulation A`
 - `SimulationA` → `Simulation A`
+- `GroundSpoofC` → `Ground Spoof A`
 - `GroundSpoofF` → `Ground Spoof A`
 - `GroundSpoofE` → `Ground Spoof A`
-- `GroundSpoofC` → `Ground Spoof A`
-- `GroundSpoofD` → `Ground Spoof A`
 - `GroundSpoofB` → `Ground Spoof A`
+- `GroundSpoofD` → `Ground Spoof A`
 - `GroundSpoofG` → `Ground Spoof A`
-- `BadPacketK` → `Bad Packets A`
-- `BadPacketA` → `Bad Packets A`
-- `BadPacketI` → `Bad Packets A`
-- `BadPacketC` → `Bad Packets A`
-- `BadPacketE` → `Bad Packets A`
-- `BadPacketD` → `Bad Packets A`
-- `BadPacketG` → `Bad Packets A`
-- `BadPacketH` → `Bad Packets A`
-- `BadPacketJ` → `Bad Packets A`
-- `InvalidA` → `Invalid Break A`
-- `CrasherA` → `Crash A`
-- `TimerA` → `Timer A`
-- `SprintB` → `Sprint A`
+- `InventoryA` → `Inventory A`
 - `SprintA` → `Sprint A`
-- `PacketOrderE` → `Packet Order A`
-- `PacketOrderC` → `Packet Order A`
-- `PacketOrderB` → `Packet Order A`
+- `SprintB` → `Sprint A`
+- `CrasherA` → `Crash A`
+- `BadPacketI` → `Bad Packets A`
+- `BadPacketA` → `Bad Packets A`
+- `BadPacketE` → `Bad Packets A`
+- `BadPacketK` → `Bad Packets A`
+- `BadPacketG` → `Bad Packets A`
+- `BadPacketD` → `Bad Packets A`
+- `BadPacketJ` → `Bad Packets A`
+- `BadPacketH` → `Bad Packets A`
+- `BadPacketC` → `Bad Packets A`
+- `TimerA` → `Timer A`
+- `InvalidA` → `Invalid Place A`
 - `PacketOrderA` → `Packet Order A`
+- `PacketOrderB` → `Packet Order A`
+- `PacketOrderC` → `Packet Order A`
 - `PacketOrderD` → `Packet Order A`
+- `PacketOrderE` → `Packet Order A`
+- `PhaseA` → `Phase A`
+- `ScaffoldA` → `Scaffold A`
+- `ScaffoldG` → `Scaffold A`
+- `ScaffoldH` → `Scaffold A`
+- `ScaffoldF` → `Scaffold A`
+- `ScaffoldB` → `Scaffold A`
+- `ScaffoldE` → `Scaffold A`
+- `ScaffoldC` → `Scaffold A`
+- `ScaffoldD` → `Scaffold A`
+- `FastBreakA` → `Fast Break A`
+- `BReachA` → `Reach A`
+- `BSpeedA` → `Speed A`
+- `BFlyA` → `Fly A`
 
 ### CloudAC
 
@@ -297,10 +297,12 @@
   - `n = x.length`
   - `xbar = sumx / n`
   - `ybar = sumy / n`
-- `movement` **Movement** → `windfall.movement.movement`
-  - Source: `src/main/java/me/arrow/checks/impl/simulation/Movement.java`
 - `packet` **InteractE** → `windfall.packet.interact e`
   - Source: `src/main/java/me/arrow/checks/impl/misc/interact/InteractE.java`
+- `movement` **Movement** → `windfall.movement.movement`
+  - Source: `src/main/java/me/arrow/checks/impl/simulation/Movement.java`
+- `movement` **GravityB** → `windfall.movement.gravity b`
+  - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityB.java`
 - `movement` **GravityA** → `windfall.movement.gravity a`
   - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityA.java`
 - `movement` **GravityD** → `windfall.movement.gravity d`
@@ -308,8 +310,6 @@
   - `transTicks = getLagCompensationTicks()`
   - `DEFAULT_GRAVITY = 0.08D`
   - `AIR_DRAG = 0.9800000190734863D`
-- `movement` **GravityB** → `windfall.movement.gravity b`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityB.java`
 - `movement` **GravityC** → `windfall.movement.gravity c`
   - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityC.java`
   - `JUMP_TOL = 0.046D`
@@ -318,55 +318,56 @@
 
 **Matched with existing Windfall checks:**
 
-- `ReachA` → `Reach A`
-- `VelocityB` → `Velocity A`
-- `VelocityA` → `Velocity A`
 - `HitboxA` → `Hitboxes A`
-- `KillauraA` → `Kill Aura A`
-- `AimB` → `Aim A`
-- `AimG` → `Aim A`
-- `AimA` → `Aim A`
-- `AimC` → `Aim A`
-- `AimH` → `Aim A`
-- `AimD` → `Aim A`
-- `AimF` → `Aim A`
-- `AimE` → `Aim A`
 - `BackTrackB` → `Backtrack A`
 - `BackTrackA` → `Backtrack A`
-- `AutoClickerD` → `Autoclicker A`
-- `AutoClickerC` → `Autoclicker A`
 - `MacroB` → `Macro A`
+- `MacroA` → `Macro A`
 - `AutoClickerH` → `Autoclicker A`
+- `AutoClickerC` → `Autoclicker A`
+- `AutoClickerD` → `Autoclicker A`
 - `AutoClickerB` → `Autoclicker A`
 - `AutoClickerG` → `Autoclicker A`
-- `MacroA` → `Macro A`
 - `AutoClickerF` → `Autoclicker A`
-- `InventoryA` → `Inventory A`
+- `VelocityA` → `Velocity A`
+- `VelocityB` → `Velocity A`
+- `ReachA` → `Reach A`
+- `AimG` → `Aim A`
+- `AimH` → `Aim A`
+- `AimC` → `Aim A`
+- `AimA` → `Aim A`
+- `AimB` → `Aim A`
+- `AimF` → `Aim A`
+- `AimD` → `Aim A`
+- `AimE` → `Aim A`
+- `KillauraA` → `Kill Aura A`
+- `InteractC` → `Self Interact A`
 - `InteractD` → `Reach A`
-- `InteractA` → `Multi Interact A`
-- `InteractC` → `Multi Interact A`
-- `ScaffoldB` → `Scaffold A`
-- `ScaffoldA` → `Scaffold A`
-- `ScaffoldC` → `Scaffold A`
+- `InteractA` → `Self Interact A`
 - `VehicleA` → `Vehicle A`
-- `TimerB` → `Timer A`
+- `ScaffoldA` → `Scaffold A`
+- `ScaffoldB` → `Scaffold A`
+- `ScaffoldC` → `Scaffold A`
+- `ScaffoldD` → `Scaffold A`
 - `TimerC` → `Timer A`
 - `TimerA` → `Timer A`
+- `TimerB` → `Timer A`
+- `InventoryA` → `Inventory A`
 - `SpeedA` → `Speed A`
 - `OmniSprintA` → `Sprint A`
 - `SpeedB` → `Speed A`
-- `ElytraA` → `Elytra A`
+- `IllegalMoveB` → `Phase A`
+- `IllegalMoveC` → `Illegal Move`
+- `GroundA` → `Ground Spoof A`
+- `GroundB` → `Ground Spoof A`
+- `GroundC` → `Ground Spoof A`
 - `FlyA` → `Fly A`
+- `ElytraA` → `Elytra A`
 - `FlyB` → `Fly A`
 - `MotionA` → `Motion A`
 - `MotionB` → `Motion A`
-- `MotionE` → `Motion A`
 - `MotionD` → `Motion A`
-- `IllegalMoveC` → `Illegal Move`
-- `IllegalMoveB` → `Phase A`
-- `GroundB` → `Ground Spoof A`
-- `GroundA` → `Ground Spoof A`
-- `GroundC` → `Ground Spoof A`
+- `MotionE` → `Motion A`
 
 ---
 
