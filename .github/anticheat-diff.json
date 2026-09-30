@@ -328,21 +328,6 @@
         ]
       },
       {
-        "name": "interact e",
-        "raw_name": "InteractE",
-        "category": "packet",
-        "stable_key": "windfall.packet.interact e",
-        "file_path": "src/main/java/me/arrow/checks/impl/misc/interact/InteractE.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "isKnownAir",
-          "hasThinPlacementSupport",
-          "isThinSupport",
-          "handle"
-        ]
-      },
-      {
         "name": "movement",
         "raw_name": "Movement",
         "category": "movement",
@@ -545,6 +530,8 @@
       "InteractD": "Reach A",
       "InteractA": "Self Interact A",
       "VehicleA": "Vehicle A",
+      "VehicleB": "Vehicle A",
+      "VehicleC": "Vehicle A",
       "ScaffoldA": "Scaffold A",
       "ScaffoldB": "Scaffold A",
       "ScaffoldC": "Scaffold A",
@@ -563,6 +550,7 @@
       "GroundC": "Ground Spoof A",
       "FlyA": "Fly A",
       "ElytraA": "Elytra A",
+      "ElytraB": "Elytra A",
       "FlyB": "Fly A",
       "MotionA": "Motion A",
       "MotionB": "Motion A",
