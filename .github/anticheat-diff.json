@@ -328,6 +328,37 @@
         ]
       },
       {
+        "name": "vector3dm",
+        "raw_name": "Vector3dm",
+        "category": "combat",
+        "stable_key": "windfall.combat.vector3dm",
+        "file_path": "src/main/java/me/arrow/checks/impl/combat/aimassist/aimassistUtil/Vector3dm.java",
+        "constants": {
+          "serialVersionUID": "-2657651106777219169L",
+          "epsilon": "1.0E-6"
+        },
+        "methods": [
+          "length",
+          "lengthSquared",
+          "distance",
+          "distance",
+          "distanceSquared",
+          "distanceSquared",
+          "distance",
+          "distanceSquared",
+          "dot",
+          "isZero",
+          "isInAABB",
+          "isInSphere",
+          "isNormalized",
+          "getBlockX",
+          "getBlockY",
+          "getBlockZ",
+          "equals",
+          "hashCode"
+        ]
+      },
+      {
         "name": "movement",
         "raw_name": "Movement",
         "category": "movement",
@@ -517,8 +548,8 @@
       "ReachA": "Reach A",
       "AimG": "Aim A",
       "AimJ": "Aim A",
+      "AimL": "Aim A",
       "AimH": "Aim A",
-      "AimK": "Aim A",
       "AimC": "Aim A",
       "AimA": "Aim A",
       "AimB": "Aim A",

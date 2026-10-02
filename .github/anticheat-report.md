@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-10-01 02:58:07 UTC
+**Generated:** 2026-10-02 03:00:31 UTC
 
 ---
 
@@ -288,7 +288,7 @@
 
 ### Arrow
 
-**Missing from Windfall (7 checks):**
+**Missing from Windfall (8 checks):**
 
 - `combat` **AimH2** → `windfall.combat.aim h2`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimH2.java`
@@ -297,6 +297,10 @@
   - `n = x.length`
   - `xbar = sumx / n`
   - `ybar = sumy / n`
+- `combat` **Vector3dm** → `windfall.combat.vector3dm`
+  - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/aimassistUtil/Vector3dm.java`
+  - `serialVersionUID = -2657651106777219169L`
+  - `epsilon = 1.0E-6`
 - `movement` **Movement** → `windfall.movement.movement`
   - Source: `src/main/java/me/arrow/checks/impl/simulation/Movement.java`
 - `movement` **GravityB** → `windfall.movement.gravity b`
@@ -332,8 +336,8 @@
 - `ReachA` → `Reach A`
 - `AimG` → `Aim A`
 - `AimJ` → `Aim A`
+- `AimL` → `Aim A`
 - `AimH` → `Aim A`
-- `AimK` → `Aim A`
 - `AimC` → `Aim A`
 - `AimA` → `Aim A`
 - `AimB` → `Aim A`
@@ -377,7 +381,7 @@
 ## Summary
 
 - Windfall has **54 checks**
-- Found **14 new checks** across competitors that Windfall doesn't have
+- Found **15 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 
