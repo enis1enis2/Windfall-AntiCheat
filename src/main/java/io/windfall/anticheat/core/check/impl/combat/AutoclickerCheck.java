@@ -14,6 +14,7 @@ import io.windfall.anticheat.core.config.WindfallConfig;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import io.windfall.anticheat.core.version.VersionBracket;
 import java.util.ArrayDeque;
+import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,10 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * {@value #MIN_CLICKS_FOR_EVAL} samples before evaluating.</p>
  *
  * <h3>Detection Strategy</h3>
- * <p>The core insight is that human click intervals have significant natural
- * variance (muscle fatigue, reaction time jitter), whereas autoclickers produce
- * very consistent timing. The check computes the <em>standard deviation</em> of
- * click-interval offsets from the first timestamp in the window:</p>
+* <p>The core insight is that human click intervals have significant natural
+     * variance (muscle fatigue, reaction time jitter), whereas autoclickers produce
+     * very consistent timing. The check computes the <em>standard deviation</em> of
+     * the consecutive inter-click intervals inside the window:</p>
  *
  * <ul>
  *   <li><b>Strong autoclicker signal</b> — standard deviation below
@@ -85,8 +86,20 @@ public class AutoclickerCheck extends Check implements PacketCheck {
     /** Standard deviation (in ms) below which the pattern is considered moderately suspicious. */
     private static final double MIN_HUMAN_STD_DEV = 15.0;
 
+    /**
+     * Mean interval (in ms) below which a sustained rate is physically impossible for a human.
+     *
+     * <p>25 ms is 40 CPS. Legacy double-click exploits peak around 20 CPS (50 ms) and are
+     * already bounded by {@link #HIGH_CPS_LEGACY}, so this floor only sees rates that no
+     * legitimate click path can produce on any protocol version.</p>
+     */
+    private static final double IMPOSSIBLE_MEAN_INTERVAL_MS = 25.0;
+
+    /** Buffer level at which the over-maximum-rate branch escalates to a flag. */
+    private static final double HIGH_RATE_FLAG_BUFFER = 10.0;
+
     /** Per-player mutable state holding the sliding window of click timestamps. */
-    private static final class PlayerState {
+    static final class PlayerState {
         final ArrayDeque<Long> clickTimestamps = new ArrayDeque<>();
     }
 
@@ -163,8 +176,31 @@ public class AutoclickerCheck extends Check implements PacketCheck {
 
         /* CPS = sample count / window duration in seconds. */
         double cps = state.clickTimestamps.size() / (CLICK_WINDOW_MS / 1000.0);
-        if (cps < lowCPS || cps > highCPS) {
+
+        /* Below the version bound: simply slow, not suspicious. */
+        if (cps < lowCPS) {
             decreaseBuffer(player, 0.2);
+            return;
+        }
+
+        /*
+         * Above the version bound: do not discard outright. Attack cooldown does not stop a
+         * client from sending higher-rate attack inputs, so treat this as its own weak signal.
+         * Only escalate when the sustained mean interval is below what a human can physically
+         * produce, which keeps network/tick batching (a handful of clicks in one ms) out of
+         * scope because batching raises variance rather than lowering the mean.
+         */
+        if (cps > highCPS) {
+            double meanMs = meanInterval(state);
+            if (meanMs < IMPOSSIBLE_MEAN_INTERVAL_MS) {
+                increaseBuffer(player, 0.5);
+                if (getBuffer(player) > HIGH_RATE_FLAG_BUFFER) {
+                    flag(player);
+                    resetBuffer(player);
+                }
+            } else {
+                decreaseBuffer(player, 0.2);
+            }
             return;
         }
 
@@ -196,39 +232,65 @@ public class AutoclickerCheck extends Check implements PacketCheck {
     }
 
     /**
-     * Computes the sample standard deviation of click-interval offsets from the
-     * first timestamp in the sliding window.
+     * Computes the population standard deviation of the consecutive inter-click
+     * intervals inside the sliding window.
      *
-     * <p>The method converts absolute timestamps to relative offsets from the
-     * earliest entry, then calculates the standard deviation using the
-     * population formula ({@code &sigma; = sqrt(&Sigma;(x - &mu;)^2 / N)}).</p>
+     * <p>Variance is measured across adjacent timestamp differences, not across offsets
+     * from the first timestamp. Offsets grow monotonically with sample index, so a human
+     * clicking at a steady 125 ms (8 CPS) yields offsets {@code 125, 250, ... 2375} and a
+     * deviation of roughly 685 ms — indistinguishable from jitter to this check — while the
+     * real intervals are all exactly 125 ms. Any threshold below 685 ms was therefore
+     * unreachable for regular clicking.</p>
+     *
+     * <p>Population formula: {@code &sigma; = sqrt(&Sigma;(x - &mu;)^2 / N)}.</p>
      *
      * @param state the player state containing the click timestamp deque
      * @return the standard deviation in milliseconds, or {@link Double#MAX_VALUE}
-     *         if there are fewer than 2 samples
+     *         if there are fewer than 2 timestamps
      */
-    private double calculateStdDev(PlayerState state) {
-        if (state.clickTimestamps.size() < 2) return Double.MAX_VALUE;
+    static double calculateStdDev(PlayerState state) {
+        if (state == null || state.clickTimestamps.size() < 2) return Double.MAX_VALUE;
 
-        long first = state.clickTimestamps.peekFirst();
+        /* N timestamps yield N-1 intervals. The leading element starts the chain and has no
+         * interval of its own, so it is stepped over instead of being folded in as a 0 ms
+         * gap — counting it drags the mean down and inflates the deviation of a perfectly
+         * regular pattern by one full interval width. */
+        int intervals = state.clickTimestamps.size() - 1;
+        Iterator<Long> cursor = state.clickTimestamps.iterator();
+        long first = cursor.next();
+        long previous = first;
+
         double mean = 0;
-        int count = 0;
-        for (Long ts : state.clickTimestamps) {
-            if (ts == first) continue;
-            mean += ts - first;
-            count++;
+        while (cursor.hasNext()) {
+            long ts = cursor.next();
+            mean += ts - previous;
+            previous = ts;
         }
-        if (count == 0) return Double.MAX_VALUE;
-        mean /= count;
+        mean /= intervals;
 
         double variance = 0;
-        for (Long ts : state.clickTimestamps) {
-            if (ts == first) continue;
-            double diff = (ts - first) - mean;
+        cursor = state.clickTimestamps.iterator();
+        previous = cursor.next();
+        while (cursor.hasNext()) {
+            long ts = cursor.next();
+            double diff = (ts - previous) - mean;
             variance += diff * diff;
+            previous = ts;
         }
-        variance /= count;
+        variance /= intervals;
 
         return Math.sqrt(variance);
+    }
+
+    /**
+     * Mean inter-click interval in milliseconds for the current window.
+     *
+     * @param state the player state containing the click timestamp deque
+     * @return the mean interval, or {@link Double#MAX_VALUE} when fewer than 2 samples exist
+     */
+    static double meanInterval(PlayerState state) {
+        if (state == null || state.clickTimestamps.size() < 2) return Double.MAX_VALUE;
+        long span = state.clickTimestamps.peekLast() - state.clickTimestamps.peekFirst();
+        return (double) span / (state.clickTimestamps.size() - 1);
     }
 }
