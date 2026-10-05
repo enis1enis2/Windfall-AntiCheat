@@ -64,27 +64,8 @@ punishments:
   permban-reason: "[Windfall] Permanently banned for cheating."
 
 # === Version Compatibility ===
-# Auto-detect server fork, ViaVersion, Geyser and adapt checks accordingly.
-compatibility:
-  auto-adapt: true
-  
-  # Bedrock tolerance multipliers (applied per-player when Geyser is present)
-  bedrock:
-    reach-multiplier: 1.5
-    speed-tolerance: 1.15
-    scaffold-threshold: 0.8
-    aim-snap-threshold: 200.0
-    controller-aim-snap: 185.0
-    touch-aim-snap: 200.0
-    cps-limit: 20
-    tolerance: 1.10
-
-  # Folia-specific settings
-  folia:
-    # Use EntityScheduler for cross-region entity access (slight 1-tick delay)
-    use-entity-scheduler: true
-    # Extra ticks of tolerance for timing-based checks
-    packet-delay-tolerance: 1
+# Auto-detection of server fork, ViaVersion and Geyser is always active and needs
+# no configuration. Bedrock tolerances live in the "bedrock" section above.
 
 # === Prometheus Metrics ===
 # Exposes anti-cheat telemetry for Grafana/Prometheus monitoring.
@@ -93,6 +74,15 @@ prometheus:
   enabled: false
   host: "127.0.0.1"
   port: 9211
+
+# === WorldGuard ===
+# Region exemptions let you build safe zones where checks are skipped.
+# Region status is refreshed once per tick on the main thread.
+worldguard:
+  # Master switch — set true if WorldGuard is installed on your server
+  enabled: false
+  # Skip all checks while a player stands inside any WorldGuard region
+  exempt-regions: false
 
 # === Checks ===
 # Each check has: enabled, max-vl, setback-vl, punishable

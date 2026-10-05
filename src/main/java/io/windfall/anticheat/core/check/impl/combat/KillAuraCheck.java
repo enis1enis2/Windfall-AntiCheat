@@ -47,8 +47,8 @@ public class KillAuraCheck extends Check implements PacketCheck {
     /** Minimum number of snaps required before the symmetry check activates. */
     private static final int MIN_SNAP_COUNT = 3;
     /**
-     * Minimum ratio of |positive|/|negative| yaw deltas to flag rotation symmetry.
-     * A value close to 1.0 means the bot rotates equally in both directions.
+     * Minimum balance of positive vs negative yaw deltas required to flag rotation symmetry.
+     * Expressed on a 0–1 scale where 1.0 is a perfect split in both directions.
      */
     private static final double BOT_ROTATION_SYMMETRY_THRESHOLD = 0.95;
     /** Minimum horizontal movement speed (blocks/tick) to consider a legacy client as strafing. */
@@ -235,7 +235,10 @@ public class KillAuraCheck extends Check implements PacketCheck {
 
         if (total < 10) return;
 
-        double symmetryRatio = Math.min(positiveCount, negativeCount) / (double) total;
+        /* Scaled to a 0–1 balance score: 1.0 is an even split, 0.0 is every delta one way.
+         * min/total on its own peaks at 0.5 when perfectly balanced, so comparing it against a
+         * 0.95 threshold could never fire — the check was silently dead. */
+        double symmetryRatio = (2.0 * Math.min(positiveCount, negativeCount)) / (double) total;
 
         double threshold = BOT_ROTATION_SYMMETRY_THRESHOLD;
         if (player.isBedrock()) {

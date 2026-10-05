@@ -1,6 +1,8 @@
 package io.windfall.anticheat.core.check.impl.movement;
 
 import io.windfall.anticheat.core.check.CheckTestBase;
+import io.windfall.anticheat.core.physics.PhysicsConstants;
+import io.windfall.anticheat.core.platform.PurpurCompat;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import org.junit.jupiter.api.Test;
 
@@ -9,6 +11,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.Mockito.*;
 
 class VelocityCheckTest extends CheckTestBase {
 
@@ -133,5 +137,39 @@ class VelocityCheckTest extends CheckTestBase {
 
         assertEquals(2.5, check.getBuffer(playerA), 0.001);
         assertEquals(0.0, check.getBuffer(playerB), 0.001);
+    }
+
+    // === Purpur knockback axis mapping ===
+
+    @Test
+    void purpurKnockback_appliesHorizontalMultiplierToZNotVertical() throws Exception {
+        PurpurCompat purpur = mock(PurpurCompat.class);
+        when(purpur.isCustomKnockbackEnabled()).thenReturn(true);
+        // Distinct values so swapping the two axes changes the result observably
+        when(purpur.adjustHorizontalKB(anyDouble())).thenAnswer(i -> (Double) i.getArgument(0) * 2.0);
+        when(purpur.adjustVerticalKB(anyDouble())).thenAnswer(i -> (Double) i.getArgument(0) * 3.0);
+        when(mockPlugin.getPurpurCompat()).thenReturn(purpur);
+
+        WindfallPlayer player = createMockPlayer("Alice");
+        when(player.isOnGround()).thenReturn(true);
+
+        double[] delta = applyPostVelocityPhysics(createCheck(), 1.0, 0.5, 1.0, player);
+
+        double groundFriction = PhysicsConstants.GROUND_FRICTION;
+        // Z is horizontal: 1.0 * horizontal(2.0) * friction
+        assertEquals(2.0 * groundFriction, delta[2], 1e-9,
+            "Z knockback must use the horizontal multiplier");
+        // Y is vertical: (0.5 * vertical(3.0) - gravity) * airDrag
+        double expectedY = (0.5 * 3.0 - PhysicsConstants.GRAVITY) * PhysicsConstants.AIR_DRAG;
+        assertEquals(expectedY, delta[1], 1e-9,
+            "Y knockback must use the vertical multiplier");
+    }
+
+    private double[] applyPostVelocityPhysics(VelocityCheck check, double vx, double vy, double vz,
+                                             WindfallPlayer player) throws Exception {
+        java.lang.reflect.Method method = VelocityCheck.class.getDeclaredMethod(
+            "applyVersionAwarePostVelocityPhysics", double.class, double.class, double.class, WindfallPlayer.class);
+        method.setAccessible(true);
+        return (double[]) method.invoke(check, vx, vy, vz, player);
     }
 }

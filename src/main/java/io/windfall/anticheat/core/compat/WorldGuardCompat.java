@@ -63,21 +63,24 @@ public final class WorldGuardCompat {
     }
 
     /**
-     * Checks if a specific location is in any WorldGuard region.
+     * Checks if a location is in any WorldGuard region of a specific world.
      *
-     * @param x world X coordinate
-     * @param y world Y coordinate
-     * @param z world Z coordinate
+     * <p>A previous overload resolved coordinates against {@code Bukkit.getWorlds().get(0)},
+     * which meant region lookups silently answered for the main world regardless of where the
+     * player actually was. Callers must now name the world.
+     *
+     * @param world the Bukkit world the coordinates belong to
+     * @param x     world X coordinate
+     * @param y     world Y coordinate
+     * @param z     world Z coordinate
      * @return true if the location is in at least one WorldGuard region
      */
-    public boolean isInRegion(int x, int y, int z) {
-        if (!available || worldGuardPlugin == null) return false;
+    public boolean isInRegion(org.bukkit.World world, int x, int y, int z) {
+        if (!available || worldGuardPlugin == null || world == null) return false;
         try {
-            org.bukkit.World world = Bukkit.getWorlds().get(0);
-            if (world == null) return false;
-            Location loc = new Location(world, x, y, z);
-            return queryRegions(null, loc);
+            return queryRegions(null, new Location(world, x, y, z));
         } catch (Exception e) {
+            available = false;
             return false;
         }
     }

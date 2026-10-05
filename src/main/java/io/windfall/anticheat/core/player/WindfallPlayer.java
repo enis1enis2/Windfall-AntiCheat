@@ -103,6 +103,15 @@ public class WindfallPlayer {
     private final User user;
 
     private volatile ClientVersion clientVersion;
+
+    /**
+     * Protocol version assumed while the client has not identified one.
+     *
+     * <p>Chosen as the oldest supported protocol so version-gated checks stay conservative:
+     * legacy handling applies the widest tolerances, which avoids false positives on a client
+     * whose real version is still unknown.
+     */
+    private static final int UNKNOWN_PROTOCOL_VERSION = 4;
     private volatile int protocolVersion;
 
     // === COMPOUND STATE (immutable snapshots, published atomically) ===
@@ -197,8 +206,12 @@ public class WindfallPlayer {
         this.name = player.getName();
         this.player = player;
         this.user = user;
-        this.clientVersion = user.getClientVersion();
-        this.protocolVersion = clientVersion.getProtocolVersion();
+        /* User data is incomplete at LOGIN_SUCCESS and getClientVersion() can return null for
+         * clients that have not identified a version yet. Unwrapping it unguarded threw an NPE
+         * that aborted player registration entirely — no checks, no tracking, silent blind spot. */
+        ClientVersion version = user != null ? user.getClientVersion() : null;
+        this.clientVersion = version;
+        this.protocolVersion = version != null ? version.getProtocolVersion() : UNKNOWN_PROTOCOL_VERSION;
         this.joinTime = System.currentTimeMillis();
     }
 
@@ -325,7 +338,21 @@ public class WindfallPlayer {
     public Player getPlayer() { return player; }
     public User getUser() { return user; }
     public ClientVersion getClientVersion() { return clientVersion; }
-    public void setClientVersion(ClientVersion clientVersion) { this.clientVersion = clientVersion; this.protocolVersion = clientVersion.getProtocolVersion(); }
+    /**
+     * Updates the client's protocol version once it is known.
+     *
+     * <p>Accepts null: an unidentified client keeps {@link #UNKNOWN_PROTOCOL_VERSION} rather
+     * than throwing, so a late or missing version identification degrades detection tolerance
+     * instead of breaking the player.
+     *
+     * @param clientVersion the newly identified version, or null if unknown
+     */
+    public void setClientVersion(ClientVersion clientVersion) {
+        this.clientVersion = clientVersion;
+        this.protocolVersion = clientVersion != null
+            ? clientVersion.getProtocolVersion()
+            : UNKNOWN_PROTOCOL_VERSION;
+    }
     public int getProtocolVersion() { return protocolVersion; }
 
     // Position getters — read from immutable snapshot

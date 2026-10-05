@@ -102,14 +102,14 @@ class PingPongManagerTest {
     @Test
     void processPingResponse_returnsFalseForUnknownPlayer() {
         WindfallPlayer player = createPlayer();
-        assertFalse(manager.processPingResponse(player, (short) 1, System.nanoTime()));
+        assertFalse(manager.processPingResponse(player, (short) 1));
     }
 
     @Test
     void processPingResponse_returnsFalseForUntrackedId() {
         WindfallPlayer player = createValidPlayer();
         manager.onTickStart(player);
-        assertFalse(manager.processPingResponse(player, (short) 999, System.nanoTime()));
+        assertFalse(manager.processPingResponse(player, (short) 999));
     }
 
     @Test
@@ -122,7 +122,7 @@ class PingPongManagerTest {
 
         // Post-change ping for tick=1 confirms tick 1
         assertFalse(manager.isTickConfirmed(player, 1));
-        manager.processPingResponse(player, (short) 20, System.nanoTime());
+        manager.processPingResponse(player, (short) 20);
         assertTrue(manager.isTickConfirmed(player, 1));
     }
 
@@ -131,7 +131,7 @@ class PingPongManagerTest {
         WindfallPlayer player = createValidPlayer();
         when(mockTransactionManager.sendPigPongTransaction(player)).thenReturn((short) 42);
         manager.onTickStart(player);
-        assertTrue(manager.processPingResponse(player, (short) 42, System.nanoTime()));
+        assertTrue(manager.processPingResponse(player, (short) 42));
     }
 
     @Test
@@ -152,7 +152,7 @@ class PingPongManagerTest {
     }
 
     @Test
-    void getEstimatedLatencyMs_averagesRttFromPings() {
+    void getEstimatedLatencyMs_isDerivedFromRecordedSendTimes() throws Exception {
         WindfallPlayer player = createValidPlayer();
 
         // Send pre-change ping (id=10) and post-change ping (id=20)
@@ -161,15 +161,103 @@ class PingPongManagerTest {
         when(mockTransactionManager.sendPigPongTransaction(player)).thenReturn((short) 20);
         manager.onTickEnd(player);
 
-        // Process both with ~50ms simulated RTT
-        long now = System.nanoTime();
-        long fakeSendTime = now - 50_000_000L; // 50ms ago
-        manager.processPingResponse(player, (short) 10, fakeSendTime);
-        manager.processPingResponse(player, (short) 20, fakeSendTime);
+        // Backdate both records so the measured RTT is ~50ms each
+        backdatePing(player, (short) 10, 50);
+        backdatePing(player, (short) 20, 50);
+
+        manager.processPingResponse(player, (short) 10);
+        manager.processPingResponse(player, (short) 20);
 
         // Estimated one-way latency = (50 + 50) / 4 = 25ms
         int latency = manager.getEstimatedLatencyMs(player);
-        assertTrue(latency >= 0, "Latency should be non-negative");
+        assertTrue(latency >= 20 && latency <= 40,
+            "Estimated one-way latency should be ~25ms from two ~50ms RTTs, was " + latency);
+    }
+
+    @Test
+    void processPingResponse_publishesLatencyToCompensator() {
+        LatencyCompensator compensator = mock(LatencyCompensator.class);
+        when(mockPlugin.getLatencyCompensator()).thenReturn(compensator);
+
+        WindfallPlayer player = createValidPlayer();
+        when(mockTransactionManager.sendPigPongTransaction(player)).thenReturn((short) 20);
+        manager.onTickEnd(player);
+
+        manager.processPingResponse(player, (short) 20);
+
+        verify(compensator).updateLatency(eq(player.getUuid()), anyInt());
+    }
+
+    @Test
+    void onTickConfirmed_waitsUntilItsOwnTickIsConfirmed() {
+        WindfallPlayer player = createValidPlayer();
+        when(mockTransactionManager.sendPigPongTransaction(player)).thenReturn((short) 20);
+
+        boolean[] ran = {false};
+        // Tick 1 is not confirmed yet
+        manager.onTickConfirmed(player, 1, () -> ran[0] = true);
+        assertFalse(ran[0], "Callback must wait for tick 1 to be confirmed");
+
+        manager.onTickEnd(player);
+        manager.processPingResponse(player, (short) 20);
+        assertTrue(ran[0], "Callback should run once tick 1 is confirmed");
+    }
+
+    @Test
+    void onTickConfirmed_firesOlderTicksEvenWhenNewerConfirmedFirst() {
+        WindfallPlayer player = createValidPlayer();
+
+        boolean[] oldTick = {false};
+        manager.onTickConfirmed(player, 1, () -> oldTick[0] = true);
+
+        // Confirm tick 3 directly, skipping tick 2 — tick 1's callback must still run
+        when(mockTransactionManager.sendPigPongTransaction(player)).thenReturn((short) 30);
+        manager.onTickEnd(player);
+        manager.onTickEnd(player);
+        manager.onTickEnd(player);
+        manager.processPingResponse(player, (short) 30);
+
+        assertTrue(oldTick[0], "Tick 1 callback should run when a later tick is confirmed");
+    }
+
+    @Test
+    void onTickConfirmed_callbackFailure_doesNotStopOtherCallbacks() {
+        WindfallPlayer player = createValidPlayer();
+        when(mockPlugin.getLogger()).thenReturn(mock(java.util.logging.Logger.class));
+
+        boolean[] second = {false};
+        manager.onTickConfirmed(player, 0, () -> {
+            throw new IllegalStateException("boom");
+        });
+        manager.onTickConfirmed(player, 0, () -> second[0] = true);
+
+        assertTrue(second[0], "A failing callback must not prevent later callbacks from running");
+    }
+
+    /** Rewrites a pending ping's send time so the measured RTT is deterministic. */
+    private void backdatePing(WindfallPlayer player, short id, long millis) throws Exception {
+        Field statesField = PingPongManager.class.getDeclaredField("playerStates");
+        statesField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Map<UUID, Object> states = (Map<UUID, Object>) statesField.get(manager);
+        Object state = states.get(player.getUuid());
+
+        Field pingsField = state.getClass().getDeclaredField("pendingPings");
+        pingsField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Map<Short, Object> pings = (Map<Short, Object>) pingsField.get(state);
+
+        Object record = pings.get(id);
+        Field tickField = record.getClass().getDeclaredField("tick");
+        tickField.setAccessible(true);
+        Field startField = record.getClass().getDeclaredField("isStartPing");
+        startField.setAccessible(true);
+
+        Object replacement = record.getClass()
+            .getDeclaredConstructor(int.class, boolean.class, long.class)
+            .newInstance((int) tickField.get(record), (boolean) startField.get(record),
+                System.nanoTime() - millis * 1_000_000L);
+        pings.put(id, replacement);
     }
 
     @Test

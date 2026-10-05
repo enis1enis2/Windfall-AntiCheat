@@ -14,6 +14,7 @@ import io.windfall.anticheat.core.command.ChecklistGUI;
 import io.windfall.anticheat.core.command.CommandManager;
 import io.windfall.anticheat.core.config.WindfallConfig;
 import io.windfall.anticheat.core.network.PacketListener;
+import io.windfall.anticheat.core.network.WorldChangeListener;
 import io.windfall.anticheat.core.player.PlayerManager;
 import io.windfall.anticheat.core.platform.FoliaCompat;
 import io.windfall.anticheat.core.platform.PurpurCompat;
@@ -132,6 +133,7 @@ public final class WindfallPlugin extends JavaPlugin {
         PacketEvents.getAPI().init();
 
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(), this);
+        getServer().getPluginManager().registerEvents(new WorldChangeListener(this), this);
 
         this.running = true;
         this.scheduler.startGlobalTick();

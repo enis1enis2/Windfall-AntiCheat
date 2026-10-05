@@ -126,8 +126,13 @@ public class SimulationCheck extends Check implements PacketCheck {
         // to test multiple scenarios — if any scenario matches, reduce deviation
         SimulationEngine simEngine = WindfallPlugin.getInstance().getSimulationEngine();
         if (simEngine != null && simEngine.needsSimulation(player)) {
-            SimulationEngine.SimulationResult result = simEngine.simulate(player, player.getLastX() + player.getDeltaX(), player.getLastY() + deltaY, player.getLastZ() + player.getDeltaZ());
-            if (result.matches) {
+            SimulationEngine.SimulationResult result = simEngine.simulate(player, player.getX(), player.getY(), player.getZ());
+            /* Scenario 0 is "the client has seen none of the unconfirmed changes" — the default
+             * baseline. Matching it proves nothing, because the engine derives its prediction from
+             * the reported deltas, so the baseline matches almost any movement. Only a scenario
+             * that actually applies an unconfirmed change is evidence that the client legitimately
+             * behaved differently than the server's current world suggests. */
+            if (result.bestScenario > 0 && result.matches) {
                 // Client's movement matches at least one possible world state — likely legitimate
                 state.samples = Math.max(0, state.samples - 2);
                 decreaseBuffer(player, 0.2);

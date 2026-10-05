@@ -227,6 +227,38 @@ class SimulationEngineTest {
         assertTrue(result.matches, "Block place scenario should match landing position");
     }
 
+    @Test
+    void simulate_singleScenario_appliesGravityInsteadOfEchoingReportedDelta() {
+        WindfallPlayer player = createPlayer();
+        when(mockPingPongManager.getConfirmedTick(player)).thenReturn(10);
+        when(mockPingPongManager.getCurrentTick(player)).thenReturn(10);
+        setupPlayerPosition(player, 100.0, 64.0, 200.0, 0.0, -0.5, 0.0);
+
+        // Airborne with deltaY = -0.5: vanilla predicts lastY + (deltaY - GRAVITY) * AIR_DRAG,
+        // which is slightly higher than the reported position.
+        double actualY = 64.0 + (-0.5) * io.windfall.anticheat.core.physics.PhysicsConstants.AIR_DRAG;
+        SimulationEngine.SimulationResult result = engine.simulate(player, 100.0, actualY, 200.0);
+
+        assertEquals(1, result.scenarioCount, "No unconfirmed changes → single scenario");
+        assertTrue(result.bestDeviation > 0.0,
+            "Single-scenario prediction must not trivially equal the reported position");
+    }
+
+    @Test
+    void simulate_singleScenario_countsHorizontalMovement() {
+        WindfallPlayer player = createPlayer();
+        when(mockPingPongManager.getConfirmedTick(player)).thenReturn(10);
+        when(mockPingPongManager.getCurrentTick(player)).thenReturn(10);
+        setupPlayerPosition(player, 100.0, 64.0, 200.0, 0.5, 0.0, 0.3);
+        when(player.isOnGround()).thenReturn(true);
+
+        // Horizontal prediction must include the observed delta, not start from the last position
+        SimulationEngine.SimulationResult result = engine.simulate(player, 100.5, 64.0, 200.3);
+
+        assertTrue(result.bestDeviation <= 0.001,
+            "Reported horizontal movement should be predicted, deviation was " + result.bestDeviation);
+    }
+
     private WindfallPlayer createPlayer() {
         WindfallPlayer player = mock(WindfallPlayer.class);
         when(player.getUuid()).thenReturn(UUID.randomUUID());

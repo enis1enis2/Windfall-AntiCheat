@@ -2,10 +2,6 @@ package io.windfall.anticheat.core.check.impl.packet;
 
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
-import com.github.retrooper.packetevents.protocol.packettype.PacketType;
-import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPong;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientWindowConfirmation;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
@@ -65,18 +61,26 @@ public class TransactionCheck extends Check implements PacketCheck {
     /** Window duration in milliseconds for accumulating skip/unknown counts */
     private static final long WINDOW_MS = 5000;
 
+    /** Floor for the response deadline, in ms — covers a local/LAN client on a laggy server */
+    private static final long MIN_SKIP_TIMEOUT_MS = 2000L;
+
+    /** Fixed slack added on top of 3× measured ping, in ms */
+    private static final long SKIP_TIMEOUT_BASE_MS = 1000L;
+
     /**
      * Per-player state for tracking transaction health metrics.
+     *
+     * <p>Fields are volatile because this state is written from the packet thread
+     * ({@link #handleTransactionResponse}) and read/mutated from the tick thread
+     * ({@link #onTick}).
      */
     private static final class PlayerState {
         /** Number of skipped transactions in the current window */
-        int skippedInWindow;
+        volatile int skippedInWindow;
         /** Number of unknown responses in the current window */
-        int unknownInWindow;
+        volatile int unknownInWindow;
         /** Start timestamp of the current window */
-        long windowStart;
-        /** Last known pending count from TransactionManager */
-        int lastPendingCount;
+        volatile long windowStart;
     }
 
     /** Thread-safe map of player UUID to their transaction check state */
@@ -93,14 +97,6 @@ public class TransactionCheck extends Check implements PacketCheck {
 
     @Override
     public void onPacketReceive(WindfallPlayer player, PacketReceiveEvent event) {
-        PacketTypeCommon type = event.getPacketType();
-
-        // Detect transaction response packets (Pong on 1.17+, WindowConfirmation on older)
-        if (type == PacketType.Play.Client.PONG) {
-            handleTransactionResponse(player, event);
-        } else if (type == PacketType.Play.Client.WINDOW_CONFIRMATION) {
-            handleTransactionResponse(player, event);
-        }
     }
 
     @Override
@@ -108,48 +104,28 @@ public class TransactionCheck extends Check implements PacketCheck {
     }
 
     /**
-     * Handles an incoming transaction response packet.
-     * The response ID is extracted and compared against pending transactions
-     * via TransactionManager. If the ID doesn't match, it's counted as unknown.
+     * Records the outcome of a client transaction response.
      *
-     * @param player the player who sent the response
-     * @param event  the packet event
+     * <p>Called by {@link io.windfall.anticheat.core.check.CheckManager} once
+     * {@link TransactionManager} has matched the echoed ID, so a fabricated or reordered
+     * response is attributed to the player who actually sent it.
+     *
+     * @param player  the responding player
+     * @param matched false if the echoed ID matched no pending transaction
      */
-    private void handleTransactionResponse(WindfallPlayer player, PacketReceiveEvent event) {
-        WindfallPlugin plugin = WindfallPlugin.getInstance();
-        if (plugin == null) return;
+    public void onTransactionResponse(WindfallPlayer player, boolean matched) {
+        if (matched) return;
 
-        TransactionManager txManager = plugin.getTransactionManager();
-        if (txManager == null) return;
-
-        short responseId;
-        PacketTypeCommon type = event.getPacketType();
-        if (type == PacketType.Play.Client.PONG) {
-            WrapperPlayClientPong pong = new WrapperPlayClientPong(event);
-            responseId = (short) pong.getId();
-        } else {
-            WrapperPlayClientWindowConfirmation confirm = new WrapperPlayClientWindowConfirmation(event);
-            responseId = confirm.getActionId();
-        }
-
-        // Check if this response matched a pending transaction
-        int prevUnknown = txManager.getUnknownResponses();
-        txManager.processTransaction(player, responseId);
-        int newUnknown = txManager.getUnknownResponses();
-
-        // If unknown count increased, this was a fabricated response
-        if (newUnknown > prevUnknown) {
-            PlayerState state = getState(player);
-            resetWindowIfNeeded(state);
-            state.unknownInWindow++;
-            evaluatePlayer(player, state);
-        }
+        PlayerState state = getState(player);
+        resetWindowIfNeeded(state);
+        state.unknownInWindow++;
+        evaluatePlayer(player, state);
     }
 
     /**
-     * Called externally by the tick loop to check for skipped transactions.
-     * Compares current pending count against the last known value to detect
-     * transactions that were sent but never responded to.
+     * Called by the tick loop to detect skipped transactions.
+     * Sweeps the player's pending queue and counts any transaction that has outlived its
+     * response deadline.
      *
      * @param player the player to check
      */
@@ -163,17 +139,29 @@ public class TransactionCheck extends Check implements PacketCheck {
         PlayerState state = getState(player);
         resetWindowIfNeeded(state);
 
-        int currentPending = txManager.getPendingCount(player.getUuid());
-
-        // If pending count decreased, transactions were responded to (good)
-        // If pending count stayed the same or increased across multiple ticks, they may be skipped
-        if (state.lastPendingCount > 0 && currentPending >= state.lastPendingCount) {
-            state.skippedInWindow++;
-            txManager.incrementSkippedTransactions();
-        }
-
-        state.lastPendingCount = currentPending;
+        /*
+         * A transaction counts as skipped only once it is past its own response deadline.
+         * Sweeping the pending queue by send time is exact; comparing the pending count between
+         * ticks would flag every healthy client, because a response still in flight legitimately
+         * keeps the count flat or rising on any given tick.
+         */
+        state.skippedInWindow += txManager.sweepTimedOutTransactions(
+                player.getUuid(), getSkipTimeoutMs(player));
         evaluatePlayer(player, state);
+    }
+
+    /**
+     * Response deadline for this player's transactions.
+     *
+     * <p>Generous enough to absorb ordinary latency, a lag spike, or a GC pause without flagging,
+     * but short enough that a client genuinely ignoring transactions is caught. Scaled off the
+     * player's measured ping so high-latency connections are not punished for being slow, and
+     * widened for Bedrock controllers whose input thread can stall.
+     */
+    private long getSkipTimeoutMs(WindfallPlayer player) {
+        int ping = player.getTransactionPing();
+        long base = Math.max(MIN_SKIP_TIMEOUT_MS, (long) (ping * 3) + SKIP_TIMEOUT_BASE_MS);
+        return player.isBedrock() ? base * 2 : base;
     }
 
     /**

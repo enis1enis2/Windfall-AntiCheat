@@ -60,6 +60,9 @@ public class FlightCheck extends Check implements PacketCheck {
     private static final class PlayerState {
         double expectedDeltaY;
         int hoverTicks;
+        /** Y position where the current fall started, or NaN when not falling. */
+        double fallStartY;
+        boolean falling;
     }
 
     private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
@@ -112,10 +115,16 @@ public class FlightCheck extends Check implements PacketCheck {
         boolean currentOnGround = ctx.onGround;
         double deltaY = ctx.deltaY;
 
+        /* Run the no-fall sub-check before the on-ground reset. A no-fall hack claims on-ground
+         * while still descending, so it has to be evaluated on the very tick the claim appears —
+         * returning early on on-ground first made flagWithSetback unreachable. */
+        handleNoFall(player, state, currentOnGround, deltaY, ctx.lastY, ctx.y);
+
         /** Reset state when the player touches the ground */
         if (currentOnGround) {
             state.expectedDeltaY = 0;
             state.hoverTicks = 0;
+            state.falling = false;
             return;
         }
 
@@ -197,7 +206,6 @@ public class FlightCheck extends Check implements PacketCheck {
             state.hoverTicks = Math.max(0, state.hoverTicks - 1);
         }
 
-        handleNoFall(player, currentOnGround, deltaY, ctx.lastY, ctx.y);
         /** Update the expected velocity for the next tick's prediction */
         state.expectedDeltaY = deltaY;
     }
@@ -238,28 +246,47 @@ public class FlightCheck extends Check implements PacketCheck {
     }
 
     /**
-     * Detects no-fall: falling with significant velocity while simultaneously claiming on-ground.
+     * Detects no-fall: descending with significant velocity while simultaneously claiming on-ground.
      *
      * <p>This sub-check catches clients that spoof the on-ground flag to prevent fall damage
-     * while still falling through the air. Uses a simple velocity + distance threshold.
+     * while still falling through the air. The accumulated fall distance is tracked from the tick
+     * the descent began, since a per-tick delta alone never exceeds
+     * {@value NO_FALL_DISTANCE} blocks.
      *
-     * @param player       the player being checked
+     * @param player          the player being checked
+     * @param state           mutable per-player state holding the fall origin
      * @param currentOnGround whether the player claims to be on the ground this tick
-     * @param deltaY       current vertical velocity (negative = falling)
-     * @param lastY        previous tick Y position
-     * @param currentY     current tick Y position
+     * @param deltaY          current vertical velocity (negative = falling)
+     * @param lastY           previous tick Y position
+     * @param currentY        current tick Y position
      */
-    private void handleNoFall(WindfallPlayer player, boolean currentOnGround, double deltaY,
-                              double lastY, double currentY) {
-        if (!currentOnGround && deltaY < -NO_FALL_VELOCITY_THRESHOLD) {
-            double fallDistance = lastY - currentY;
-            if (fallDistance > NO_FALL_DISTANCE) {
-                if (currentOnGround) {
-                    flagWithSetback(player);
-                } else {
-                    flag(player);
-                }
+    private void handleNoFall(WindfallPlayer player, PlayerState state, boolean currentOnGround,
+                              double deltaY, double lastY, double currentY) {
+        boolean descending = deltaY < -NO_FALL_VELOCITY_THRESHOLD;
+
+        if (descending && !state.falling) {
+            state.falling = true;
+            state.fallStartY = lastY;
+        }
+
+        if (!state.falling) {
+            if (currentOnGround) state.falling = false;
+            return;
+        }
+
+        double fallDistance = state.fallStartY - currentY;
+
+        /* Landing legitimately ends the tracked fall. */
+        if (currentOnGround) {
+            state.falling = false;
+            if (fallDistance > NO_FALL_DISTANCE && descending) {
+                flagWithSetback(player);
             }
+            return;
+        }
+
+        if (fallDistance > NO_FALL_DISTANCE && descending) {
+            flag(player);
         }
     }
 }
