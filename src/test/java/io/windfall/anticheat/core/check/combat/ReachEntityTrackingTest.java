@@ -74,6 +74,25 @@ class ReachEntityTrackingTest {
 
     // === HELPERS ===
 
+    /**
+     * Backdates a tracked entry's timestamp.
+     *
+     * <p>{@code cleanup} ages entries against {@link System#currentTimeMillis()}, so asserting
+     * eviction from freshly spawned entries races the clock: if spawn and cleanup land inside
+     * the same millisecond the age is 0 and nothing is evicted. Injecting the age removes that
+     * dependency — and lets stale and fresh entries coexist in one assertion.</p>
+     */
+    private static void ageEntry(int entityId, long ageMs) throws Exception {
+        Class<?> nested = Class.forName(
+            "io.windfall.anticheat.core.check.impl.combat.ReachCheck$TrackedEntity");
+        Field timestamp = nested.getDeclaredField("timestamp");
+        timestamp.setAccessible(true);
+
+        Object entry = cache().get(entityId);
+        assertNotNull(entry, "entity " + entityId + " should be tracked before ageing");
+        timestamp.setLong(entry, System.currentTimeMillis() - ageMs);
+    }
+
     private static Object trackedType(int entityId) throws Exception {
         for (Class<?> nested : ReachCheck.class.getDeclaredClasses()) {
             if (!nested.getSimpleName().equals("TrackedEntity")) continue;
@@ -118,9 +137,27 @@ class ReachEntityTrackingTest {
         ReachCheck.trackSpawn(1, PLAYER, 0.0, 64.0, 0.0);
         ReachCheck.trackSpawn(2, PLAYER, 0.0, 64.0, 0.0);
 
-        // Large maxAge keeps both; a zero maxAge evicts everything already timed
+        // Large maxAge keeps both.
         ReachCheck.cleanup(Long.MAX_VALUE);
         assertEquals(2, cache().size());
+
+        // Age only entity 1 past the 5s threshold; entity 2 stays fresh.
+        ageEntry(1, 6_000L);
+
+        ReachCheck.cleanup(5_000L);
+
+        assertEquals(1, cache().size(), "stale entry should be evicted");
+        assertNull(ReachCheck.getTrackedPosition(1), "stale entity 1 should be gone");
+        assertNotNull(ReachCheck.getTrackedPosition(2), "fresh entity 2 must be retained");
+    }
+
+    @Test
+    void cleanup_zeroMaxAgeEvictsEverything() throws Exception {
+        ReachCheck.trackSpawn(1, PLAYER, 0.0, 64.0, 0.0);
+        ReachCheck.trackSpawn(2, PLAYER, 0.0, 64.0, 0.0);
+
+        ageEntry(1, 1L);
+        ageEntry(2, 1L);
 
         ReachCheck.cleanup(0L);
         assertTrue(cache().isEmpty(), "cleanup should evict entries older than maxAgeMs");
