@@ -57,6 +57,10 @@ import io.windfall.anticheat.core.check.impl.packet.ClientBrandCheck;
 import io.windfall.anticheat.core.check.impl.packet.VehicleCheck;
 import io.windfall.anticheat.core.check.impl.packet.TransactionCheck;
 import io.windfall.anticheat.core.check.impl.inventory.InventoryCheck;
+import io.windfall.anticheat.core.check.impl.combat.InteractCursorCheck;
+import io.windfall.anticheat.core.check.impl.movement.GravityCheck;
+import io.windfall.anticheat.core.check.impl.movement.InvalidPlaceCursorCheck;
+import io.windfall.anticheat.core.check.impl.movement.ScaffoldSupportCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import io.windfall.anticheat.core.adaptive.AdaptiveThreshold;
 import io.windfall.anticheat.core.compensation.PingPongManager;
@@ -181,6 +185,7 @@ public class CheckManager {
         allChecks.add(new MultiInteractCheck());
         allChecks.add(new SelfInteractCheck());
         allChecks.add(new ReachCheck());
+        allChecks.add(new InteractCursorCheck());
         allChecks.add(new CriticalsCheck());
         allChecks.add(new KillAuraCheck());
         allChecks.add(new FastHealCheck());
@@ -193,6 +198,8 @@ public class CheckManager {
         allChecks.add(new NoFallCheck());
         allChecks.add(new StepCheck());
         allChecks.add(new ScaffoldCheck());
+        allChecks.add(new ScaffoldSupportCheck());
+        allChecks.add(new GravityCheck());
         allChecks.add(new ElytraCheck());
         allChecks.add(new BaritoneCheck());
         allChecks.add(new GroundSpoofCheck());
@@ -206,6 +213,7 @@ public class CheckManager {
         allChecks.add(new FarPlaceCheck());
         allChecks.add(new InvalidBreakCheck());
         allChecks.add(new InvalidPlaceCheck());
+        allChecks.add(new InvalidPlaceCursorCheck());
         allChecks.add(new NoSwingCheck());
         allChecks.add(new RotationBreakCheck());
         allChecks.add(new AirLiquidBreakCheck());

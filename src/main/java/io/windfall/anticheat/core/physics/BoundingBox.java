@@ -64,6 +64,91 @@ public final class BoundingBox {
                 && maxZ > other.minZ && minZ < other.maxZ;
     }
 
+    /**
+     * Ray/AABB intersection using the slab method.
+     *
+     * <p>Used by cursor checks: a legitimate attack or placement always has a look ray that
+     * passes through the target's hitbox or the targeted block. Testing the ray against the
+     * box is exact, unlike comparing endpoint distance, which cannot tell "aimed at the
+     * entity" from "aimed past it".</p>
+     *
+     * @param originX    ray origin X
+     * @param originY    ray origin Y
+     * @param originZ    ray origin Z
+     * @param dirX       ray direction X (need not be normalised)
+     * @param dirY       ray direction Y (need not be normalised)
+     * @param dirZ       ray direction Z (need not be normalised)
+     * @param maxDistance maximum ray length in the same units as {@code dirX..dirZ}
+     * @return true if the ray enters this box within {@code maxDistance}
+     */
+    public boolean intersectsRay(double originX, double originY, double originZ,
+                                 double dirX, double dirY, double dirZ,
+                                 double maxDistance) {
+        double rayLength = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+        if (rayLength == 0.0) return false;
+
+        /* Work in normalised units so maxDistance is measured in blocks. */
+        double ux = dirX / rayLength;
+        double uy = dirY / rayLength;
+        double uz = dirZ / rayLength;
+
+        double tMin = 0.0;
+        double tMax = maxDistance;
+
+        /* X slab */
+        if (Math.abs(ux) < 1e-9) {
+            if (originX < minX || originX > maxX) return false;
+        } else {
+            double inv = 1.0 / ux;
+            double t1 = (minX - originX) * inv;
+            double t2 = (maxX - originX) * inv;
+            if (t1 > t2) {
+                double swap = t1;
+                t1 = t2;
+                t2 = swap;
+            }
+            if (t1 > tMin) tMin = t1;
+            if (t2 < tMax) tMax = t2;
+            if (tMin > tMax) return false;
+        }
+
+        /* Y slab */
+        if (Math.abs(uy) < 1e-9) {
+            if (originY < minY || originY > maxY) return false;
+        } else {
+            double inv = 1.0 / uy;
+            double t1 = (minY - originY) * inv;
+            double t2 = (maxY - originY) * inv;
+            if (t1 > t2) {
+                double swap = t1;
+                t1 = t2;
+                t2 = swap;
+            }
+            if (t1 > tMin) tMin = t1;
+            if (t2 < tMax) tMax = t2;
+            if (tMin > tMax) return false;
+        }
+
+        /* Z slab */
+        if (Math.abs(uz) < 1e-9) {
+            if (originZ < minZ || originZ > maxZ) return false;
+        } else {
+            double inv = 1.0 / uz;
+            double t1 = (minZ - originZ) * inv;
+            double t2 = (maxZ - originZ) * inv;
+            if (t1 > t2) {
+                double swap = t1;
+                t1 = t2;
+                t2 = swap;
+            }
+            if (t1 > tMin) tMin = t1;
+            if (t2 < tMax) tMax = t2;
+            if (tMin > tMax) return false;
+        }
+
+        return tMax >= 0.0;
+    }
+
     /** Returns the X centre of the box (midpoint of minX and maxX) */
     public double getCenterX() { return (minX + maxX) * 0.5; }
     /** Returns the Y centre of the box */
