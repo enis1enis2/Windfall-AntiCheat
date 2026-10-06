@@ -20,6 +20,8 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPl
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientWindowConfirmation;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityPositionSync;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityRelativeMove;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityRelativeMoveAndRotation;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityTeleport;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityVelocity;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPing;
@@ -230,11 +232,12 @@ public class PacketListener extends PacketListenerAbstract {
      * Updates {@link io.windfall.anticheat.core.check.impl.combat.ReachCheck}'s entity cache
      * from the server→client entity packets.
      *
-     * <p>All four packet shapes are handled because they split differently across protocol
-     * versions: living entities (mob spawns) have their own packet, players spawn separately,
-     * plain entities use the generic spawn, and movement arrives as either an absolute teleport
-     * or a relative position sync depending on the version. Missing any one of them leaves part
-     * of the world untracked.
+     * <p>The entity movement packets are all handled because they split differently across
+     * protocol versions: living entities (mob spawns) have their own packet, players spawn
+     * separately, plain entities use the generic spawn, and movement arrives as an absolute
+     * teleport, a position sync, or a short relative step. Missing any of them leaves part of
+     * the world untracked — and relative steps are the common case for ordinary entity
+     * movement, so skipping them leaves {@link ReachCheck} measuring against stale positions.
      *
      * @param event the outgoing packet event
      * @param type  the packet type
@@ -259,6 +262,15 @@ public class PacketListener extends PacketListenerAbstract {
             } else if (type == PacketType.Play.Server.ENTITY_POSITION_SYNC) {
                 WrapperPlayServerEntityPositionSync wrapper = new WrapperPlayServerEntityPositionSync(event);
                 applyEntityMove(wrapper.getId(), wrapper.getValues().getPosition(), RelativeFlag.NONE);
+            } else if (type == PacketType.Play.Server.ENTITY_RELATIVE_MOVE) {
+                WrapperPlayServerEntityRelativeMove wrapper = new WrapperPlayServerEntityRelativeMove(event);
+                applyRelativeMove(wrapper.getEntityId(), wrapper.getDeltaX(), wrapper.getDeltaY(),
+                        wrapper.getDeltaZ());
+            } else if (type == PacketType.Play.Server.ENTITY_RELATIVE_MOVE_AND_ROTATION) {
+                WrapperPlayServerEntityRelativeMoveAndRotation wrapper =
+                        new WrapperPlayServerEntityRelativeMoveAndRotation(event);
+                applyRelativeMove(wrapper.getEntityId(), wrapper.getDeltaX(), wrapper.getDeltaY(),
+                        wrapper.getDeltaZ());
             } else if (type == PacketType.Play.Server.DESTROY_ENTITIES) {
                 WrapperPlayServerDestroyEntities wrapper = new WrapperPlayServerDestroyEntities(event);
                 for (int entityId : wrapper.getEntityIds()) {
@@ -297,6 +309,27 @@ public class PacketListener extends PacketListenerAbstract {
         }
 
         ReachCheck.trackMove(entityId, x, y, z);
+    }
+
+    /**
+     * Applies a short movement step for {@link PacketType.Play.Server#ENTITY_RELATIVE_MOVE} and
+     * {@link PacketType.Play.Server#ENTITY_RELATIVE_MOVE_AND_ROTATION}.
+     *
+     * <p>These packets carry only a delta (already scaled to blocks by the wrapper) rather than a
+     * coordinate, and they are how ordinary entity movement is transmitted — teleports are the
+     * exception, not the rule. Ignoring them left the cached position pinned to wherever the
+     * entity spawned, so reach distances were measured against coordinates that never advanced.
+     *
+     * @param entityId the entity's network ID
+     * @param dx       movement along X, in blocks
+     * @param dy       movement along Y, in blocks
+     * @param dz       movement along Z, in blocks
+     */
+    private void applyRelativeMove(int entityId, double dx, double dy, double dz) {
+        double[] last = ReachCheck.getTrackedPosition(entityId);
+        // A step without an origin cannot be resolved; keep whatever position we already have.
+        if (last == null) return;
+        ReachCheck.trackMove(entityId, last[0] + dx, last[1] + dy, last[2] + dz);
     }
 
     /**

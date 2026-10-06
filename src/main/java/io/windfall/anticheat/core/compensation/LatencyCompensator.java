@@ -1,6 +1,7 @@
 package io.windfall.anticheat.core.compensation;
 
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.util.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.World;
 
@@ -93,8 +94,15 @@ public final class LatencyCompensator {
             queue.poll();
         }
 
-        // Tick-based: for SimulationEngine unconfirmed-change replay
-        recordTickChange(uuid, tick, WorldChange.blockBreak(tick, x, y, z));
+        // Tick-based: for SimulationEngine unconfirmed-change replay. The listener reports
+        // breaks as AIR and placements as the new material, so the material selects the
+        // change type. Recording every edit as a break left the BLOCK_PLACE branch of the
+        // simulation unreachable, and worse, could report a freshly placed block under the
+        // player as removed support and pull onGround to false.
+        boolean removal = material == null || MaterialUtils.isAirLike(material);
+        recordTickChange(uuid, tick, removal
+            ? WorldChange.blockBreak(tick, x, y, z)
+            : WorldChange.blockPlace(tick, x, y, z, material));
     }
 
     /**

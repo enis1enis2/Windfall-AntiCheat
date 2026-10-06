@@ -27,18 +27,18 @@ import io.windfall.anticheat.core.player.WindfallPlayer;
  *
  * <h3>Algorithm</h3>
  * <ol>
- *   <li>Derive the clicked block from the placement position and face. Vanilla places at
- *       {@code clicked + faceNormal}, so the inverse reconstructs what was clicked.</li>
+ *   <li>Read the clicked block straight from the packet. The protocol's "Use Item On" position
+ *       is the block whose face was clicked; vanilla then places at {@code clicked + faceNormal}.</li>
  *   <li>Raycast the look ray against that block's AABB, expanded by {@value #BLOCK_TOLERANCE}.
- *       On 1.13+ the packet also carries an exact cursor position, which is used as a
- *       cross-check when present.</li>
- *   <li>Verify the look direction has a positive component along the face normal. A player
- *       cannot legitimately place against a face they are looking away from.</li>
+ *       On 1.13+ the packet also carries an exact cursor position, used as a cross-check when
+ *       present: the reported hit point must lie on the look ray.</li>
+ *   <li>Verify the look direction opposes the face normal. A player clicks a face from outside
+ *       the block, so the look vector must point into it; a ray travelling along the outward
+ *       normal can only come from inside or behind the block.</li>
  * </ol>
  *
- * <p>Legacy protocols (pre-1.13) report the placement position directly with the face attached;
- * the same derivation holds because those clients send the resulting block position too. The
- * ray test is what adapts to each version, not the arithmetic.</p>
+ * <p>The cursor is an in-block fraction (0..1), so it is resolved against the clicked block's
+ * origin before it can be compared with world-space ray coordinates.</p>
  *
  * <p>{@link PositionPlaceCheck} remains the authority on placement distance — this check does
  * not duplicate it, it only answers whether the click was aimed at. {@link RotationPlaceCheck}
@@ -71,18 +71,20 @@ public class InvalidPlaceCursorCheck extends Check implements PacketCheck {
 
         WrapperPlayClientPlayerBlockPlacement wrapper = new WrapperPlayClientPlayerBlockPlacement(event);
 
-        /* Legacy clients may omit the face; there is nothing to derive the click from. */
-        if (wrapper.getFace() == null) return;
+        /* Legacy clients may omit the face, and OTHER carries no direction; there is nothing
+         * to validate the click against in either case. */
+        if (wrapper.getFace() == null || wrapper.getFace() == BlockFace.OTHER) return;
 
         Vector3i place = wrapper.getBlockPosition();
         if (place == null) return;
 
         int[] normal = faceNormal(wrapper.getFace());
 
-        /* Inverse of vanilla's "place at clicked + faceNormal". */
-        int clickX = place.getX() - normal[0];
-        int clickY = place.getY() - normal[1];
-        int clickZ = place.getZ() - normal[2];
+        /* The packet reports the clicked block directly. Vanilla places at clicked + faceNormal,
+         * but the face is the direction the placement travels, not an offset to undo. */
+        int clickX = place.getX();
+        int clickY = place.getY();
+        int clickZ = place.getZ();
 
         double eyeX = player.getX();
         double eyeY = player.getY() + player.getEyeHeight();
@@ -103,14 +105,28 @@ public class InvalidPlaceCursorCheck extends Check implements PacketCheck {
 
         boolean onBlock = blockBox.intersectsRay(eyeX, eyeY, eyeZ, dirX, dirY, dirZ, RAY_LENGTH);
 
-        /* On 1.13+ the client reports the exact hit point; a ray that misses the block but
-         * passes through the reported cursor is still legitimate, because the client picks the
-         * nearest face and can report a point on an adjacent block at an edge. */
+        /* On 1.13+ the client reports the exact hit point, which is the fallback when the ray
+         * test misses: the hit point sits on the clicked block's face, and the client picks the
+         * nearest face, so an edge click can land outside the expanded box. The point must still
+         * lie on the look ray — cursor is an in-block fraction, hence click + cursor. */
         Vector3f cursor = wrapper.getCursorPosition();
         if (!onBlock && cursor != null) {
-            onBlock = Math.abs(cursor.getX() - (clickX + 0.5)) <= 1.0
-                && Math.abs(cursor.getY() - (clickY + 0.5)) <= 1.0
-                && Math.abs(cursor.getZ() - (clickZ + 0.5)) <= 1.0;
+            double hitX = clickX + cursor.getX();
+            double hitY = clickY + cursor.getY();
+            double hitZ = clickZ + cursor.getZ();
+
+            double vx = hitX - eyeX;
+            double vy = hitY - eyeY;
+            double vz = hitZ - eyeZ;
+
+            double along = vx * dirX + vy * dirY + vz * dirZ;
+            if (along >= 0.0 && along <= RAY_LENGTH) {
+                double perpX = vx - along * dirX;
+                double perpY = vy - along * dirY;
+                double perpZ = vz - along * dirZ;
+                double perpSq = perpX * perpX + perpY * perpY + perpZ * perpZ;
+                onBlock = perpSq <= BLOCK_TOLERANCE * BLOCK_TOLERANCE;
+            }
         }
 
         if (!onBlock) {
@@ -122,11 +138,13 @@ public class InvalidPlaceCursorCheck extends Check implements PacketCheck {
             return;
         }
 
-        /* 2. Face orientation: the look ray must lean into the claimed face. */
+        /* 2. Face orientation: a player clicks a face from outside the block, so the look ray
+         * must oppose the outward normal (angle near 180). A ray travelling along or into the
+         * normal (angle near 0) originates inside or behind the block, which cannot be clicked. */
         double dot = dirX * normal[0] + dirY * normal[1] + dirZ * normal[2];
         double angle = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, dot))));
 
-        if (angle > 90.0 + FACE_ANGLE_SLACK_DEGREES) {
+        if (angle < 90.0 - FACE_ANGLE_SLACK_DEGREES) {
             increaseBuffer(player, 1.0);
             if (getBuffer(player) > BUFFER_THRESHOLD) {
                 flag(player);
@@ -155,6 +173,8 @@ public class InvalidPlaceCursorCheck extends Check implements PacketCheck {
                 return new int[]{1, 0, 0};
             case WEST:
                 return new int[]{-1, 0, 0};
+            case DOWN:
+                return new int[]{0, -1, 0};
             case UP:
             default:
                 return new int[]{0, 1, 0};

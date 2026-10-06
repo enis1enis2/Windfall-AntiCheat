@@ -90,8 +90,19 @@ public abstract class Check {
         this.enabled = cfg.isCheckEnabled(stableKey);
         this.maxVl = cfg.getCheckMaxVl(stableKey);
         this.punishable = cfg.isCheckPunishable(stableKey);
-        // decay and setbackVl keep the @CheckData defaults unless config.yml explicitly
-        // overrides them — see WindfallConfig#getExplicitCheckSetbackVl / getExplicitCheckDecay.
+        // decay and setbackVl have to be applied here as well: this constructor is what the
+        // check runs with from the moment it is registered, so leaving them to
+        // CheckManager#reloadChecks meant an operator's explicit config.yml values were
+        // silently ignored until the first /windfall reload. Null means "not written in
+        // config.yml" — keep the @CheckData defaults in that case.
+        Integer explicitSetbackVl = cfg.getExplicitCheckSetbackVl(stableKey);
+        if (explicitSetbackVl != null) {
+            this.setbackVl = explicitSetbackVl;
+        }
+        Double explicitDecay = cfg.getExplicitCheckDecay(stableKey);
+        if (explicitDecay != null) {
+            this.decay = explicitDecay;
+        }
     }
 
     /**

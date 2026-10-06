@@ -4,12 +4,15 @@ import io.windfall.anticheat.core.check.CheckTestBase;
 import io.windfall.anticheat.core.check.impl.movement.FlightCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import org.junit.jupiter.api.Test;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 
 import java.lang.reflect.Field;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class FlightCheckTest extends CheckTestBase {
 
@@ -116,26 +119,54 @@ class FlightCheckTest extends CheckTestBase {
         // Fall starts high and descends past the distance threshold while still reporting airborne
         runNoFall(check, player, state, false, -0.9, 80.0, 79.1);
         runNoFall(check, player, state, false, -0.9, 79.1, 74.0);
-        // ... then the client starts claiming on-ground mid-descent, which must reach the
-        // setback path rather than being treated as a normal landing
+        // ... then the client starts claiming on-ground mid-descent with no block under the feet.
+        // The sub-check wants a buffer of consecutive false claims before it flags, so the claim
+        // has to hold — and keep the descent tracked — for NO_FALL_STRIKES ticks.
         runNoFall(check, player, state, true, -0.9, 74.0, 73.1);
+        runNoFall(check, player, state, true, -0.9, 73.1, 72.2);
+        runNoFall(check, player, state, true, -0.9, 72.2, 71.3);
 
         assertTrue(check.getViolationLevel(player) > 0,
             "Claiming on-ground mid-descent must register a violation");
     }
 
     @Test
-    void noFall_landingAfterLongFall_isDetected() throws Exception {
+    void noFall_landingOnSolidGround_isNotFlagged() throws Exception {
         FlightCheck check = createCheck();
         WindfallPlayer player = createMockPlayer("Alice");
         Object state = state(check, player);
 
+        // The probe must see a block under the feet. The mock player reports position (0,0,0),
+        // so the feet probe reads (0,0,0) and the below probe reads (0,-1,0).
+        World world = player.getPlayer().getWorld();
+        Block solid = mock(Block.class);
+        when(solid.getType()).thenReturn(org.bukkit.Material.STONE);
+        when(world.getBlockAt(0, -1, 0)).thenReturn(solid);
+
         runNoFall(check, player, state, false, -0.9, 80.0, 79.1);
         runNoFall(check, player, state, false, -0.9, 79.1, 74.0);
-        runNoFall(check, player, state, true, -0.2, 74.0, 74.0);
+        runNoFall(check, player, state, true, -0.9, 74.0, 74.0);
+        runNoFall(check, player, state, true, -0.9, 74.0, 74.0);
+        runNoFall(check, player, state, true, -0.9, 74.0, 74.0);
 
-        assertTrue(check.getViolationLevel(player) > 0,
-            "Landing after a long fast fall must register a violation");
+        assertEquals(0, check.getViolationLevel(player),
+            "A landing the server-side probe can confirm must never be flagged");
+    }
+
+    @Test
+    void noFall_longMidAirFallWithoutGroundClaim_isNotFlagged() throws Exception {
+        FlightCheck check = createCheck();
+        WindfallPlayer player = createMockPlayer("Alice");
+        Object state = state(check, player);
+
+        // Falling a long way in open air without ever claiming to be on the ground is ordinary
+        // movement. This pins the earlier bug where fall distance alone triggered a flag.
+        runNoFall(check, player, state, false, -0.9, 80.0, 79.1);
+        runNoFall(check, player, state, false, -0.9, 79.1, 74.0);
+        runNoFall(check, player, state, false, -0.9, 74.0, 70.0);
+
+        assertEquals(0, check.getViolationLevel(player),
+            "A long fast fall with no ground claim is not a no-fall violation");
     }
 
     @Test
