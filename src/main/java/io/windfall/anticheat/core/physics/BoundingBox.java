@@ -88,20 +88,37 @@ public final class BoundingBox {
         if (rayLength == 0.0) return false;
 
         /* Work in normalised units so maxDistance is measured in blocks. */
-        double ux = dirX / rayLength;
-        double uy = dirY / rayLength;
-        double uz = dirZ / rayLength;
+        SlabRange range = new SlabRange(0.0, maxDistance);
+        return range.clip(originX, dirX / rayLength, minX, maxX)
+                && range.clip(originY, dirY / rayLength, minY, maxY)
+                && range.clip(originZ, dirZ / rayLength, minZ, maxZ)
+                && range.tMax >= 0.0;
+    }
 
-        double tMin = 0.0;
-        double tMax = maxDistance;
+    /**
+     * The overlap of the ray segment [tMin, tMax] with the box along a single axis.
+     *
+     * <p>One instance is reused across the three slab clips of an intersection test; each
+     * {@link #clip} call further constrains the interval and reports whether the segment
+     * still overlaps the box on that axis.</p>
+     */
+    private static final class SlabRange {
+        private double tMin;
+        private double tMax;
 
-        /* X slab */
-        if (Math.abs(ux) < 1e-9) {
-            if (originX < minX || originX > maxX) return false;
-        } else {
-            double inv = 1.0 / ux;
-            double t1 = (minX - originX) * inv;
-            double t2 = (maxX - originX) * inv;
+        SlabRange(double tMin, double tMax) {
+            this.tMin = tMin;
+            this.tMax = tMax;
+        }
+
+        /** Slabs the interval against one axis; {@code false} when the segment leaves the box. */
+        boolean clip(double origin, double dirUnit, double slabMin, double slabMax) {
+            if (Math.abs(dirUnit) < 1e-9) {
+                return origin >= slabMin && origin <= slabMax;
+            }
+            double inv = 1.0 / dirUnit;
+            double t1 = (slabMin - origin) * inv;
+            double t2 = (slabMax - origin) * inv;
             if (t1 > t2) {
                 double swap = t1;
                 t1 = t2;
@@ -109,44 +126,8 @@ public final class BoundingBox {
             }
             if (t1 > tMin) tMin = t1;
             if (t2 < tMax) tMax = t2;
-            if (tMin > tMax) return false;
+            return tMin <= tMax;
         }
-
-        /* Y slab */
-        if (Math.abs(uy) < 1e-9) {
-            if (originY < minY || originY > maxY) return false;
-        } else {
-            double inv = 1.0 / uy;
-            double t1 = (minY - originY) * inv;
-            double t2 = (maxY - originY) * inv;
-            if (t1 > t2) {
-                double swap = t1;
-                t1 = t2;
-                t2 = swap;
-            }
-            if (t1 > tMin) tMin = t1;
-            if (t2 < tMax) tMax = t2;
-            if (tMin > tMax) return false;
-        }
-
-        /* Z slab */
-        if (Math.abs(uz) < 1e-9) {
-            if (originZ < minZ || originZ > maxZ) return false;
-        } else {
-            double inv = 1.0 / uz;
-            double t1 = (minZ - originZ) * inv;
-            double t2 = (maxZ - originZ) * inv;
-            if (t1 > t2) {
-                double swap = t1;
-                t1 = t2;
-                t2 = swap;
-            }
-            if (t1 > tMin) tMin = t1;
-            if (t2 < tMax) tMax = t2;
-            if (tMin > tMax) return false;
-        }
-
-        return tMax >= 0.0;
     }
 
     /** Returns the X centre of the box (midpoint of minX and maxX) */

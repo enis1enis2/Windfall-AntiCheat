@@ -139,37 +139,16 @@ public class FlightCheck extends Check implements PacketCheck {
             return;
         }
 
-        /**
-         * When transitioning from ground to air, determine the initial vertical velocity:
-         * - If deltaY matches jump momentum (0.42 ± tolerance), seed with JUMP_MOMENTUM
-         * - If deltaY is near zero, seed with 0 (e.g., walked off edge)
-         */
-        if (ctx.lastOnGround && !currentOnGround) {
-            if (deltaY >= JUMP_MOMENTUM - 0.01 && deltaY <= JUMP_MOMENTUM + 0.15) {
-                state.expectedDeltaY = JUMP_MOMENTUM;
-            } else if (Math.abs(deltaY) < 0.01) {
-                state.expectedDeltaY = 0;
-            }
-        }
+        // When transitioning from ground to air, determine the initial vertical velocity:
+        // jump momentum if the delta matches a jump, 0 if the player walked off an edge.
+        seedExpectedVelocityOnTakeoff(state, ctx, deltaY);
 
         boolean hasRiptide = PredictionEngine.checkRiptiding(player);
         boolean isFallFlying = PredictionEngine.checkFallFlying(player);
 
-        /** Predict the vertical delta using the full physics model */
-        double predictedDeltaY = PredictionEngine.predictDeltaY(
-                state.expectedDeltaY,
-                ctx.inWater,
-                ctx.inLava,
-                ctx.climbing,
-                PredictionEngine.checkOnHoney(player),
-                ctx.hasSlowFalling,
-                ctx.hasLevitation,
-                ctx.hasLevitation ? PredictionEngine.getLevitationAmplifier(player) : 1.0,
-                isFallFlying,
-                hasRiptide
-        );
+        /* Predict the vertical delta using the full physics model */
+        double predictedDeltaY = predictDeltaY(player, state, ctx, hasRiptide, isFallFlying);
 
-        /** Deviation between predicted and actual vertical movement */
         double verticalDelta = deltaY - predictedDeltaY;
 
         // Bypass resistance: widen tolerance when client has unconfirmed state changes
@@ -182,43 +161,108 @@ public class FlightCheck extends Check implements PacketCheck {
                 && Math.abs(deltaY) > 0.01;
 
         if (verticalDeviation && !isFallFlying && !hasRiptide && !ctx.hasLevitation) {
-            handleHoverDetection(player, state, ctx);
-
-            /**
-             * Upward movement when expected to be falling or stationary is heavily penalized.
-             * This catches fly hacks that push the player upward against gravity.
-             */
-            if (deltaY > 0 && state.expectedDeltaY <= 0 && !ctx.hasLevitation && !hasRiptide && !isFallFlying) {
-                increaseBuffer(player, 1.5);
-                if (getBuffer(player) > 3.0) {
-                    flag(player);
-                    resetBuffer(player);
-                }
-            } else {
-                /**
-                 * deviationRatio = magnitude of deviation relative to prediction.
-                 * A ratio > 2.0 is blatant and triggers an immediate flag.
-                 */
-                double deviationRatio = Math.abs(verticalDelta) / Math.max(Math.abs(predictedDeltaY), 0.001);
-                if (deviationRatio > 2.0) {
-                    flag(player);
-                    resetBuffer(player);
-                } else {
-                    /** Gradual buffer increase, capped at a 2.0 deviation ratio contribution */
-                    increaseBuffer(player, 0.3 * Math.min(deviationRatio, 2.0));
-                    if (getBuffer(player) > 5.0) {
-                        flag(player);
-                        resetBuffer(player);
-                    }
-                }
-            }
+            evaluateVerticalDeviation(player, state, ctx, verticalDelta, predictedDeltaY, deltaY);
         } else {
             decreaseBuffer(player, 0.1);
             state.hoverTicks = Math.max(0, state.hoverTicks - 1);
         }
 
-        /** Update the expected velocity for the next tick's prediction */
+        /* Update the expected velocity for the next tick's prediction */
         state.expectedDeltaY = deltaY;
+    }
+
+    /**
+     * Seeds the expected vertical velocity when the player leaves the ground.
+     *
+     * @param state  per-player state holding the expected velocity
+     * @param ctx    current tick prediction context
+     * @param deltaY actual vertical delta this tick
+     */
+    private void seedExpectedVelocityOnTakeoff(PlayerState state, PredictionContext ctx, double deltaY) {
+        if (ctx.lastOnGround && !ctx.onGround) {
+            // Jump: 0.42 blocks/tick initial velocity (vanilla); walked-off-edge: 0.
+            if (deltaY >= JUMP_MOMENTUM - 0.01 && deltaY <= JUMP_MOMENTUM + 0.15) {
+                state.expectedDeltaY = JUMP_MOMENTUM;
+            } else if (Math.abs(deltaY) < 0.01) {
+                state.expectedDeltaY = 0;
+            }
+        }
+    }
+
+    /**
+     * Predicts the expected vertical delta this tick from the full physics model.
+     *
+     * @param player       the player being checked
+     * @param state        per-player state holding the seed velocity
+     * @param ctx          current tick prediction context
+     * @param hasRiptide   whether the player is riptide-lunging
+     * @param isFallFlying whether the player is gliding with an elytra
+     * @return the predicted deltaY
+     */
+    private double predictDeltaY(WindfallPlayer player, PlayerState state, PredictionContext ctx,
+                                 boolean hasRiptide, boolean isFallFlying) {
+        return PredictionEngine.predictDeltaY(
+                state.expectedDeltaY,
+                ctx.inWater,
+                ctx.inLava,
+                ctx.climbing,
+                PredictionEngine.checkOnHoney(player),
+                ctx.hasSlowFalling,
+                ctx.hasLevitation,
+                ctx.hasLevitation ? PredictionEngine.getLevitationAmplifier(player) : 1.0,
+                isFallFlying,
+                hasRiptide
+        );
+    }
+
+    /**
+     * Evaluates a confirmed vertical deviation, growing the buffer or flagging outright.
+     *
+     * <p>Reached only when the deviation exceeds tolerance and the player is not elytra-gliding,
+     * riptide-lunging or levitating, so those exclusions are already implied by the caller and
+     * are not repeated here.</p>
+     *
+     * <p>Upward movement while physics dictates falling or standing still is penalised heavily;
+     * any other deviation is judged by how large it is relative to the prediction, so a small
+     * anomaly nudges the buffer while a blatant one flags immediately.</p>
+     *
+     * @param player          the player being checked
+     * @param state           per-player state (hover tracking)
+     * @param ctx             current tick prediction context
+     * @param verticalDelta   predicted vs actual vertical delta
+     * @param predictedDeltaY the physics-predicted vertical delta
+     * @param deltaY          actual vertical delta this tick
+     */
+    private void evaluateVerticalDeviation(WindfallPlayer player, PlayerState state, PredictionContext ctx,
+                                           double verticalDelta, double predictedDeltaY, double deltaY) {
+        handleHoverDetection(player, state, ctx);
+
+        /* Upward movement when expected to be falling or stationary is heavily penalized:
+         * catches fly hacks that push the player upward against gravity. */
+        if (deltaY > 0 && state.expectedDeltaY <= 0) {
+            increaseBuffer(player, 1.5);
+            if (getBuffer(player) > 3.0) {
+                flag(player);
+                resetBuffer(player);
+            }
+            return;
+        }
+
+        /* deviationRatio = magnitude of deviation relative to the prediction.
+         * A ratio > 2.0 is blatant and triggers an immediate flag. */
+        double deviationRatio = Math.abs(verticalDelta) / Math.max(Math.abs(predictedDeltaY), 0.001);
+        if (deviationRatio > 2.0) {
+            flag(player);
+            resetBuffer(player);
+            return;
+        }
+
+        /* Gradual buffer increase, capped at a 2.0 deviation ratio contribution. */
+        increaseBuffer(player, 0.3 * Math.min(deviationRatio, 2.0));
+        if (getBuffer(player) > 5.0) {
+            flag(player);
+            resetBuffer(player);
+        }
     }
 
     /** No-op — flight detection only requires incoming movement packets. */
@@ -285,9 +329,7 @@ public class FlightCheck extends Check implements PacketCheck {
      */
     private void handleNoFall(WindfallPlayer player, PlayerState state, boolean currentOnGround,
                               double deltaY, double lastY, double currentY) {
-        boolean descending = deltaY < -NO_FALL_VELOCITY_THRESHOLD;
-
-        if (descending && !state.falling) {
+        if (deltaY < -NO_FALL_VELOCITY_THRESHOLD && !state.falling) {
             state.falling = true;
             state.fallStartY = lastY;
         }
@@ -297,25 +339,31 @@ public class FlightCheck extends Check implements PacketCheck {
             return;
         }
 
-        double fallDistance = state.fallStartY - currentY;
+        // A tick that does not claim ground neither proves nor refutes a spoof.
+        if (!currentOnGround) {
+            state.noFallStrikes = 0;
+            return;
+        }
 
-        if (currentOnGround) {
-            if (fallDistance > NO_FALL_DISTANCE && descending && !hasGroundBeneath(player)) {
-                /* The claim is false, so the descent is not over: keep fallStartY where it is
-                 * and do not clear `falling`, otherwise this branch would restart the origin on
-                 * the next tick and a buffer larger than one tick could never be reached. */
-                if (++state.noFallStrikes >= NO_FALL_STRIKES) {
-                    state.noFallStrikes = 0;
-                    state.falling = false;
-                    flagWithSetback(player);
-                }
-            } else {
-                /* Ground claim the probe agrees with — this is a real landing. */
+        double fallDistance = state.fallStartY - currentY;
+        boolean impossibleClaim = fallDistance > NO_FALL_DISTANCE
+                && deltaY < -NO_FALL_VELOCITY_THRESHOLD
+                && !hasSolidBlockUnder(player);
+
+        if (impossibleClaim) {
+            /* The claim is false, so the descent is not over: keep fallStartY where it is
+             * and do not clear `falling`, otherwise this branch would restart the origin
+             * on the next tick and a buffer larger than one tick could never be reached. */
+            state.noFallStrikes++;
+            if (state.noFallStrikes >= NO_FALL_STRIKES) {
                 state.noFallStrikes = 0;
                 state.falling = false;
+                flagWithSetback(player);
             }
         } else {
+            /* Ground claim the probe agrees with — this is a real landing. */
             state.noFallStrikes = 0;
+            state.falling = false;
         }
     }
 
@@ -330,23 +378,31 @@ public class FlightCheck extends Check implements PacketCheck {
      * @param player the player being probed
      * @return true if ground is present or the world cannot answer
      */
-    private boolean hasGroundBeneath(WindfallPlayer player) {
+    private boolean hasSolidBlockUnder(WindfallPlayer player) {
         try {
             org.bukkit.entity.Player bukkit = player.getPlayer();
-            if (bukkit == null || !bukkit.isOnline()) return true;
-            if (bukkit.isInsideVehicle() || PredictionEngine.checkInWater(player) || bukkit.isFlying()) return true;
-
-            org.bukkit.World world = bukkit.getWorld();
-            int bx = (int) Math.floor(player.getX());
-            int by = (int) Math.floor(player.getY());
-            int bz = (int) Math.floor(player.getZ());
-
-            if (!world.isChunkLoaded(bx >> 4, bz >> 4)) return true;
-
-            return !MaterialUtils.isAirLike(world.getBlockAt(bx, by, bz).getType())
-                || !MaterialUtils.isAirLike(world.getBlockAt(bx, by - 1, bz).getType());
+            return bukkit != null && bukkit.isOnline()
+                    && !bukkit.isInsideVehicle()
+                    && !PredictionEngine.checkInWater(player)
+                    && !bukkit.isFlying()
+                    && blockUnderFeetHasSupport(bukkit.getWorld(),
+                            (int) Math.floor(player.getX()),
+                            (int) Math.floor(player.getY()),
+                            (int) Math.floor(player.getZ()));
         } catch (Exception e) {
             return true;
         }
+    }
+
+    /**
+     * Is there a non-air block at the feet position or directly below it?
+     *
+     * <p>An unloaded chunk reports true: an unanswerable world must never yield a flag.</p>
+     */
+    private boolean blockUnderFeetHasSupport(org.bukkit.World world, int bx, int by, int bz) {
+        if (!world.isChunkLoaded(bx >> 4, bz >> 4)) return true;
+
+        return !MaterialUtils.isAirLike(world.getBlockAt(bx, by, bz).getType())
+            || !MaterialUtils.isAirLike(world.getBlockAt(bx, by - 1, bz).getType());
     }
 }
