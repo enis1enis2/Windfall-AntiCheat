@@ -63,21 +63,24 @@ public final class WorldGuardCompat {
     }
 
     /**
-     * Checks if a specific location is in any WorldGuard region.
+     * Checks if a location is in any WorldGuard region of a specific world.
      *
-     * @param x world X coordinate
-     * @param y world Y coordinate
-     * @param z world Z coordinate
+     * <p>A previous overload resolved coordinates against {@code Bukkit.getWorlds().get(0)},
+     * which meant region lookups silently answered for the main world regardless of where the
+     * player actually was. Callers must now name the world.
+     *
+     * @param world the Bukkit world the coordinates belong to
+     * @param x     world X coordinate
+     * @param y     world Y coordinate
+     * @param z     world Z coordinate
      * @return true if the location is in at least one WorldGuard region
      */
-    public boolean isInRegion(int x, int y, int z) {
-        if (!available || worldGuardPlugin == null) return false;
+    public boolean isInRegion(org.bukkit.World world, int x, int y, int z) {
+        if (!available || worldGuardPlugin == null || world == null) return false;
         try {
-            org.bukkit.World world = Bukkit.getWorlds().get(0);
-            if (world == null) return false;
-            Location loc = new Location(world, x, y, z);
-            return queryRegions(null, loc);
+            return queryRegions(null, new Location(world, x, y, z));
         } catch (Exception e) {
+            available = false;
             return false;
         }
     }
@@ -115,8 +118,13 @@ public final class WorldGuardCompat {
         Object weWorld = bukkitAdapter.getMethod("adapt", org.bukkit.World.class)
             .invoke(null, loc.getWorld());
 
-        // Get the region container for this world
-        Object worldContainer = container.getClass().getMethod("get", weWorld.getClass())
+        // Get the region container for this world. RegionContainer.get and the WorldEdit
+        // Location constructor both declare WorldEdit's World interface, while adapt() hands
+        // back the BukkitWorld subclass. getMethod/getConstructor match parameter types
+        // exactly, so passing weWorld.getClass() always threw NoSuchMethodException, the
+        // caller marked the integration unavailable, and every region exemption silently died.
+        Class<?> weWorldInterface = Class.forName("com.sk89q.worldedit.world.World");
+        Object worldContainer = container.getClass().getMethod("get", weWorldInterface)
             .invoke(container, weWorld);
         if (worldContainer == null) return false;
 
@@ -126,7 +134,7 @@ public final class WorldGuardCompat {
             .invoke(null, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
         Class<?> weLocClass = Class.forName("com.sk89q.worldedit.util.Location");
-        Object weLoc = weLocClass.getConstructor(weWorld.getClass(), blockVector3)
+        Object weLoc = weLocClass.getConstructor(weWorldInterface, blockVector3)
             .newInstance(weWorld, blockPos);
 
         // query.getApplicableRegions(location)

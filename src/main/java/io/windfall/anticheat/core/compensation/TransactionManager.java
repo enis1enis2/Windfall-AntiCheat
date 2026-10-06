@@ -103,12 +103,17 @@ public final class TransactionManager {
      * Matches the response ID against pending transactions, computes RTT, and
      * executes any registered callbacks.
      *
+     * <p>Returns whether the ID matched a pending transaction. Callers use this to attribute
+     * fabricated responses to the correct player — reading the global {@link #getUnknownResponses()}
+     * counter around this call would race with responses from other players on the same thread.
+     *
      * @param player the player who responded
      * @param id     the transaction ID echoed by the client
+     * @return true if the ID matched a pending transaction, false if it was fabricated
      */
-    public void processTransaction(WindfallPlayer player, short id) {
+    public boolean processTransaction(WindfallPlayer player, short id) {
         TransactionState state = playerTransactions.get(player.getUuid());
-        if (state == null) return;
+        if (state == null) return false;
 
         long receiveTime = System.nanoTime();
         PendingTransaction matched = null;
@@ -141,9 +146,51 @@ public final class TransactionManager {
             try {
                 callback.run();
             } catch (Exception e) {
-                e.printStackTrace();
+                plugin.getLogger().warning(
+                    "Windfall: transaction callback for " + player.getName() + " failed: " + e.getMessage());
             }
         }
+
+        return matched != null;
+    }
+
+    /**
+     * Removes and counts pending transactions that were never responded to within a timeout.
+     *
+     * <p>This is the only reliable way to detect a skipped transaction: the client owes the server
+     * exactly one response per transaction, and that response is late (or absent) once the
+     * transaction's own deadline has passed. Comparing the pending <em>count</em> between ticks
+     * instead would flag every healthy player, because in-flight transactions legitimately raise
+     * the count on any tick where the response has not yet arrived.
+     *
+     * @param uuid      the player whose pending queue should be swept
+     * @param timeoutMs how long a transaction may stay unanswered before it counts as skipped
+     * @return number of transactions found past their deadline
+     */
+    public int sweepTimedOutTransactions(UUID uuid, long timeoutMs) {
+        TransactionState state = playerTransactions.get(uuid);
+        if (state == null) return 0;
+
+        long deadline = System.nanoTime() - (timeoutMs * 1_000_000L);
+
+        int timedOut = 0;
+        Queue<PendingTransaction> remaining = new ConcurrentLinkedQueue<>();
+        PendingTransaction tx;
+        while ((tx = state.pendingTransactions.poll()) != null) {
+            if (tx.sendTime < deadline) {
+                timedOut++;
+                state.callbacks.remove(tx.id);
+            } else {
+                remaining.add(tx);
+            }
+        }
+        state.pendingTransactions.addAll(remaining);
+
+        if (timedOut > 0) {
+            skippedTransactions.addAndGet(timedOut);
+            noResponseCount.addAndGet(timedOut);
+        }
+        return timedOut;
     }
 
     /**

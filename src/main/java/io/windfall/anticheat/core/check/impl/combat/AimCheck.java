@@ -30,11 +30,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  *
  * <h3>1. Instant-Snap Detection</h3>
- * <p>Flags rotation deltas exceeding {@value #INSTANT_SNAP_THRESHOLD} degrees per
- * packet. A single snap that extreme is nearly impossible for a human and is a
- * strong signal of a teleport-to-target or hard-lock aimbot. The buffer
- * increments by 1.0 per snap and flags once it exceeds
- * {@value #SNAP_BUFFER_FLAG_THRESHOLD}.</p>
+ * <p>Flags rotation deltas exceeding {@value #INSTANT_SNAP_THRESHOLD} degrees yaw
+ * or {@value #INSTANT_SNAP_PITCH_THRESHOLD} degrees pitch in a single packet. A single
+ * snap that extreme is nearly impossible for a human and is a strong signal of a
+ * teleport-to-target or hard-lock aimbot. The buffer increments by 1.0 per snap and
+ * flags once it exceeds {@value #SNAP_BUFFER_FLAG_THRESHOLD}.</p>
  *
  * <h3>2. Yaw-Variance / Pitch-Variance Ratio Analysis</h3>
  * <p>Over a rolling window of {@value #MIN_ROTATION_SAMPLES} rotation packets,
@@ -59,8 +59,19 @@ import java.util.concurrent.ConcurrentHashMap;
 @CheckData(name = "Aim A", stableKey = "windfall.combat.aim", decay = 0.01, setbackVl = 10)
 public class AimCheck extends Check implements PacketCheck {
 
-    /** Maximum yaw or pitch delta (in degrees) before a single-packet snap is flagged. */
-    private static final double INSTANT_SNAP_THRESHOLD = 180.0;
+    /**
+     * Maximum yaw or pitch delta (in degrees) before a single-packet snap is flagged.
+     * Yaw deltas are normalized to [-180, 180) before comparison, so a threshold of 180 could
+     * never be exceeded — that branch was dead. 100 degrees per packet is already far beyond
+     * fast human flicking and remains reachable for hard-lock aimbots.
+     */
+    private static final double INSTANT_SNAP_THRESHOLD = 100.0;
+
+    /**
+     * Pitch snap threshold. Pitch is unbounded in the packet format, so unlike yaw a large delta
+     * is possible, but a single packet moving pitch by more than this is still a hard lock.
+     */
+    private static final double INSTANT_SNAP_PITCH_THRESHOLD = 60.0;
 
     /** Full circle rotation used for yaw delta normalization to [-180, 180). */
     private static final float ROTATION_MODULO = 360.0f;
@@ -85,6 +96,24 @@ public class AimCheck extends Check implements PacketCheck {
 
     /** Buffer level at which the snap-detection heuristic triggers a flag. */
     private static final double SNAP_BUFFER_FLAG_THRESHOLD = 3.0;
+
+    /**
+     * Wraps a raw yaw delta into [-180, 180) so that a 359 -&gt; 1 degree turn is treated as a
+     * 2 degree movement rather than a 358 degree whip.
+     */
+    static float normalizeYawDelta(float deltaYaw) {
+        // Modulo first, then nudge the +180 boundary to -180 so the result spans [-180, 180).
+        // A single +/- 360 adjustment only covers inputs in [-540, 540) and leaks larger deltas.
+        float normalized = deltaYaw % ROTATION_MODULO;
+        if (normalized >= 180.0f) normalized -= ROTATION_MODULO;
+        if (normalized < -180.0f) normalized += ROTATION_MODULO;
+        return normalized;
+    }
+
+    /** Tests a pair of absolute rotation deltas against the instant-snap thresholds. */
+    static boolean isInstantSnap(double absDeltaYaw, double absDeltaPitch) {
+        return absDeltaYaw > INSTANT_SNAP_THRESHOLD || absDeltaPitch > INSTANT_SNAP_PITCH_THRESHOLD;
+    }
 
     /** Per-player mutable state for tracking rotation history and accumulators. */
     private static final class PlayerState {
@@ -149,11 +178,7 @@ public class AimCheck extends Check implements PacketCheck {
             return;
         }
 
-        /* Normalize yaw delta to the [-180, 180) range to handle the 359 -> 1 degree wrap-around. */
-        float deltaYaw = yaw - state.lastYaw;
-        if (deltaYaw > 180) deltaYaw -= ROTATION_MODULO;
-        if (deltaYaw < -180) deltaYaw += ROTATION_MODULO;
-
+        float deltaYaw = normalizeYawDelta(yaw - state.lastYaw);
         float deltaPitch = pitch - state.lastPitch;
 
         double absDeltaYaw = Math.abs(deltaYaw);
@@ -166,17 +191,13 @@ public class AimCheck extends Check implements PacketCheck {
             return;
         }
 
-        /* Pre-filter: skip when player is stationary (position unchanged since last packet). */
-        if (player.getX() == player.getLastX()
-                && player.getY() == player.getLastY()
-                && player.getZ() == player.getLastZ()) {
-            state.lastYaw = yaw;
-            state.lastPitch = pitch;
-            return;
-        }
+        /* Do NOT skip rotation-only packets when the player is stationary. PLAYER_ROTATION never
+         * carries a position, so a "position unchanged" pre-filter discarded every pure mouse-look
+         * packet and starved both heuristics below of samples. Rotation variance is measured from
+         * the deltas alone, so it stays valid while stationary. */
 
         /* Strategy 1: Instant-snap — a single rotation delta exceeding the threshold. */
-        if (absDeltaYaw > INSTANT_SNAP_THRESHOLD || absDeltaPitch > 90.0) {
+        if (isInstantSnap(absDeltaYaw, absDeltaPitch)) {
             increaseBuffer(player, 1.0);
             if (getBuffer(player) > SNAP_BUFFER_FLAG_THRESHOLD) {
                 flag(player);

@@ -37,6 +37,10 @@ class ScaffoldCheckEnhancedTest {
         when(mockConfig.isCheckEnabled("windfall.movement.scaffold")).thenReturn(true);
         when(mockConfig.getCheckMaxVl("windfall.movement.scaffold")).thenReturn(100);
         when(mockConfig.isCheckPunishable("windfall.movement.scaffold")).thenReturn(true);
+        // Mockito answers Integer with 0, while these methods mean "not written" via null.
+        // A 0 would override the annotation decay/setbackVl defaults that the tests assert.
+        when(mockConfig.getExplicitCheckSetbackVl("windfall.movement.scaffold")).thenReturn(null);
+        when(mockConfig.getExplicitCheckDecay("windfall.movement.scaffold")).thenReturn(null);
 
         pluginStaticMock.when(WindfallPlugin::getInstance).thenReturn(mockPlugin);
     }

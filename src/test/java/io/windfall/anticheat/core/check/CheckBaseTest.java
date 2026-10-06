@@ -51,6 +51,31 @@ class CheckBaseTest extends CheckTestBase {
     }
 
     @Test
+    void setters_updateTunables() {
+        NoSwingCheck check = new NoSwingCheck();
+
+        check.setMaxVl(42);
+        check.setSetbackVl(7);
+        check.setDecay(0.5);
+
+        assertEquals(42, check.getMaxVl());
+        assertEquals(7, check.getSetbackVl());
+        assertEquals(0.5, check.getDecay(), 1e-9);
+    }
+
+    @Test
+    void reward_usesUpdatedDecay() {
+        NoSwingCheck check = new NoSwingCheck();
+        WindfallPlayer player = createMockPlayer("Test");
+
+        check.setDecay(0.5);
+        check.increaseBuffer(player, 1.0);
+        check.reward(player);
+
+        assertEquals(0.5, check.getBuffer(player), 1e-9);
+    }
+
+    @Test
     void increaseBuffer_addsToBuffer() {
         NoSwingCheck check = new NoSwingCheck();
         WindfallPlayer player = createMockPlayer("Test");
@@ -159,7 +184,7 @@ class CheckBaseTest extends CheckTestBase {
     }
 
     @Test
-    void reward_decrementsViolationLevel() {
+    void reward_doesNotDecrementViolationLevelWithinDecayInterval() {
         MultiBreakCheck check = new MultiBreakCheck();
         WindfallPlayer player = createMockPlayer("Test");
 
@@ -167,8 +192,51 @@ class CheckBaseTest extends CheckTestBase {
         check.flag(player);
         assertEquals(2, check.getViolationLevel(player));
 
+        // Decrementing VL every tick drained punishment tiers within a second of one flag
         check.reward(player);
+        assertEquals(2, check.getViolationLevel(player),
+            "VL must hold during the decay grace period");
+    }
+
+    @Test
+    void reward_decrementsViolationLevelAfterDecayInterval() throws Exception {
+        MultiBreakCheck check = new MultiBreakCheck();
+        WindfallPlayer player = createMockPlayer("Test");
+
+        check.flag(player);
+        check.flag(player);
+        assertEquals(2, check.getViolationLevel(player));
+
+        expireVlDecayWindow(check);
+        check.reward(player);
+
         assertEquals(1, check.getViolationLevel(player));
+    }
+
+    @Test
+    void reward_decrementsAtMostOncePerInterval() throws Exception {
+        MultiBreakCheck check = new MultiBreakCheck();
+        WindfallPlayer player = createMockPlayer("Test");
+
+        check.flag(player);
+        check.flag(player);
+        check.flag(player);
+        assertEquals(3, check.getViolationLevel(player));
+
+        expireVlDecayWindow(check);
+        check.reward(player);
+        check.reward(player);
+        check.reward(player);
+
+        assertEquals(2, check.getViolationLevel(player),
+            "Repeated reward calls inside one interval must not stack decrements");
+    }
+
+    /** Backdates the last VL decay so the next reward call is outside the grace window. */
+    private void expireVlDecayWindow(MultiBreakCheck check) throws Exception {
+        java.lang.reflect.Field field = Check.class.getDeclaredField("lastVlDecayMs");
+        field.setAccessible(true);
+        field.setLong(check, System.currentTimeMillis() - Check.VL_DECAY_INTERVAL_MS - 1L);
     }
 
     @Test

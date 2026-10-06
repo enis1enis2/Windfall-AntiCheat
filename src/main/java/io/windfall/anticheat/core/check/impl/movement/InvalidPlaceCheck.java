@@ -20,9 +20,10 @@ import org.bukkit.Material;
  * <ol>
  *   <li><b>Rate limit</b> — Players may place at most {@value #MAX_PLACEMENTS_PER_TICK} blocks per
  *       client tick (50 ms window). Exceeding this indicates autoclicker or multi-thread placement.</li>
- *   <li><b>Occupied block</b> — The target block position must be air-type (AIR, CAVE_AIR, VOID_AIR).
- *       Placing into an already-occupied block indicates a ghost-block or NBS exploit.</li>
- *   <li><b>Self-intersection</b> — The placed block must not overlap the player's own bounding box.
+ *   <li><b>Occupied block</b> — the block the new cube would occupy must not already hold a
+ *       full opaque cube. Replacing a full block is impossible in vanilla; placing into air,
+ *       liquids, tall grass, snow layers, slabs or stairs is legal and therefore not flagged.</li>
+ *   <li><b>Self-intersection</b> — the placed block must not overlap the player's own bounding box.
  *       Overlap is detected via AABB intersection of the player and the target block.</li>
  * </ol>
  *
@@ -101,17 +102,28 @@ public class InvalidPlaceCheck extends Check implements PacketCheck {
 
         WrapperPlayClientPlayerBlockPlacement wrapper = new WrapperPlayClientPlayerBlockPlacement(event);
         var position = wrapper.getBlockPosition();
+        var face = wrapper.getFace();
 
-        int bx = position.getX();
-        int by = position.getY();
-        int bz = position.getZ();
+        /* The protocol reports the block that was clicked, not the block being placed;
+         * without a usable face there is no way to derive the placement target. */
+        if (position == null || face == null || face == com.github.retrooper.packetevents.protocol.world.BlockFace.OTHER) {
+            return;
+        }
+        int[] normal = InvalidPlaceCursorCheck.faceNormal(face);
+
+        int bx = position.getX() + normal[0];
+        int by = position.getY() + normal[1];
+        int bz = position.getZ() + normal[2];
 
         try {
             Material type = player.getPlayer().getWorld().getBlockAt(bx, by, bz).getType();
 
-            String typeName = type.name();
-            if (type != Material.AIR && !typeName.equals("CAVE_AIR") && !typeName.equals("VOID_AIR")) {
-                flagDetail(player, "placing in occupied block " + typeName);
+            /* Only a full opaque cube makes a placement impossible. Anything thinner,
+             * transparent or replaceable is a legal target: clients send this packet even when
+             * their own prediction fails, and stacking a slab onto a slab or breaking through
+             * tall grass are everyday actions. */
+            if (type.isOccluding()) {
+                flagDetail(player, "placing in occupied block " + type.name());
                 return;
             }
 

@@ -18,6 +18,12 @@ import static org.mockito.Mockito.*;
 
 class WindfallPlayerTest {
 
+    /**
+     * Protocol version used when the client has not identified one. Mirrors
+     * {@code WindfallPlayer.UNKNOWN_PROTOCOL_VERSION}.
+     */
+    private static final int UNKNOWN_PROTOCOL_FALLBACK = 4;
+
     @Mock private Player mockBukkitPlayer;
     @Mock private User mockUser;
     @Mock private ClientVersion mockClientVersion;
@@ -301,5 +307,52 @@ class WindfallPlayerTest {
         WindfallPlayer player = createPlayer(47);
         assertEquals(47, player.getProtocolVersion());
         assertEquals(mockClientVersion, player.getClientVersion());
+    }
+
+    // === Client version unavailable at login ===
+
+    @Test
+    void constructor_nullClientVersion_doesNotThrow() {
+        // PacketEvents returns null when the client has not identified a version yet.
+        // Unwrapping it unguarded threw an NPE that aborted player registration entirely.
+        when(mockUser.getClientVersion()).thenReturn(null);
+
+        WindfallPlayer player = new WindfallPlayer(mockBukkitPlayer, mockUser);
+
+        assertNull(player.getClientVersion());
+        assertEquals(UNKNOWN_PROTOCOL_FALLBACK, player.getProtocolVersion(),
+            "Unknown version should fall back to the most conservative protocol");
+    }
+
+    @Test
+    void constructor_nullClientVersion_staysUsable() {
+        when(mockUser.getClientVersion()).thenReturn(null);
+        WindfallPlayer player = new WindfallPlayer(mockBukkitPlayer, mockUser);
+
+        // Version-gated behaviour must still work rather than throwing on every packet.
+        assertEquals(UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"), player.getUuid());
+        assertEquals(1.8, player.getHeight(), 1e-9);
+        assertTrue(player.isValid());
+    }
+
+    @Test
+    void setClientVersion_null_fallsBackWithoutThrowing() {
+        WindfallPlayer player = createPlayer(767);
+
+        player.setClientVersion(null);
+
+        assertNull(player.getClientVersion());
+        assertEquals(UNKNOWN_PROTOCOL_FALLBACK, player.getProtocolVersion());
+    }
+
+    @Test
+    void setClientVersion_updatesProtocolVersion() {
+        WindfallPlayer player = createPlayer(767);
+
+        player.setClientVersion(mockClientVersion);
+        when(mockClientVersion.getProtocolVersion()).thenReturn(47);
+        player.setClientVersion(mockClientVersion);
+
+        assertEquals(47, player.getProtocolVersion());
     }
 }

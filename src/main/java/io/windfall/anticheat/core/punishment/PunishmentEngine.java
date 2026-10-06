@@ -91,7 +91,7 @@ public class PunishmentEngine {
     public void evaluate(WindfallPlayer player) {
         if (!enabled) return;
 
-        int totalVl = player.getTotalViolationLevel();
+        int totalVl = getPunishableVl(player);
 
         if (totalVl >= permbanVl) {
             executeOnce(player, permbanVl);
@@ -105,13 +105,34 @@ public class PunishmentEngine {
     }
 
     /**
+     * Sums only the VL from checks configured as punishable.
+     *
+     * <p>{@link WindfallPlayer#getTotalViolationLevel()} counts every check, including ones the
+     * server owner marked {@code punishable: false} purely for alerting. Punishing on the raw sum
+     * let a player be banned for accumulating VL on non-punishable checks, which contradicts the
+     * config setting.
+     *
+     * @param player the player whose punishable VL should be summed
+     * @return total VL across punishable checks only
+     */
+    private int getPunishableVl(WindfallPlayer player) {
+        int total = 0;
+        for (java.util.Map.Entry<String, Integer> entry : player.getViolationLevels().entrySet()) {
+            if (plugin.getWindfallConfig().isCheckPunishable(entry.getKey())) {
+                total += entry.getValue();
+            }
+        }
+        return total;
+    }
+
+    /**
      * Removes the applied tier if the player's VL has dropped below the tier threshold.
      * Called once per tick for all online players.
      */
     public void decayTierIfNeeded(WindfallPlayer player) {
         if (!enabled) return;
 
-        int totalVl = player.getTotalViolationLevel();
+        int totalVl = getPunishableVl(player);
         Integer current = appliedTiers.get(player.getUuid());
         if (current == null) return;
 
@@ -156,16 +177,33 @@ public class PunishmentEngine {
                     bukkitPlayer.getName(),
                     ChatColor.translateAlternateColorCodes('&', tempbanReason),
                     expiry, "Windfall");
+                kickAfterBan(bukkitPlayer, tier);
             } else if (tier == permbanVl) {
                 Bukkit.getBanList(banListType).addBan(
                     bukkitPlayer.getName(),
                     ChatColor.translateAlternateColorCodes('&', permbanReason),
                     (Date) null, "Windfall");
+                kickAfterBan(bukkitPlayer, tier);
             }
 
             plugin.getLogger().info("[Punishment] " + player.getName()
-                + " punished at tier " + tier + " (total VL=" + player.getTotalViolationLevel() + ")");
+                + " punished at tier " + tier + " (punishable VL=" + getPunishableVl(player) + ")");
         });
+    }
+
+    /**
+     * Disconnects a player who has just been banned.
+     *
+     * <p>Adding to a ban list does not remove an already-connected session: the player keeps
+     * playing until they disconnect on their own, so a banned cheater could stay in the server
+     * indefinitely. Kicking terminates the session immediately.
+     *
+     * @param bukkitPlayer the banned player
+     * @param tier         the VL threshold that triggered the ban
+     */
+    private void kickAfterBan(Player bukkitPlayer, int tier) {
+        String reason = tier == permbanVl ? permbanReason : tempbanReason;
+        bukkitPlayer.kickPlayer(ChatColor.translateAlternateColorCodes('&', reason));
     }
 
     /**

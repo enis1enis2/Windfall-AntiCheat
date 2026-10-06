@@ -132,6 +132,10 @@ public class WindfallConfig {
         config.addDefault("prometheus.host", "127.0.0.1");
         config.addDefault("prometheus.port", 9211);
 
+        // WorldGuard region exemptions
+        config.addDefault("worldguard.enabled", false);
+        config.addDefault("worldguard.exempt-regions", false);
+
         // Check defaults — per-check values override these if set
         config.addDefault("checks.default.enabled", true);
         config.addDefault("checks.default.max-vl", 100);
@@ -164,9 +168,10 @@ public class WindfallConfig {
         for (String key : allChecks) {
             config.addDefault("checks." + key + ".enabled", true);
             config.addDefault("checks." + key + ".max-vl", 100);
-            config.addDefault("checks." + key + ".setback-vl", 20);
-            config.addDefault("checks." + key + ".decay", 0.02);
             config.addDefault("checks." + key + ".punishable", true);
+            // setback-vl and decay are intentionally NOT registered per check: the @CheckData
+            // annotation on each check class is the source of truth, and a registered default
+            // would silently override it on every startup and reload.
         }
     }
 
@@ -434,19 +439,56 @@ public class WindfallConfig {
     }
 
     public int getCheckSetbackVl(String checkKey) {
-        String path = "checks." + checkKey + ".setback-vl";
-        if (config.isSet(path)) {
-            return config.getInt(path);
-        }
+        Integer explicit = getExplicitCheckSetbackVl(checkKey);
+        if (explicit != null) return explicit;
         return config.getInt("checks.default.setback-vl", 20);
     }
 
     public double getCheckDecay(String checkKey) {
-        String path = "checks." + checkKey + ".decay";
-        if (config.isSet(path)) {
-            return config.getDouble(path);
-        }
+        Double explicit = getExplicitCheckDecay(checkKey);
+        if (explicit != null) return explicit;
         return config.getDouble("checks.default.decay", 0.02);
+    }
+
+    /**
+     * Returns the per-check {@code setback-vl} only when the operator actually wrote it into
+     * config.yml, ignoring registered defaults.
+     *
+     * <p>{@code isSet} also reports values injected via {@code addDefault}, which made every
+     * check look explicitly configured and would override the {@code @CheckData} annotation
+     * values on every startup.
+     *
+     * @return the configured value, or null when unset in the file
+     */
+    public Integer getExplicitCheckSetbackVl(String checkKey) {
+        String path = "checks." + checkKey + ".setback-vl";
+        return config.isSet(path) ? config.getInt(path) : null;
+    }
+
+    /**
+     * Returns the per-check {@code decay} only when the operator actually wrote it into
+     * config.yml, ignoring registered defaults.
+     *
+     * @return the configured value, or null when unset in the file
+     */
+    public Double getExplicitCheckDecay(String checkKey) {
+        String path = "checks." + checkKey + ".decay";
+        return config.isSet(path) ? config.getDouble(path) : null;
+    }
+
+    /** Whether WorldGuard region exemptions should be honoured at all. */
+    public boolean isWorldGuardEnabled() {
+        return config.getBoolean("worldguard.enabled", false);
+    }
+
+    /**
+     * Whether players standing inside a WorldGuard region are exempt from checks.
+     *
+     * <p>Off by default: the integration was loaded but never consulted, so servers that
+     * installed WorldGuard silently got no safe zones.
+     */
+    public boolean isWorldGuardExemptRegions() {
+        return config.getBoolean("worldguard.exempt-regions", false);
     }
 
     public boolean isCheckPunishable(String checkKey) {
@@ -457,10 +499,18 @@ public class WindfallConfig {
         return config.getBoolean("checks.default.punishable", true);
     }
 
-    /** Returns all registered check stableKeys (e.g., "windfall.movement.speed") */
+    /**
+     * Returns all registered check stableKeys (e.g., "windfall.movement.speed").
+     *
+     * <p>Filters out the {@code default} template key, which is a fallback section rather than
+     * a real check and would otherwise show up as a bogus entry in GUI listings.
+     */
     public Set<String> getCheckKeys() {
         if (config.isConfigurationSection("checks")) {
-            return config.getConfigurationSection("checks").getKeys(false);
+            Set<String> keys = new java.util.LinkedHashSet<>(
+                config.getConfigurationSection("checks").getKeys(false));
+            keys.remove("default");
+            return keys;
         }
         return Collections.emptySet();
     }

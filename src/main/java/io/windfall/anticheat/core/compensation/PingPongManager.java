@@ -3,6 +3,7 @@ package io.windfall.anticheat.core.compensation;
 import io.windfall.anticheat.WindfallPlugin;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
@@ -65,19 +66,22 @@ public final class PingPongManager {
      * Processes a client response to a transaction ping.
      * Updates the confirmed tick window and fires any pending callbacks.
      *
+     * <p>RTT is derived from the send time recorded in the {@link PingRecord} rather than a
+     * caller-supplied value — the packet listener has no way to know when the ping went out,
+     * and guessing would make latency tracking meaningless.
+     *
      * @param player the player who responded
      * @param id     the transaction ID echoed by the client
-     * @param sendTime the server-side send time (nanoseconds) for RTT calculation
      * @return true if this was a ping-pong transaction (not a regular transaction)
      */
-    public boolean processPingResponse(WindfallPlayer player, short id, long sendTime) {
+    public boolean processPingResponse(WindfallPlayer player, short id) {
         PlayerPingState state = playerStates.get(player.getUuid());
         if (state == null) return false;
 
         PingRecord record = state.pendingPings.remove(id);
         if (record == null) return false;
 
-        long rttNanos = System.nanoTime() - sendTime;
+        long rttNanos = System.nanoTime() - record.sendTimeNanos;
         int rttMs = (int) (rttNanos / 1_000_000);
 
         if (record.isStartPing) {
@@ -90,44 +94,59 @@ public final class PingPongManager {
             state.lastPostChangeRtt = rttMs;
         }
 
-        // Fire callbacks for newly confirmed ticks
-        Queue<Runnable> callbacks;
-        while ((callbacks = state.tickCallbacks.poll()) != null) {
-            for (Runnable cb : callbacks) {
-                try {
-                    cb.run();
-                } catch (Exception e) {
-                    // Callback failure must not crash the check pipeline
-                }
-            }
+        // Publish the one-way latency estimate that lag compensation consumes.
+        LatencyCompensator compensator = plugin.getLatencyCompensator();
+        if (compensator != null) {
+            compensator.updateLatency(player.getUuid(), getEstimatedLatencyMs(player));
         }
 
+        fireConfirmedCallbacks(state);
         return true;
     }
 
     /**
      * Registers a callback to run once a specific tick is confirmed by the client.
      * Used by checks that need to defer logic until the client has processed a state change.
+     *
+     * <p>Callbacks are stored per tick and fired only once that exact tick is confirmed.
+     * Firing every pending callback on any confirmation would run tick-5 logic as soon as
+     * tick 1 was acknowledged.
      */
     public void onTickConfirmed(WindfallPlayer player, int tick, Runnable callback) {
         PlayerPingState state = getState(player);
         if (tick <= state.confirmedTick) {
-            // Already confirmed — run immediately
-            try {
-                callback.run();
-            } catch (Exception e) {
-                // Silent — callback failure must not crash checks
-            }
+            runCallback(callback);
             return;
         }
-        state.tickCallbacks.add(new ConcurrentLinkedQueue<>());
-        Queue<Runnable> lastQueue = null;
-        // Find or create the queue for this tick
-        for (Queue<Runnable> q : state.tickCallbacks) {
-            lastQueue = q;
+        state.tickCallbacks
+                .computeIfAbsent(tick, k -> new ConcurrentLinkedQueue<>())
+                .add(callback);
+    }
+
+    private void runCallback(Runnable callback) {
+        try {
+            callback.run();
+        } catch (Exception e) {
+            plugin.getLogger().warning("Windfall: ping-pong callback failed: " + e.getMessage());
         }
-        if (lastQueue != null) {
-            lastQueue.add(callback);
+    }
+
+    /**
+     * Runs every callback registered for a tick the client has now confirmed.
+     *
+     * <p>Collects due keys first and removes them before invoking: {@code ConcurrentHashMap}
+     * iteration order is unspecified, so breaking out on the first unconfirmed key could leave
+     * older callbacks stranded.
+     */
+    private void fireConfirmedCallbacks(PlayerPingState state) {
+        int confirmed = state.confirmedTick;
+        for (Integer tick : new ArrayList<>(state.tickCallbacks.keySet())) {
+            if (tick == null || tick > confirmed) continue;
+            Queue<Runnable> callbacks = state.tickCallbacks.remove(tick);
+            if (callbacks == null) continue;
+            for (Runnable callback : callbacks) {
+                runCallback(callback);
+            }
         }
     }
 
@@ -187,8 +206,8 @@ public final class PingPongManager {
         volatile int lastPostChangeRtt;
         /** Pending pings awaiting client response (transaction ID → record) */
         final Map<Short, PingRecord> pendingPings = new ConcurrentHashMap<>();
-        /** Callbacks queued per tick — fired when the tick is confirmed */
-        final Queue<Queue<Runnable>> tickCallbacks = new ConcurrentLinkedQueue<>();
+        /** Callbacks keyed by the tick they wait on — fired once that tick is confirmed */
+        final Map<Integer, Queue<Runnable>> tickCallbacks = new ConcurrentHashMap<>();
 
         void sendPing(WindfallPlugin plugin, WindfallPlayer player, boolean isStartPing) {
             try {

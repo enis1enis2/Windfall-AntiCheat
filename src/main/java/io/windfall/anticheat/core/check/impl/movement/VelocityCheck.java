@@ -307,7 +307,8 @@ public class VelocityCheck extends Check implements PacketCheck {
         PurpurCompat purpur = WindfallPlugin.getInstance().getPurpurCompat();
         if (purpur.isCustomKnockbackEnabled()) {
             velX = purpur.adjustHorizontalKB(velX);
-            velZ = purpur.adjustVerticalKB(velZ);
+            velZ = purpur.adjustHorizontalKB(velZ);
+            velY = purpur.adjustVerticalKB(velY);
         }
 
         double newDeltaX = velX * groundFriction;

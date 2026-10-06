@@ -145,6 +145,12 @@ public final class SimulationEngine {
         double deltaY = player.getDeltaY();
         boolean onGround = player.isOnGround();
 
+        /* Horizontal motion is the client's own input, not something a world change explains,
+         * so the observed horizontal delta is the baseline. Only the vertical axis is
+         * recomputed from physics — that is the axis unconfirmed changes can legitimately move. */
+        predictedX += player.getDeltaX();
+        predictedZ += player.getDeltaZ();
+
         // Physics modifiers (accumulate across applied potion changes)
         double gravityMod = 1.0;
         double airDragMod = 1.0;
@@ -230,18 +236,14 @@ public final class SimulationEngine {
 
     /**
      * Calculates the deviation between predicted and actual position using default physics.
-     * Used when no unconfirmed changes exist (single-scenario path).
+     *
+     * <p>Delegates to {@link #simulateScenario} with an empty change set so the single-scenario
+     * path and the multi-scenario path share one physics model. A separate formula here made
+     * the no-changes case report zero deviation for any input, which made a "match" meaningless.
      */
     private double calculateDeviation(WindfallPlayer player, double actualX, double actualY, double actualZ) {
-        double predictedX = player.getLastX() + player.getDeltaX();
-        double predictedY = player.getLastY() + player.getDeltaY();
-        double predictedZ = player.getLastZ() + player.getDeltaZ();
-
-        return Math.sqrt(
-            (actualX - predictedX) * (actualX - predictedX) +
-            (actualY - predictedY) * (actualY - predictedY) +
-            (actualZ - predictedZ) * (actualZ - predictedZ)
-        );
+        return simulateScenario(player, actualX, actualY, actualZ,
+            java.util.Collections.emptyList(), 0, 0);
     }
 
     /**

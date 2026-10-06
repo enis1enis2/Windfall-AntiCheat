@@ -57,6 +57,10 @@ import io.windfall.anticheat.core.check.impl.packet.ClientBrandCheck;
 import io.windfall.anticheat.core.check.impl.packet.VehicleCheck;
 import io.windfall.anticheat.core.check.impl.packet.TransactionCheck;
 import io.windfall.anticheat.core.check.impl.inventory.InventoryCheck;
+import io.windfall.anticheat.core.check.impl.combat.InteractCursorCheck;
+import io.windfall.anticheat.core.check.impl.movement.GravityCheck;
+import io.windfall.anticheat.core.check.impl.movement.InvalidPlaceCursorCheck;
+import io.windfall.anticheat.core.check.impl.movement.ScaffoldSupportCheck;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import io.windfall.anticheat.core.adaptive.AdaptiveThreshold;
 import io.windfall.anticheat.core.compensation.PingPongManager;
@@ -181,6 +185,7 @@ public class CheckManager {
         allChecks.add(new MultiInteractCheck());
         allChecks.add(new SelfInteractCheck());
         allChecks.add(new ReachCheck());
+        allChecks.add(new InteractCursorCheck());
         allChecks.add(new CriticalsCheck());
         allChecks.add(new KillAuraCheck());
         allChecks.add(new FastHealCheck());
@@ -193,6 +198,8 @@ public class CheckManager {
         allChecks.add(new NoFallCheck());
         allChecks.add(new StepCheck());
         allChecks.add(new ScaffoldCheck());
+        allChecks.add(new ScaffoldSupportCheck());
+        allChecks.add(new GravityCheck());
         allChecks.add(new ElytraCheck());
         allChecks.add(new BaritoneCheck());
         allChecks.add(new GroundSpoofCheck());
@@ -206,6 +213,7 @@ public class CheckManager {
         allChecks.add(new FarPlaceCheck());
         allChecks.add(new InvalidBreakCheck());
         allChecks.add(new InvalidPlaceCheck());
+        allChecks.add(new InvalidPlaceCursorCheck());
         allChecks.add(new NoSwingCheck());
         allChecks.add(new RotationBreakCheck());
         allChecks.add(new AirLiquidBreakCheck());
@@ -302,6 +310,8 @@ public class CheckManager {
         // Feed packet interval to fingerprint system
         packetFingerprint.recordPacketInterval(player.getUuid(), 50); // baseline 50ms interval
 
+        if (isExempt(player)) return;
+
         for (Check check : checks) {
             if (!check.isEnabled()) continue;
             try {
@@ -313,10 +323,79 @@ public class CheckManager {
     }
 
     /**
+     * Returns whether this player is currently exempt from checks.
+     *
+     * <p>Only consulted when {@code worldguard.exempt-regions} is enabled and WorldGuard is
+     * actually installed. The reflective region lookup runs on every packet, so the answer is
+     * cached per player and refreshed on the global tick.
+     *
+     * @param player the player to test
+     * @return true when checks should be skipped for this player
+     */
+    private boolean isExempt(WindfallPlayer player) {
+        if (!regionExemptionsEnabled()) return false;
+        // Read only the tick-refreshed cache: the reflective lookup touches Bukkit state and
+        // must never run on a Netty thread.
+        return regionExempt.getOrDefault(player.getUuid(), Boolean.FALSE);
+    }
+
+    private boolean regionExemptionsEnabled() {
+        io.windfall.anticheat.core.compat.WorldGuardCompat wg = plugin.getWorldGuardCompat();
+        return wg != null && wg.isAvailable()
+            && plugin.getWindfallConfig().isWorldGuardEnabled()
+            && plugin.getWindfallConfig().isWorldGuardExemptRegions();
+    }
+
+    /** Per-player WorldGuard exemption cache, refreshed each global tick. */
+    private final java.util.Map<java.util.UUID, Boolean> regionExempt = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Recomputes WorldGuard exemption for every online player. Must run on the main thread
+     * because {@code isInRegion} reads the Bukkit location.
+     */
+    private void refreshRegionExemptions() {
+        if (!regionExemptionsEnabled()) {
+            regionExempt.clear();
+            return;
+        }
+        io.windfall.anticheat.core.compat.WorldGuardCompat wg = plugin.getWorldGuardCompat();
+        for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
+            if (!player.isValid()) continue;
+            try {
+                regionExempt.put(player.getUuid(), wg.isInRegion(player.getPlayer()));
+            } catch (Exception e) {
+                regionExempt.put(player.getUuid(), Boolean.FALSE);
+            }
+        }
+    }
+
+    /**
+     * Notifies the transaction check about an incoming transaction response.
+     *
+     * <p>The response itself is matched by {@link io.windfall.anticheat.core.compensation.TransactionManager}
+     * inside the packet listener, before checks are dispatched. Passing the match result down
+     * keeps detection in one place and avoids matching the same response twice.
+     *
+     * @param player  the responding player
+     * @param matched true if the echoed ID matched a pending transaction
+     */
+    public void onTransactionResponse(WindfallPlayer player, boolean matched) {
+        for (Check check : checks) {
+            if (check instanceof io.windfall.anticheat.core.check.impl.packet.TransactionCheck) {
+                ((io.windfall.anticheat.core.check.impl.packet.TransactionCheck) check)
+                    .onTransactionResponse(player, matched);
+                return;
+            }
+        }
+    }
+
+    /**
      * Dispatches an outgoing packet to all enabled checks.
      * Called from {@link io.windfall.anticheat.core.network.PacketListener#onPacketSend}.
      */
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
+        if (isExempt(player)) return;
+
         for (Check check : checks) {
             if (!check.isEnabled()) continue;
             try {
@@ -340,6 +419,9 @@ public class CheckManager {
 
         // Update Prometheus metrics every tick
         prometheus.tick();
+
+        // Refresh WorldGuard region status on the main thread — packet threads only read the cache
+        refreshRegionExemptions();
 
         io.windfall.anticheat.core.punishment.PunishmentEngine pe = plugin.getPunishmentEngine();
         for (WindfallPlayer player : plugin.getPlayerManager().getAllPlayers()) {
@@ -388,12 +470,25 @@ public class CheckManager {
         }
     }
 
-    /** Reloads config and updates enabled/punishable state for all checks */
+    /**
+     * Reloads config and refreshes every tunable per-check value.
+     *
+     * <p>Previously only {@code enabled} and {@code punishable} were re-applied, so
+     * {@code max-vl}, {@code setback-vl}, and {@code decay} edits in config.yml required a
+     * full server restart to take effect.
+     */
     public void reloadChecks() {
         plugin.getWindfallConfig().reload();
         for (Check check : checks) {
-            check.setEnabled(plugin.getWindfallConfig().isCheckEnabled(check.getStableKey()));
-            check.setPunishable(plugin.getWindfallConfig().isCheckPunishable(check.getStableKey()));
+            String key = check.getStableKey();
+            check.setEnabled(plugin.getWindfallConfig().isCheckEnabled(key));
+            check.setPunishable(plugin.getWindfallConfig().isCheckPunishable(key));
+            check.setMaxVl(plugin.getWindfallConfig().getCheckMaxVl(key));
+            // Null means "not written in config.yml" — keep the current annotation default
+            Integer setbackVl = plugin.getWindfallConfig().getExplicitCheckSetbackVl(key);
+            if (setbackVl != null) check.setSetbackVl(setbackVl);
+            Double decay = plugin.getWindfallConfig().getExplicitCheckDecay(key);
+            if (decay != null) check.setDecay(decay);
         }
     }
 

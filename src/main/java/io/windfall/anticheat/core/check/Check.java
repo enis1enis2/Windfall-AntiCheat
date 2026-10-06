@@ -90,6 +90,19 @@ public abstract class Check {
         this.enabled = cfg.isCheckEnabled(stableKey);
         this.maxVl = cfg.getCheckMaxVl(stableKey);
         this.punishable = cfg.isCheckPunishable(stableKey);
+        // decay and setbackVl have to be applied here as well: this constructor is what the
+        // check runs with from the moment it is registered, so leaving them to
+        // CheckManager#reloadChecks meant an operator's explicit config.yml values were
+        // silently ignored until the first /windfall reload. Null means "not written in
+        // config.yml" — keep the @CheckData defaults in that case.
+        Integer explicitSetbackVl = cfg.getExplicitCheckSetbackVl(stableKey);
+        if (explicitSetbackVl != null) {
+            this.setbackVl = explicitSetbackVl;
+        }
+        Double explicitDecay = cfg.getExplicitCheckDecay(stableKey);
+        if (explicitDecay != null) {
+            this.decay = explicitDecay;
+        }
     }
 
     /**
@@ -140,6 +153,9 @@ public abstract class Check {
             vl = maxVl;
         }
 
+        // A fresh violation restarts the decay grace period
+        lastVlDecayMs = System.currentTimeMillis();
+
         // Record violation for repeat-offender pattern analysis
         if (plugin.getCheckManager() != null) {
             plugin.getCheckManager().getViolationPattern()
@@ -188,6 +204,22 @@ public abstract class Check {
             vl = maxVl;
         }
 
+        /* Setback violations are critical and need the same repeat-offender and metrics
+         * bookkeeping as flag(), which otherwise only saw plain flags. Without this, a check
+         * that only ever calls flagWithSetback produced no violation history and no Prometheus
+         * flag counts, so staff dashboards silently under-reported it. */
+        lastVlDecayMs = System.currentTimeMillis();
+
+        if (plugin.getCheckManager() != null) {
+            plugin.getCheckManager().getViolationPattern()
+                .recordViolation(player.getUuid(), stableKey, vl, plugin.getCheckManager().getTickCounter());
+
+            WindfallPrometheus prometheus = plugin.getCheckManager().getPrometheus();
+            if (prometheus != null) {
+                prometheus.incrementFlags(stableKey);
+            }
+        }
+
         AlertManager alertManager = plugin.getAlertManager();
         if (alertManager != null && player.isAlertsEnabled()) {
             alertManager.sendAlert(player, this, "VL=" + vl + " (SETBACK)");
@@ -210,19 +242,41 @@ public abstract class Check {
      * Decreases the player's VL and buffer for this check.
      * Called once per tick for all online players — provides recovery for clean play.
      *
+     * <p>Buffer decays every tick, but VL only decays once per {@value #VL_DECAY_INTERVAL_MS}ms.
+     * Decrementing VL on every tick let punishment tiers evaporate within a second of a single
+     * flag: with several checks registered, a player at the permban threshold lost all of it
+     * between two alerts.
+     *
      * @param player the player to reward
      */
     public void reward(WindfallPlayer player) {
-        int vl = player.getViolationLevels().getOrDefault(stableKey, 0);
-        if (vl > 1) {
-            player.getViolationLevels().put(stableKey, vl - 1);
-        } else if (vl == 1) {
-            player.getViolationLevels().put(stableKey, 0);
-        }
-
         double buf = player.getBuffers().getOrDefault(stableKey, 0.0);
         if (buf > 0.0) {
             player.getBuffers().put(stableKey, Math.max(0.0, buf - decay));
+        }
+
+        int vl = player.getViolationLevels().getOrDefault(stableKey, 0);
+        if (vl <= 0) return;
+
+        long now = System.currentTimeMillis();
+        long last = lastVlDecayMs;
+        if (now - last < VL_DECAY_INTERVAL_MS) return;
+        // Compare-and-set so concurrent reward calls cannot stack extra decrements
+        if (!compareAndSetLastVlDecay(last, now)) return;
+
+        player.getViolationLevels().put(stableKey, vl - 1);
+    }
+
+    /** Interval between VL decrements during clean play, in milliseconds. */
+    static final long VL_DECAY_INTERVAL_MS = 1000L;
+
+    private volatile long lastVlDecayMs = 0L;
+
+    private boolean compareAndSetLastVlDecay(long expected, long update) {
+        synchronized (this) {
+            if (lastVlDecayMs != expected) return false;
+            lastVlDecayMs = update;
+            return true;
         }
     }
 
@@ -283,8 +337,11 @@ public abstract class Check {
     public boolean isPunishable() { return punishable; }
     public void setPunishable(boolean punishable) { this.punishable = punishable; }
     public double getDecay() { return decay; }
+    public void setDecay(double decay) { this.decay = decay; }
     public int getMaxVl() { return maxVl; }
+    public void setMaxVl(int maxVl) { this.maxVl = maxVl; }
     public int getSetbackVl() { return setbackVl; }
+    public void setSetbackVl(int setbackVl) { this.setbackVl = setbackVl; }
     public int getMinVersion() { return minVersion; }
     public int getMaxVersion() { return maxVersion; }
     public CompatFlag[] getCompatFlags() { return compatFlags; }

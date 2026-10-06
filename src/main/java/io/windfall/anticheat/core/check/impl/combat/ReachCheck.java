@@ -170,6 +170,20 @@ public class ReachCheck extends Check implements PacketCheck {
     }
 
     /**
+     * Reads an entity's last known position from the tracking cache.
+     *
+     * <p>Needed to resolve the relative-axis form of entity teleport packets, whose coordinates
+     * are deltas rather than absolute positions.
+     *
+     * @param entityId the entity's network ID
+     * @return {@code [x, y, z]}, or {@code null} if the entity is not tracked
+     */
+    public static double[] getTrackedPosition(int entityId) {
+        TrackedEntity te = trackedEntities.get(entityId);
+        return te != null ? new double[]{te.x, te.y, te.z} : null;
+    }
+
+    /**
      * Evicts stale entries from the entity tracking cache. Should be called periodically
      * (e.g., once per tick) to prevent memory leaks from entities that are no longer tracked.
      *

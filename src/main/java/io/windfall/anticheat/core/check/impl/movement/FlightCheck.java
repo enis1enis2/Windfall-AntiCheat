@@ -12,6 +12,7 @@ import io.windfall.anticheat.core.player.data.ActionData;
 import io.windfall.anticheat.core.physics.PredictionContext;
 import io.windfall.anticheat.core.physics.PredictionEngine;
 import io.windfall.anticheat.core.player.WindfallPlayer;
+import io.windfall.anticheat.core.util.MaterialUtils;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,8 +32,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li><b>Hover detection</b>: If the player stays airborne for more than {@value HOVER_TICK_THRESHOLD}
  *       ticks with near-zero vertical movement (&lt;{@value HOVER_DELTA_THRESHOLD}), the buffer increases
  *       by 1.0 per tick — catches hover/fly hacks that maintain a fixed Y.</li>
- *   <li><b>NoFall fallback</b>: Detects fall distance exceeding {@value NO_FALL_DISTANCE} blocks with
- *       vertical velocity exceeding {@value NO_FALL_VELOCITY_THRESHOLD} while on-ground.</li>
+ *   <li><b>NoFall fallback</b>: Flags a claimed on-ground state during a fall of more than
+ *       {@value NO_FALL_DISTANCE} blocks when the server-side probe finds no ground beneath the
+ *       player. Falls that are simply long are not violations — only the false ground claim is.</li>
  * </ol>
  *
  * @see PredictionEngine#predictDeltaY for vertical movement prediction
@@ -56,10 +58,22 @@ public class FlightCheck extends Check implements PacketCheck {
     private static final double NO_FALL_VELOCITY_THRESHOLD = 0.5;
     /** Minimum fall distance (blocks) before the no-fall sub-check considers it a violation */
     private static final double NO_FALL_DISTANCE = 3.0;
+    /**
+     * Consecutive ticks an impossible on-ground claim must persist before flagging.
+     *
+     * <p>A lagging server can report the player a fraction above the block they have already
+     * touched down on, so a single mismatching tick proves nothing.</p>
+     */
+    private static final int NO_FALL_STRIKES = 3;
 
     private static final class PlayerState {
         double expectedDeltaY;
         int hoverTicks;
+        /** Y position where the current fall started, or NaN when not falling. */
+        double fallStartY;
+        boolean falling;
+        /** Ticks in a row the client claimed ground while the ground probe disagreed. */
+        int noFallStrikes;
     }
 
     private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
@@ -112,10 +126,16 @@ public class FlightCheck extends Check implements PacketCheck {
         boolean currentOnGround = ctx.onGround;
         double deltaY = ctx.deltaY;
 
+        /* Run the no-fall sub-check before the on-ground reset. A no-fall hack claims on-ground
+         * while still descending, so it has to be evaluated on the very tick the claim appears —
+         * returning early on on-ground first made flagWithSetback unreachable. */
+        handleNoFall(player, state, currentOnGround, deltaY, ctx.lastY, ctx.y);
+
         /** Reset state when the player touches the ground */
         if (currentOnGround) {
             state.expectedDeltaY = 0;
             state.hoverTicks = 0;
+            state.falling = false;
             return;
         }
 
@@ -197,7 +217,6 @@ public class FlightCheck extends Check implements PacketCheck {
             state.hoverTicks = Math.max(0, state.hoverTicks - 1);
         }
 
-        handleNoFall(player, currentOnGround, deltaY, ctx.lastY, ctx.y);
         /** Update the expected velocity for the next tick's prediction */
         state.expectedDeltaY = deltaY;
     }
@@ -238,28 +257,96 @@ public class FlightCheck extends Check implements PacketCheck {
     }
 
     /**
-     * Detects no-fall: falling with significant velocity while simultaneously claiming on-ground.
+     * Detects no-fall: a client claiming to be on the ground while it is still falling.
      *
-     * <p>This sub-check catches clients that spoof the on-ground flag to prevent fall damage
-     * while still falling through the air. Uses a simple velocity + distance threshold.
+     * <p>The spoof is the signal, not the fall itself. A violation therefore needs all three
+     * of:</p>
+     * <ol>
+     *   <li>the client claiming on-ground this tick,</li>
+     *   <li>with more than {@value NO_FALL_DISTANCE} blocks of fall accumulated since the
+     *       descent began and velocity beyond {@value NO_FALL_VELOCITY_THRESHOLD}, and</li>
+     *   <li>the server-side ground probe finding no block at or under the player's feet.</li>
+     * </ol>
      *
-     * @param player       the player being checked
+     * <p>Condition 3 is what keeps ordinary landings out: the tick a player touches down meets
+     * the first two conditions as well, but the block beneath the feet is solid, so nothing is
+     * recorded. Falling a long way in open air is never flagged on its own either — only the
+     * false ground claim is. This complements {@link NoFallCheck}, which uses a per-tick
+     * distance and so misses a sustained spoof below its velocity threshold; this sub-check
+     * accumulates instead. Both require consecutive ticks before flagging, because a lagging
+     * server can briefly hold the player above a block the client has already landed on.</p>
+     *
+     * @param player          the player being checked
+     * @param state           mutable per-player state holding the fall origin
      * @param currentOnGround whether the player claims to be on the ground this tick
-     * @param deltaY       current vertical velocity (negative = falling)
-     * @param lastY        previous tick Y position
-     * @param currentY     current tick Y position
+     * @param deltaY          current vertical velocity (negative = falling)
+     * @param lastY           previous tick Y position
+     * @param currentY        current tick Y position
      */
-    private void handleNoFall(WindfallPlayer player, boolean currentOnGround, double deltaY,
-                              double lastY, double currentY) {
-        if (!currentOnGround && deltaY < -NO_FALL_VELOCITY_THRESHOLD) {
-            double fallDistance = lastY - currentY;
-            if (fallDistance > NO_FALL_DISTANCE) {
-                if (currentOnGround) {
+    private void handleNoFall(WindfallPlayer player, PlayerState state, boolean currentOnGround,
+                              double deltaY, double lastY, double currentY) {
+        boolean descending = deltaY < -NO_FALL_VELOCITY_THRESHOLD;
+
+        if (descending && !state.falling) {
+            state.falling = true;
+            state.fallStartY = lastY;
+        }
+
+        if (!state.falling) {
+            if (currentOnGround) state.falling = false;
+            return;
+        }
+
+        double fallDistance = state.fallStartY - currentY;
+
+        if (currentOnGround) {
+            if (fallDistance > NO_FALL_DISTANCE && descending && !hasGroundBeneath(player)) {
+                /* The claim is false, so the descent is not over: keep fallStartY where it is
+                 * and do not clear `falling`, otherwise this branch would restart the origin on
+                 * the next tick and a buffer larger than one tick could never be reached. */
+                if (++state.noFallStrikes >= NO_FALL_STRIKES) {
+                    state.noFallStrikes = 0;
+                    state.falling = false;
                     flagWithSetback(player);
-                } else {
-                    flag(player);
                 }
+            } else {
+                /* Ground claim the probe agrees with — this is a real landing. */
+                state.noFallStrikes = 0;
+                state.falling = false;
             }
+        } else {
+            state.noFallStrikes = 0;
+        }
+    }
+
+    /**
+     * Server-side ground probe: is there a block the player could actually be standing on?
+     *
+     * <p>Reads the block the feet occupy and the one directly below it, so a slab or fence
+     * filling the feet block counts as ground. An unloaded chunk, offline player, vehicle,
+     * swimmer or flying player all report {@code true} — an unknown state must never produce
+     * a flag, only a confirmed absence of ground may.</p>
+     *
+     * @param player the player being probed
+     * @return true if ground is present or the world cannot answer
+     */
+    private boolean hasGroundBeneath(WindfallPlayer player) {
+        try {
+            org.bukkit.entity.Player bukkit = player.getPlayer();
+            if (bukkit == null || !bukkit.isOnline()) return true;
+            if (bukkit.isInsideVehicle() || PredictionEngine.checkInWater(player) || bukkit.isFlying()) return true;
+
+            org.bukkit.World world = bukkit.getWorld();
+            int bx = (int) Math.floor(player.getX());
+            int by = (int) Math.floor(player.getY());
+            int bz = (int) Math.floor(player.getZ());
+
+            if (!world.isChunkLoaded(bx >> 4, bz >> 4)) return true;
+
+            return !MaterialUtils.isAirLike(world.getBlockAt(bx, by, bz).getType())
+                || !MaterialUtils.isAirLike(world.getBlockAt(bx, by - 1, bz).getType());
+        } catch (Exception e) {
+            return true;
         }
     }
 }
