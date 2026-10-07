@@ -2,6 +2,7 @@ package io.windfall.anticheat.core.player;
 
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.player.User;
+import io.windfall.anticheat.compat.trust.TrustFactorModel;
 import io.windfall.anticheat.core.bedrock.BedrockInfo;
 import io.windfall.anticheat.core.player.data.ActionData;
 import java.util.UUID;
@@ -176,6 +177,9 @@ public class WindfallPlayer {
 
     /** Tracks block-level actions (placement, breaking, piston pushes) for movement check exemptions */
     private final ActionData actionData = new ActionData(this);
+
+    /** Per-player trust model — scales check thresholds from SUPER_UNTRUSTWORTHY to LEGIT */
+    private final TrustFactorModel trustFactor = new TrustFactorModel();
 
     // === BYPASS RESISTANCE STATE ===
     // Latency-compensated world state for this player
@@ -507,6 +511,9 @@ public class WindfallPlayer {
 
     public boolean isAlertsEnabled() { return alertsEnabled; }
     public void setAlertsEnabled(boolean alertsEnabled) { this.alertsEnabled = alertsEnabled; }
+
+    /** Returns the per-player trust model used to scale check thresholds. */
+    public TrustFactorModel getTrustFactor() { return trustFactor; }
 
     /** Returns the action data tracker for this player — provides block update/piston exemptions */
     public ActionData getActionData() { return actionData; }

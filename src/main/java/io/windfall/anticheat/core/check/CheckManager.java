@@ -15,6 +15,7 @@ import io.windfall.anticheat.core.check.impl.combat.KillAuraCheck;
 import io.windfall.anticheat.core.check.impl.combat.FastHealCheck;
 import io.windfall.anticheat.core.check.impl.combat.SwordBlockCheck;
 import io.windfall.anticheat.core.check.impl.combat.MacroCheck;
+import io.windfall.anticheat.core.check.impl.combat.CrystalCheck;
 import io.windfall.anticheat.core.check.impl.movement.SpeedCheck;
 import io.windfall.anticheat.core.check.impl.movement.FlightCheck;
 import io.windfall.anticheat.core.check.impl.movement.VelocityCheck;
@@ -27,6 +28,7 @@ import io.windfall.anticheat.core.check.impl.movement.BaritoneCheck;
 import io.windfall.anticheat.core.check.impl.movement.GroundSpoofCheck;
 import io.windfall.anticheat.core.check.impl.movement.PhaseCheck;
 import io.windfall.anticheat.core.check.impl.movement.SimulationCheck;
+import io.windfall.anticheat.core.check.impl.movement.OmniSprintCheck;
 import io.windfall.anticheat.core.check.impl.movement.NoSlowCheck;
 import io.windfall.anticheat.core.check.impl.movement.MotionCheck;
 import io.windfall.anticheat.core.check.impl.movement.FastBreakCheck;
@@ -84,7 +86,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Responsibilities:
  * <ul>
- *   <li>Instantiates all 52 checks and filters incompatible ones at startup</li>
+ *   <li>Instantiates all 60 checks and filters incompatible ones at startup</li>
  *   <li>Dispatches packets to enabled checks via {@link #onPacketReceive} / {@link #onPacketSend}</li>
  *   <li>Runs per-tick reward (VL/buffer decay) for all online players</li>
  *   <li>Provides lookup by stableKey for commands and GUI</li>
@@ -191,6 +193,7 @@ public class CheckManager {
         allChecks.add(new FastHealCheck());
         allChecks.add(new SwordBlockCheck());
         allChecks.add(new MacroCheck());
+        allChecks.add(new CrystalCheck());
         allChecks.add(new SpeedCheck());
         allChecks.add(new FlightCheck());
         allChecks.add(new VelocityCheck());
@@ -205,6 +208,7 @@ public class CheckManager {
         allChecks.add(new GroundSpoofCheck());
         allChecks.add(new PhaseCheck());
         allChecks.add(new SimulationCheck());
+        allChecks.add(new OmniSprintCheck());
         allChecks.add(new NoSlowCheck());
         allChecks.add(new MotionCheck());
         allChecks.add(new IllegalMoveCheck());

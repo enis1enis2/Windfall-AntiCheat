@@ -3,6 +3,7 @@ package io.windfall.anticheat.core.check;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import io.windfall.anticheat.WindfallPlugin;
+import io.windfall.anticheat.compat.trust.TrustFactorModel;
 import io.windfall.anticheat.core.alert.AlertManager;
 import io.windfall.anticheat.core.config.WindfallConfig;
 import io.windfall.anticheat.core.metrics.WindfallPrometheus;
@@ -143,6 +144,8 @@ public abstract class Check {
     public void flag(WindfallPlayer player) {
         if (!enabled) return;
 
+        decreaseTrust(player);
+
         WindfallPlugin plugin = WindfallPlugin.getInstance();
         int increment = plugin.getSeverityManager().getScaledVlIncrement(player);
         int vl = player.getViolationLevels().merge(stableKey, increment, Integer::sum);
@@ -194,6 +197,8 @@ public abstract class Check {
      */
     public void flagWithSetback(WindfallPlayer player) {
         if (!enabled) return;
+
+        decreaseTrust(player);
 
         WindfallPlugin plugin = WindfallPlugin.getInstance();
         int increment = plugin.getSeverityManager().getScaledVlIncrement(player);
@@ -250,6 +255,8 @@ public abstract class Check {
      * @param player the player to reward
      */
     public void reward(WindfallPlayer player) {
+        increaseTrust(player);
+
         double buf = player.getBuffers().getOrDefault(stableKey, 0.0);
         if (buf > 0.0) {
             player.getBuffers().put(stableKey, Math.max(0.0, buf - decay));
@@ -377,6 +384,46 @@ public abstract class Check {
             }
         } else {
             decreaseBuffer(player, 0.1);
+        }
+    }
+
+    /**
+     * Scales a detection threshold by the player's current trust rank.
+     *
+     * <p>Flagged players ({@link TrustFactorModel.TrustRank#SUPER_UNTRUSTWORTHY}/
+     * {@link TrustFactorModel.TrustRank#UNTRUSTWORTHY}) face tighter thresholds so their suspicion
+     * compounds; trusted players ({@link TrustFactorModel.TrustRank#TRUSTED}/
+     * {@link TrustFactorModel.TrustRank#LEGIT}) earn a wider margin before being flagged again.
+     *
+     * @param player the player being evaluated
+     * @param base   the default (SUSPICIOUS/NORMAL) threshold
+     * @return the trust-adjusted threshold
+     */
+    protected double trustAdjustedThreshold(WindfallPlayer player, double base) {
+        TrustFactorModel trust = player != null ? player.getTrustFactor() : null;
+        if (trust == null) return base;
+        switch (trust.getRank()) {
+            case SUPER_UNTRUSTWORTHY: return base * 0.5D;
+            case UNTRUSTWORTHY: return base * 0.75D;
+            case TRUSTED: return base * 1.1D;
+            case LEGIT: return base * 1.3D;
+            default: return base;
+        }
+    }
+
+    /** Lowers trust on a violation so repeat offenders get progressively tighter thresholds. */
+    private void decreaseTrust(WindfallPlayer player) {
+        TrustFactorModel trust = player != null ? player.getTrustFactor() : null;
+        if (trust != null) {
+            trust.decreaseTrust();
+        }
+    }
+
+    /** Raises trust during clean play — a tick with no violation restores some standing. */
+    private void increaseTrust(WindfallPlayer player) {
+        TrustFactorModel trust = player != null ? player.getTrustFactor() : null;
+        if (trust != null) {
+            trust.increaseTrust();
         }
     }
 }

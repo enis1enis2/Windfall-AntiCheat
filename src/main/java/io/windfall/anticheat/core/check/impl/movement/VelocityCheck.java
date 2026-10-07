@@ -5,7 +5,9 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityVelocity;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerExplosion;
 import io.windfall.anticheat.WindfallPlugin;
+import io.windfall.anticheat.compat.velocity.ExplosionQueue;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
@@ -70,6 +72,8 @@ public class VelocityCheck extends Check implements PacketCheck {
 
     private static final class PlayerState {
         final ConcurrentLinkedDeque<PendingVelocity> pendingVelocities = new ConcurrentLinkedDeque<>();
+        /** Unconfirmed explosion knockbacks — while pending, velocity comparisons are unreliable */
+        final ExplosionQueue explosions = new ExplosionQueue();
         boolean velocityActive;
         double expectedDeltaX;
         double expectedDeltaY;
@@ -107,6 +111,11 @@ public class VelocityCheck extends Check implements PacketCheck {
      */
     @Override
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
+        if (event.getPacketType() == PacketType.Play.Server.EXPLOSION) {
+            captureExplosion(player, event);
+            return;
+        }
+
         if (event.getPacketType() != PacketType.Play.Server.ENTITY_VELOCITY) return;
 
         WrapperPlayServerEntityVelocity wrapper = new WrapperPlayServerEntityVelocity(event);
@@ -136,6 +145,28 @@ public class VelocityCheck extends Check implements PacketCheck {
             state.pendingVelocities.removeFirst();
         }
         state.pendingVelocities.addLast(new PendingVelocity(velX, velY, velZ, System.currentTimeMillis()));
+    }
+
+    /**
+     * Captures explosion knockback as an unconfirmed velocity.
+     *
+     * <p>Explosion knockback arrives already scaled to blocks/tick (unlike
+     * {@code ENTITY_VELOCITY}, which uses MC's ×8000 fixed-point encoding), so the vector is
+     * queued as-is. Until the client confirms the explosion via transaction, the blended
+     * knockback would make a velocity re-check flag a legitimate player — pending explosions
+     * suppress those comparisons instead.
+     *
+     * @param player the player receiving the explosion
+     * @param event  the outgoing packet event
+     */
+    private void captureExplosion(WindfallPlayer player, PacketSendEvent event) {
+        WrapperPlayServerExplosion wrapper = new WrapperPlayServerExplosion(event);
+        com.github.retrooper.packetevents.util.Vector3d knockback = wrapper.getKnockback();
+        if (knockback == null) return;
+
+        PlayerState state = getState(player);
+        state.explosions.addPlayerExplosion(player.getTransactionId(),
+            new ExplosionQueue.Vec3(knockback.x, knockback.y, knockback.z));
     }
 
     /**
@@ -184,6 +215,18 @@ public class VelocityCheck extends Check implements PacketCheck {
         }
 
         if (!state.velocityActive) return;
+
+        /**
+         * Unconfirmed explosion knockback is still blended into the player's movement. Comparing
+         * against an unrelated entity-velocity here would flag a legitimate knockback+explosion
+         * combo, so decay the buffer instead. Matching transactions are drained (testing only) —
+         * the first confirmed explosion leaves the queue and normal checks resume.
+         */
+        state.explosions.getPossibleExplosions(player.getTransactionId(), true);
+        if (state.explosions.getPendingCount() > 0) {
+            decreaseBuffer(player, 0.25);
+            return;
+        }
 
         state.velocityAge++;
 

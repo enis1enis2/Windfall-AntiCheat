@@ -2,8 +2,11 @@ package io.windfall.anticheat.core.check.impl.movement;
 
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
+import io.windfall.anticheat.compat.elytra.FireworkBoostModel;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
@@ -70,8 +73,12 @@ public class ElytraCheck extends Check implements PacketCheck {
         boolean wasGliding;
         /** Previous tick's Y delta, used for trend analysis. */
         double lastElytraDeltaY;
+        /** Previous tick's horizontal speed, used for boost acceleration deltas. */
+        double lastHorizontalSpeed;
         /** Total ticks spent gliding in the current flight. */
         int elytraTicks;
+        /** Firework boost model — legitimately exempts boost acceleration from speed/ascent checks. */
+        final FireworkBoostModel boost = new FireworkBoostModel();
     }
 
     private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
@@ -120,6 +127,15 @@ public class ElytraCheck extends Check implements PacketCheck {
     /** {@inheritDoc} */
     @Override
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
+        if (event.getPacketType() != PacketType.Play.Server.SPAWN_ENTITY) return;
+
+        WrapperPlayServerSpawnEntity wrapper = new WrapperPlayServerSpawnEntity(event);
+        if (wrapper.getEntityType() != EntityTypes.FIREWORK_ROCKET) return;
+
+        PlayerState state = getState(player);
+        double horizontalSpeed = Math.sqrt(
+            player.getDeltaX() * player.getDeltaX() + player.getDeltaZ() * player.getDeltaZ());
+        state.boost.onFireworkInteraction(player.getTickCount(), horizontalSpeed, checkGliding(player));
     }
 
     /**
@@ -137,8 +153,26 @@ public class ElytraCheck extends Check implements PacketCheck {
 
         double horizontalSpeed = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
 
+        /** Feed the firework boost model — a legit boost legitimately raises speed and ascent. */
+        double deltaSpeed = horizontalSpeed - state.lastHorizontalSpeed;
+        state.lastHorizontalSpeed = horizontalSpeed;
+        state.boost.update(player.getTickCount(), horizontalSpeed, deltaSpeed);
+
+        /** A confirmed boost (or its grace window) exempts speed/ascent/kick-off checks entirely. */
+        if (state.boost.isInBoostOrGrace()) {
+            decreaseBuffer(player, 0.1);
+            state.lastElytraDeltaY = deltaY;
+            return;
+        }
+
+        /** A fake firework (boost attempt that failed validation) is itself a violation signal. */
+        if (state.boost.isFakeFirework()) {
+            increaseBuffer(player, 0.4);
+        }
+
         /** Check 1: Horizontal speed exceeding the elytra maximum. */
-        if (horizontalSpeed > ELYTRA_MAX_HORIZONTAL_SPEED) {
+        double maxHorizontalSpeed = trustAdjustedThreshold(player, ELYTRA_MAX_HORIZONTAL_SPEED);
+        if (horizontalSpeed > maxHorizontalSpeed) {
             // Bypass resistance: velocity changes (knockback, explosions) during elytra flight
             // can legitimately increase horizontal speed — check simulation engine first
             SimulationEngine simEngine = io.windfall.anticheat.WindfallPlugin.getInstance().getSimulationEngine();
@@ -194,7 +228,9 @@ public class ElytraCheck extends Check implements PacketCheck {
         /** Check 4: Ascent after sustained gliding — vanilla only allows descent. */
         if (deltaY > 0 && !player.isOnGround() && state.elytraTicks > 5) {
             double expectedDescent = ELYTRA_MIN_DESCENT;
-            if (deltaY > Math.abs(expectedDescent) + ELYTRA_VERTICAL_TOLERANCE) {
+            double ascentThreshold = trustAdjustedThreshold(player,
+                Math.abs(expectedDescent) + ELYTRA_VERTICAL_TOLERANCE);
+            if (deltaY > ascentThreshold) {
                 increaseBuffer(player, 0.4);
                 if (getBuffer(player) > 4.0) {
                     flag(player);

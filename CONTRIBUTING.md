@@ -105,11 +105,11 @@ All 553 tests must pass before submitting a PR.
 src/main/java/io/windfall/anticheat/
   WindfallPlugin.java              — Plugin entry point
   core/
-    check/                         — All 52 anti-cheat checks
+    check/                         — All 60 anti-cheat checks
       impl/
-        combat/                    — 12 combat checks
-        movement/                  — 29 movement checks
-        packet/                    — 10 packet checks
+        combat/                    — 14 combat checks
+        movement/                  — 34 movement checks
+        packet/                    — 11 packet checks
         inventory/                 — 1 inventory check
     physics/                       — Prediction engine, bounding boxes, MC physics
     player/                        — Per-player state tracking

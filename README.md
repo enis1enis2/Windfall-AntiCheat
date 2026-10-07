@@ -27,7 +27,7 @@
 
 Windfall intercepts incoming packets via [PacketEvents 2](https://github.com/retrooper/packetevents) and evaluates player behaviour against a configurable set of checks. A **single JAR** works across every supported server version — no separate builds required.
 
-**52 checks** across 4 categories, with a **5-layer compatibility system** that adapts detection thresholds per-player based on protocol version, server fork, installed plugins, and Bedrock status.
+**60 checks** across 4 categories, with a **5-layer compatibility system** that adapts detection thresholds per-player based on protocol version, server fork, installed plugins, and Bedrock status.
 
 **Public API** available via `WindfallAPI` for external plugins to query player data, violation levels, and check status.
 
@@ -36,7 +36,7 @@ Windfall intercepts incoming packets via [PacketEvents 2](https://github.com/ret
 ## Checks
 
 <details>
-<summary><strong>Combat</strong> — 12 checks</summary>
+<summary><strong>Combat</strong> — 14 checks</summary>
 
 | Check | Description |
 |-------|-------------|
@@ -52,11 +52,13 @@ Windfall intercepts incoming packets via [PacketEvents 2](https://github.com/ret
 | Reach | AABB-to-eye distance measurement with lag compensation |
 | Self Interact | Self-targeting packet detection |
 | Sword Block | Block+attack timing abuse (1.7–1.8) |
+| Crystal | End-crystal place-break / ID-predict detection |
+| Interact Cursor | Look-vector required for entity interactions |
 
 </details>
 
 <details>
-<summary><strong>Movement</strong> — 29 checks</summary>
+<summary><strong>Movement</strong> — 34 checks</summary>
 
 | Check | Description |
 |-------|-------------|
@@ -68,21 +70,26 @@ Windfall intercepts incoming packets via [PacketEvents 2](https://github.com/ret
 | Far Place | Placing blocks beyond vanilla reach |
 | Fast Break | Breaking blocks faster than vanilla break times |
 | Flight | Vertical velocity prediction and hover detection |
+| Gravity | Vertical velocity consistency with gravity |
 | Ground Spoof | Server-side ground state validation |
+| Illegal Move | Teleport/position desync validation |
 | Invalid Break | Breaking air or indestructible blocks |
 | Invalid Place | Placing blocks in invalid positions |
+| Invalid Place Cursor | Look-vector placement validation |
 | Motion | General motion anomaly detection |
 | Multi Break | Multiple START_DIGGING packets per tick |
 | Multi Place | Multiple block placements per tick |
 | NoFall | Missing or incorrect fall packets |
 | NoSlow | Bypassing item-use movement slowdown |
 | No Swing | Missing arm-swing animation on block interactions |
+| Omni-Sprint | Impossible omnidirectional sprinting detection |
 | Phase | Wall clipping / phase detection |
 | Position Break | Squared-distance reach validation |
 | Position Place | Squared-distance placement validation |
 | Rotation Break | Excessive view rotation during block break |
 | Rotation Place | Excessive view rotation during block place |
 | Scaffold | Automated block placement (tower/bridge) |
+| Scaffold Support | Tower/bridge support-block validation |
 | Simulation | Full movement simulation comparison |
 | Speed | Horizontal acceleration prediction |
 | Step | Step-up height validation |
@@ -93,7 +100,7 @@ Windfall intercepts incoming packets via [PacketEvents 2](https://github.com/ret
 </details>
 
 <details>
-<summary><strong>Packet</strong> — 10 checks</summary>
+<summary><strong>Packet</strong> — 11 checks</summary>
 
 | Check | Description |
 |-------|-------------|
@@ -106,6 +113,7 @@ Windfall intercepts incoming packets via [PacketEvents 2](https://github.com/ret
 | Exploit | Known exploit packet detection |
 | Packet Order | Invalid packet sequence and burst detection |
 | Sprint | Impossible sprint state changes |
+| Transaction | Transaction order and skip detection |
 | Vehicle | Vehicle interaction exploit detection |
 
 </details>
@@ -212,9 +220,9 @@ windfall/
 ├── core/
 │   ├── check/           # Check registration, base classes, @CheckData
 │   │   └── impl/
-│   │       ├── combat/      # 12 combat checks
-│   │       ├── movement/    # 29 movement checks
-│   │       ├── packet/      # 10 packet checks
+│   │       ├── combat/      # 14 combat checks
+│   │       ├── movement/    # 34 movement checks
+│   │       ├── packet/      # 11 packet checks
 │   │       └── inventory/   # 1 inventory check
 │   ├── physics/         # Prediction engine, physics constants, version branching
 │   ├── player/          # WindfallPlayer state, PlayerManager, PlayerProfile, ActionData

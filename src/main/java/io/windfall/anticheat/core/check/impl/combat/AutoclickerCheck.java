@@ -6,6 +6,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity;
 import io.windfall.anticheat.WindfallPlugin;
+import io.windfall.anticheat.compat.stats.StatisticalMetrics;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
@@ -207,8 +208,18 @@ public class AutoclickerCheck extends Check implements PacketCheck {
         double stdDev = calculateStdDev(state);
 
         if (stdDev < STD_DEV_AUTOCLICKER_THRESHOLD && cps > lowCPS) {
+            /**
+             * Entropy of the inter-click intervals complements the deviation signal: an
+             * autoclicker that cycles a fixed pattern (e.g., 80,120,80,120 ms) passes a
+             * deviation check because its variance is nonzero, but the low entropy exposes it.
+             * Near-zero entropy plus near-zero deviation is a very strong automation signal.
+             */
+            double[] intervals = intervalsOf(state);
+            double entropy = StatisticalMetrics.entropy(intervals);
+            double strength = entropy < 1.0 ? 1.8 : 1.5;
+
             /* Very low variance — strong autoclicker signal. */
-            increaseBuffer(player, 1.5);
+            increaseBuffer(player, strength);
             if (getBuffer(player) > 4.0) {
                 flag(player);
                 resetBuffer(player);
@@ -292,5 +303,30 @@ public class AutoclickerCheck extends Check implements PacketCheck {
         if (state == null || state.clickTimestamps.size() < 2) return Double.MAX_VALUE;
         long span = state.clickTimestamps.peekLast() - state.clickTimestamps.peekFirst();
         return (double) span / (state.clickTimestamps.size() - 1);
+    }
+
+    /**
+     * Extracts the consecutive inter-click intervals as a double array.
+     *
+     * <p>Each element is the millisecond gap between two adjacent timestamps, in window order.
+     * Mirrors {@link #calculateStdDev}'s interval derivation so {@link StatisticalMetrics}
+     * operates on the same samples the deviation check uses.
+     *
+     * @param state the player state containing the click timestamp deque
+     * @return the inter-click intervals in milliseconds
+     */
+    static double[] intervalsOf(PlayerState state) {
+        if (state == null || state.clickTimestamps.size() < 2) return new double[0];
+
+        double[] intervals = new double[state.clickTimestamps.size() - 1];
+        Iterator<Long> cursor = state.clickTimestamps.iterator();
+        long previous = cursor.next();
+        int index = 0;
+        while (cursor.hasNext()) {
+            long ts = cursor.next();
+            intervals[index++] = ts - previous;
+            previous = ts;
+        }
+        return intervals;
     }
 }

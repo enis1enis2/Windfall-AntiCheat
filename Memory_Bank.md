@@ -450,7 +450,7 @@ Min severity to flag: default 60 (configurable)
 8. TransactionManager / PingPongManager / LatencyCompensator / SimulationEngine
 9. GeyserManager / GeysersTracker
 10. SeverityManager / PunishmentEngine
-11. CheckManager (registers 52 checks)
+11. CheckManager (registers 60 checks)
 12. CommandManager / AlertManager / ChecklistGUI
 13. WorldGuard integration (conditional)
 14. Register API, PacketListener, PlayerQuitListener

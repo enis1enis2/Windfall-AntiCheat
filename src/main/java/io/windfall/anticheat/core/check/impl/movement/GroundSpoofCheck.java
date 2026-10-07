@@ -2,12 +2,15 @@ package io.windfall.anticheat.core.check.impl.movement;
 
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
+import io.windfall.anticheat.WindfallPlugin;
+import io.windfall.anticheat.compat.world.GhostBlockResolver;
 import io.windfall.anticheat.core.check.Check;
 import io.windfall.anticheat.core.check.CheckData;
 import io.windfall.anticheat.core.check.CompatFlag;
 import io.windfall.anticheat.core.check.type.PacketCheck;
 import io.windfall.anticheat.core.physics.PredictionContext;
 import io.windfall.anticheat.core.physics.PredictionEngine;
+import io.windfall.anticheat.core.platform.FoliaCompat;
 import io.windfall.anticheat.core.player.WindfallPlayer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,7 +54,12 @@ public class GroundSpoofCheck extends Check implements PacketCheck {
     private static final class PlayerState {
         int falseGroundCount;
         int airTicks;
+        /** Ticks of grace granted when the world around the player only resolves to air (ghost blocks). */
+        int ghostGraceTicks;
     }
+
+    /** Ghost-block resync resolver — dense air around a "grounded" player indicates desync, not spoofing. */
+    private final GhostBlockResolver ghostBlocks = new GhostBlockResolver(false, 2);
 
     private final ConcurrentHashMap<UUID, PlayerState> stateMap = new ConcurrentHashMap<>();
 
@@ -97,6 +105,20 @@ public class GroundSpoofCheck extends Check implements PacketCheck {
             return;
         }
 
+        /** Ghost-block grace: if the world only resolves to air around the player, the server
+         * may be resyncing blocks — defer ground claims until the grace expires. */
+        if (state.ghostGraceTicks > 0) {
+            state.ghostGraceTicks--;
+            decreaseBuffer(player, 0.1);
+            return;
+        }
+        if (ghostBlocks.shouldResync(ghostWorldView(player),
+                (int) Math.floor(ctx.x), (int) Math.floor(ctx.y - 0.5D), (int) Math.floor(ctx.z))) {
+            state.ghostGraceTicks = 10;
+            decreaseBuffer(player, 0.1);
+            return;
+        }
+
         /**
          * Detection 1: Player is actually falling (negative velocity beyond threshold) with
          * significant fall distance, but claims on-ground. This is classic ground spoofing.
@@ -133,5 +155,33 @@ public class GroundSpoofCheck extends Check implements PacketCheck {
     /** No-op — ground spoof detection only requires incoming movement packets. */
     @Override
     public void onPacketSend(WindfallPlayer player, PacketSendEvent event) {
+    }
+
+    /**
+     * Builds a {@link GhostBlockResolver.WorldView} over the player's Bukkit world.
+     *
+     * <p>Guarded for Folia: world reads only happen when the current thread owns the player's
+     * region, otherwise an empty view is returned so {@code shouldResync} stays false (no grant).
+     *
+     * @param player the player whose world is probed
+     * @return a world view resolving chunk-load and air checks against Bukkit
+     */
+    private GhostBlockResolver.WorldView ghostWorldView(WindfallPlayer player) {
+        org.bukkit.World world = player.getPlayer().getWorld();
+        FoliaCompat folia = WindfallPlugin.getInstance().getFoliaCompat();
+        boolean safeThread = !folia.isFolia() || folia.isOwnedByCurrentRegion(player.getPlayer());
+        return new GhostBlockResolver.WorldView() {
+            @Override
+            public boolean isChunkLoaded(int chunkX, int chunkZ) {
+                if (!safeThread || world == null) return false;
+                return world.isChunkLoaded(chunkX, chunkZ);
+            }
+
+            @Override
+            public boolean isAir(int x, int y, int z) {
+                if (!safeThread || world == null) return false;
+                return world.getBlockAt(x, y, z).getType() == org.bukkit.Material.AIR;
+            }
+        };
     }
 }
