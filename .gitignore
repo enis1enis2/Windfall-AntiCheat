@@ -28,6 +28,29 @@ release.properties
 # Anti-cheat monitor cache
 .cache/
 
+# Agent / local tool state
+.claude/
+.repowise/
+.mcp.json
+.opencode/
+opencode.jsonc
+AGENTS.md
+
+# Logs
+logs/
+*.log
+hs_err_pid*.log
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Temp files
+*.tmp
+*.bak
+*.orig
+
 # Local only
 MEMORYBANK.md
 server/
