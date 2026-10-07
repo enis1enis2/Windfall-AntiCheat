@@ -1,12 +1,12 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-10-06 03:43:29 UTC
+**Generated:** 2026-10-07 03:10:51 UTC
 
 ---
 
 ## Windfall Current Checks
 
-**Total: 54 checks**
+**Total: 58 checks**
 
 ### Combat
 - `windfall.combat.criticals` — Criticals A
@@ -21,13 +21,16 @@
 - `windfall.combat.backtrack` — Backtrack A
 - `windfall.combat.reach` — Reach A
 - `windfall.combat.swordblock` — Sword Block A
+- `windfall.combat.interactcursor` — Interact Cursor
 
 ### Movement
+- `windfall.movement.scaffoldsupport` — Scaffold Support
 - `windfall.movement.noslow` — NoSlow A
 - `windfall.movement.phase` — Phase A
 - `windfall.movement.noswing` — No Swing A
 - `windfall.movement.step` — Step A
 - `windfall.movement.motion` — Motion A
+- `windfall.movement.invalidplacecursor` — Invalid Place Cursor
 - `windfall.movement.baritone` — Baritone A
 - `windfall.movement.simulation` — Simulation A
 - `windfall.movement.multibreak` — Multi Break
@@ -36,6 +39,7 @@
 - `windfall.movement.fly` — Fly A
 - `windfall.movement.rotationplace` — Rotation Place
 - `windfall.movement.farbreak` — Far Break A
+- `windfall.movement.gravity` — Gravity
 - `windfall.movement.fastbreak` — Fast Break A
 - `windfall.movement.positionplace` — Position Place
 - `windfall.movement.nofall` — NoFall A
@@ -73,13 +77,8 @@
 
 ### Grim
 
-**Missing from Windfall (3 checks):**
+**Missing from Windfall (1 checks):**
 
-- `combat` **InvalidInteractCursor** → `windfall.combat.invalid interact cursor`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/combat/InvalidInteractCursor.java`
-  - `scale = (float) packetEntity.getAttributeValue(Attributes.SCALE)`
-- `movement` **InvalidPlaceCursor** → `windfall.movement.invalid place cursor`
-  - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceCursor.java`
 - `movement` **InvalidPlaceFace** → `windfall.movement.invalid place face`
   - Source: `common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceFace.java`
 
@@ -94,6 +93,7 @@
 - `SprintE` → `Sprint A`
 - `SelfInteract` → `Self Interact A`
 - `Reach` → `Reach A`
+- `InvalidInteractCursor` → `Interact Cursor`
 - `MultiInteractA` → `Multi Interact A`
 - `MultiInteractB` → `Multi Interact A`
 - `Post` → `No Swing A`
@@ -129,11 +129,12 @@
 - `RotationBreak` → `Rotation Break A`
 - `AirLiquidPlace` → `Air Liquid Place`
 - `PositionPlace` → `Position Place`
+- `InvalidPlaceCursor` → `Invalid Place Cursor`
 - `FarPlace` → `Far Place A`
 - `MultiPlace` → `Multi Place`
 - `RotationPlace` → `Rotation Place`
 - `DuplicateRotPlace` → `Rotation Place`
-- `FabricatedPlace` → `Invalid Place A`
+- `FabricatedPlace` → `Invalid Place Cursor`
 - `CrashH` → `Crash A`
 - `CrashE` → `Crash A`
 - `CrashC` → `Crash A`
@@ -183,7 +184,7 @@
 
 ### TruthfulAC
 
-**Missing from Windfall (4 checks):**
+**Missing from Windfall (3 checks):**
 
 - `combat` **LagB** → `windfall.combat.lag b`
   - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagB.java`
@@ -200,10 +201,6 @@
   - `MAX_ATTACK_AGE_TICKS = 40`
   - `BACKTRACK_TOLERANCE = 0.45D`
   - `HARD_CEILING = 7.5D`
-- `movement` **ScaffoldSupport** → `windfall.movement.scaffold support`
-  - Source: `src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldSupport.java`
-  - `MAX_SLOTS = 40`
-  - `MAX = 60`
 
 **Matched with existing Windfall checks:**
 
@@ -258,7 +255,7 @@
 - `BadPacketH` → `Bad Packets A`
 - `BadPacketC` → `Bad Packets A`
 - `TimerA` → `Timer A`
-- `InvalidA` → `Invalid Place A`
+- `InvalidA` → `Invalid Place Cursor`
 - `PacketOrderA` → `Packet Order A`
 - `PacketOrderB` → `Packet Order A`
 - `PacketOrderC` → `Packet Order A`
@@ -273,6 +270,7 @@
 - `ScaffoldE` → `Scaffold A`
 - `ScaffoldC` → `Scaffold A`
 - `ScaffoldD` → `Scaffold A`
+- `ScaffoldSupport` → `Scaffold Support`
 - `FastBreakA` → `Fast Break A`
 - `BReachA` → `Reach A`
 - `BSpeedA` → `Speed A`
@@ -288,7 +286,7 @@
 
 ### Arrow
 
-**Missing from Windfall (8 checks):**
+**Missing from Windfall (4 checks):**
 
 - `combat` **AimH2** → `windfall.combat.aim h2`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimH2.java`
@@ -303,20 +301,6 @@
   - `epsilon = 1.0E-6`
 - `movement` **Movement** → `windfall.movement.movement`
   - Source: `src/main/java/me/arrow/checks/impl/simulation/Movement.java`
-- `movement` **GravityB** → `windfall.movement.gravity b`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityB.java`
-- `movement` **GravityA** → `windfall.movement.gravity a`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityA.java`
-- `movement` **GravityD** → `windfall.movement.gravity d`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityD.java`
-  - `transTicks = getLagCompensationTicks()`
-  - `DEFAULT_GRAVITY = 0.08D`
-  - `AIR_DRAG = 0.9800000190734863D`
-- `movement` **GravityC** → `windfall.movement.gravity c`
-  - Source: `src/main/java/me/arrow/checks/impl/movement/fly/GravityC.java`
-  - `JUMP_TOL = 0.046D`
-  - `G = 0.08D`
-  - `DRAG = 0.9800000190734863D`
 
 **Matched with existing Windfall checks:**
 
@@ -367,10 +351,14 @@
 - `GroundA` → `Ground Spoof A`
 - `GroundB` → `Ground Spoof A`
 - `GroundC` → `Ground Spoof A`
+- `GravityB` → `Gravity`
 - `FlyA` → `Fly A`
+- `GravityA` → `Gravity`
 - `ElytraA` → `Elytra A`
 - `ElytraB` → `Elytra A`
 - `FlyB` → `Fly A`
+- `GravityD` → `Gravity`
+- `GravityC` → `Gravity`
 - `MotionA` → `Motion A`
 - `MotionB` → `Motion A`
 - `MotionD` → `Motion A`
@@ -380,8 +368,8 @@
 
 ## Summary
 
-- Windfall has **54 checks**
-- Found **15 new checks** across competitors that Windfall doesn't have
+- Windfall has **58 checks**
+- Found **8 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 

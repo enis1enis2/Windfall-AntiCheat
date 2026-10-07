@@ -2,31 +2,6 @@
   "Grim": {
     "new_checks": [
       {
-        "name": "invalid interact cursor",
-        "raw_name": "InvalidInteractCursor",
-        "category": "combat",
-        "stable_key": "windfall.combat.invalid interact cursor",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/combat/InvalidInteractCursor.java",
-        "constants": {
-          "scale": "(float) packetEntity.getAttributeValue(Attributes.SCALE)"
-        },
-        "methods": [
-          "isApplicable",
-          "onPacketReceive"
-        ]
-      },
-      {
-        "name": "invalid place cursor",
-        "raw_name": "InvalidPlaceCursor",
-        "category": "movement",
-        "stable_key": "windfall.movement.invalid place cursor",
-        "file_path": "common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/InvalidPlaceCursor.java",
-        "constants": {},
-        "methods": [
-          "onBlockPlace"
-        ]
-      },
-      {
         "name": "invalid place face",
         "raw_name": "InvalidPlaceFace",
         "category": "movement",
@@ -48,6 +23,7 @@
       "SprintE": "Sprint A",
       "SelfInteract": "Self Interact A",
       "Reach": "Reach A",
+      "InvalidInteractCursor": "Interact Cursor",
       "MultiInteractA": "Multi Interact A",
       "MultiInteractB": "Multi Interact A",
       "Post": "No Swing A",
@@ -83,11 +59,12 @@
       "RotationBreak": "Rotation Break A",
       "AirLiquidPlace": "Air Liquid Place",
       "PositionPlace": "Position Place",
+      "InvalidPlaceCursor": "Invalid Place Cursor",
       "FarPlace": "Far Place A",
       "MultiPlace": "Multi Place",
       "RotationPlace": "Rotation Place",
       "DuplicateRotPlace": "Rotation Place",
-      "FabricatedPlace": "Invalid Place A",
+      "FabricatedPlace": "Invalid Place Cursor",
       "CrashH": "Crash A",
       "CrashE": "Crash A",
       "CrashC": "Crash A",
@@ -192,22 +169,6 @@
           "rayEntryDistance",
           "onQuit"
         ]
-      },
-      {
-        "name": "scaffold support",
-        "raw_name": "ScaffoldSupport",
-        "category": "movement",
-        "stable_key": "windfall.movement.scaffold support",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldSupport.java",
-        "constants": {
-          "MAX_SLOTS": "40",
-          "MAX": "60"
-        },
-        "methods": [
-          "trim",
-          "trim",
-          "trim"
-        ]
       }
     ],
     "existing_matches": {
@@ -262,7 +223,7 @@
       "BadPacketH": "Bad Packets A",
       "BadPacketC": "Bad Packets A",
       "TimerA": "Timer A",
-      "InvalidA": "Invalid Place A",
+      "InvalidA": "Invalid Place Cursor",
       "PacketOrderA": "Packet Order A",
       "PacketOrderB": "Packet Order A",
       "PacketOrderC": "Packet Order A",
@@ -277,6 +238,7 @@
       "ScaffoldE": "Scaffold A",
       "ScaffoldC": "Scaffold A",
       "ScaffoldD": "Scaffold A",
+      "ScaffoldSupport": "Scaffold Support",
       "FastBreakA": "Fast Break A",
       "BReachA": "Reach A",
       "BSpeedA": "Speed A",
@@ -369,166 +331,6 @@
           "handle",
           "handle"
         ]
-      },
-      {
-        "name": "gravity b",
-        "raw_name": "GravityB",
-        "category": "movement",
-        "stable_key": "windfall.movement.gravity b",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/fly/GravityB.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle",
-          "GravityPredictionB",
-          "getPlacedBlockLandingPrediction",
-          "getPlacedBlockJumpPrediction",
-          "isHorizontallyOverPlacedBlock",
-          "getPlacedBlockCollisionTolerance",
-          "getExpectedJumpMotion",
-          "resetGravityBuffer"
-        ]
-      },
-      {
-        "name": "gravity a",
-        "raw_name": "GravityA",
-        "category": "movement",
-        "stable_key": "windfall.movement.gravity a",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/fly/GravityA.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle",
-          "GravityPredictionA",
-          "getPlacedBlockLandingPrediction",
-          "getPlacedBlockJumpPrediction",
-          "isHorizontallyOverPlacedBlock",
-          "getPlacedBlockCollisionTolerance",
-          "getExpectedJumpMotion",
-          "getPrediction",
-          "computeAllowedDelta",
-          "resetGravityBuffer"
-        ]
-      },
-      {
-        "name": "gravity d",
-        "raw_name": "GravityD",
-        "category": "movement",
-        "stable_key": "windfall.movement.gravity d",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/fly/GravityD.java",
-        "constants": {
-          "transTicks": "getLagCompensationTicks()",
-          "DEFAULT_GRAVITY": "0.08D",
-          "AIR_DRAG": "0.9800000190734863D",
-          "MAX_AGGREGATED_GRAVITY_TICKS": "4",
-          "displacementY": "data.getDeltaY()",
-          "fallDist": "data.getFallDistance()",
-          "movementTick": "data.getTick()",
-          "airTicks": "getAirTicks(data)",
-          "sampleTicks": "movementTick - lastGravityDSampleTick",
-          "lastObservedDY": "lastGravityDObservedDY",
-          "selectedExpectedDisplacement": "selectedLocal\n                ? localMotion.displacementY\n                : trajectoryMotion.displacementY",
-          "selectedExpectedDY": "selectedLocal\n                ? localMotion.terminalDY\n                : trajectoryMotion.terminalDY",
-          "selectedType": "selectedLocal ? expectedResult.type : \"trajectory\"",
-          "currentDY": "estimateTerminalDY(displacementY, sampleTicks, launchSample, localMotion\n        )",
-          "normalExpectedDY": "launchSample\n                ? getExpectedJumpMotion()\n                : simulateGravity(lastObservedDY, sampleTicks).terminalDY",
-          "selectedAllowedPerTick": "getFastFallAllowed(\n                profile, data, currentDY, lastObservedDY, selectedExpectedDY\n        )",
-          "selectedAllowed": "getAggregateGravityAllowance(selectedAllowedPerTick, sampleTicks)",
-          "selectedExcess": "selectedExpectedDisplacement - displacementY",
-          "selectedExtraGravity": "selectedExcess - selectedAllowed",
-          "trajectoryExcess": "trajectoryMotion.displacementY - displacementY",
-          "trajectoryAllowed": "getTrajectoryGravityAllowance(sampleTicks, predictedTicks)",
-          "cumulativeRequired": "getCumulativeGravityRequired()",
-          "expectedAcceleration": "lastObservedDY - selectedExpectedDY",
-          "actualAcceleration": "lastObservedDY - currentDY",
-          "accelerationExcess": "sampleTicks == 1\n                ? actualAcceleration - expectedAcceleration\n                : 0.0D",
-          "normalDoubleGravityDY": "sampleTicks == 1\n                ? predictGravityDY(data, selectedExpectedDY)\n                : Double.NaN",
-          "doubleGravityDY": "doubleResult.prediction",
-          "perTickExcess": "selectedExpectedDY - currentDY",
-          "perTickExtraGravity": "perTickExcess - selectedAllowedPerTick",
-          "severity": "Math.max(\n                selectedAllowed <= 0.0D ? selectedExcess : selectedExcess / selectedAllowed,\n                Math.max(\n                        trajectoryAllowed <= 0.0D ? trajectoryExcess : trajectoryExcess / trajectoryAllowed,\n                        cumulativeRequired <= 0.0D ? cumulativeNegativeGravity : cumulativeNegativeGravity / cumulativeRequired\n                )\n        )",
-          "packetThreshold": "0.0305D",
-          "residual": "expectedDY - dy",
-          "transitionTolerance": "Math.max(\n                bedrock ? 0.135D : 0.070D,\n                allowed * (bedrock ? 1.35D : 1.10D)\n        )",
-          "VANILLA_MICRO": "0.003016261509046103D",
-          "VANILLA_NEG": "-0.07840000152587834D"
-        },
-        "methods": [
-          "handle",
-          "handle",
-          "handleStrictNegativeGravityInvariant",
-          "registerStrictGravityEvidence",
-          "isStrictGravityContextInvalid",
-          "primeStrictGravityGround",
-          "resetStrictGravityInvariant",
-          "GravityPredictionD",
-          "isGravityDExempt",
-          "isActualGround",
-          "isTrustedClientGround",
-          "hasExactGroundSupport",
-          "getAirTicks",
-          "getLagCompensationTicks",
-          "handleAirborneNoPositionGravity",
-          "hasRecentGravityVelocity",
-          "isDirectFastFallMotion",
-          "isImpossibleFastLanding",
-          "isLowHopMotion",
-          "isAbruptNegativeGravityTransition",
-          "hasRecentGravitySupportChange",
-          "getFastFallStreakAdd",
-          "handleGravityDFlag",
-          "resetGravityDTrackingOnly",
-          "decayGravityDStreaks",
-          "decayGravityDEvidence",
-          "synchronizeGravityDSample",
-          "estimateTerminalDY",
-          "getExpectedJumpMotion",
-          "refreshMovementAttributes",
-          "readBukkitAttribute",
-          "sameFiniteValue",
-          "getGravityValue",
-          "getTerminalVelocity",
-          "getAggregateGravityAllowance",
-          "getTrajectoryGravityAllowance",
-          "updateCumulativeNegativeGravity",
-          "getCumulativeGravityRequired",
-          "updateGravityDNoise",
-          "getPlacedBlockLandingPrediction",
-          "getPlacedBlockJumpPrediction",
-          "isHorizontallyOverPlacedBlock",
-          "getPlacedBlockCollisionTolerance",
-          "predictGravityDY",
-          "getFastFallAllowed",
-          "resetGravityD",
-          "isVanillaMicroFallTransition"
-        ]
-      },
-      {
-        "name": "gravity c",
-        "raw_name": "GravityC",
-        "category": "movement",
-        "stable_key": "windfall.movement.gravity c",
-        "file_path": "src/main/java/me/arrow/checks/impl/movement/fly/GravityC.java",
-        "constants": {
-          "JUMP_TOL": "0.046D",
-          "G": "0.08D",
-          "DRAG": "0.9800000190734863D",
-          "EPS": "1.0E-8D",
-          "VANILLA_MICRO": "0.003016261509046103D",
-          "VANILLA_NEG": "-0.0784000015258789D",
-          "LAND_NEG": "-0.07840000152587834D"
-        },
-        "methods": [
-          "handle",
-          "handle",
-          "GravityPredictionC",
-          "resetGravityBuffer",
-          "getPlacedBlockLandingPrediction",
-          "getPlacedBlockJumpPrediction",
-          "isHorizontallyOverPlacedBlock",
-          "getPlacedBlockCollisionTolerance",
-          "getExpectedJumpMotion"
-        ]
       }
     ],
     "existing_matches": {
@@ -579,10 +381,14 @@
       "GroundA": "Ground Spoof A",
       "GroundB": "Ground Spoof A",
       "GroundC": "Ground Spoof A",
+      "GravityB": "Gravity",
       "FlyA": "Fly A",
+      "GravityA": "Gravity",
       "ElytraA": "Elytra A",
       "ElytraB": "Elytra A",
       "FlyB": "Fly A",
+      "GravityD": "Gravity",
+      "GravityC": "Gravity",
       "MotionA": "Motion A",
       "MotionB": "Motion A",
       "MotionD": "Motion A",
