@@ -1,12 +1,12 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-10-07 03:10:51 UTC
+**Generated:** 2026-10-08 03:26:30 UTC
 
 ---
 
 ## Windfall Current Checks
 
-**Total: 58 checks**
+**Total: 60 checks**
 
 ### Combat
 - `windfall.combat.criticals` — Criticals A
@@ -17,6 +17,7 @@
 - `windfall.combat.autoclicker` — Autoclicker A
 - `windfall.combat.fastheal` — Fast Heal A
 - `windfall.combat.hitboxes` — Hitboxes A
+- `windfall.combat.crystal` — Crystal A
 - `windfall.combat.killaura` — Kill Aura A
 - `windfall.combat.backtrack` — Backtrack A
 - `windfall.combat.reach` — Reach A
@@ -30,6 +31,7 @@
 - `windfall.movement.noswing` — No Swing A
 - `windfall.movement.step` — Step A
 - `windfall.movement.motion` — Motion A
+- `windfall.movement.sprint` — Sprint B
 - `windfall.movement.invalidplacecursor` — Invalid Place Cursor
 - `windfall.movement.baritone` — Baritone A
 - `windfall.movement.simulation` — Simulation A
@@ -87,7 +89,7 @@
 - `SprintA` → `Sprint A`
 - `SprintG` → `Sprint A`
 - `SprintC` → `Sprint A`
-- `SprintB` → `Sprint A`
+- `SprintB` → `Sprint B`
 - `SprintF` → `Sprint A`
 - `SprintD` → `Sprint A`
 - `SprintE` → `Sprint A`
@@ -243,7 +245,7 @@
 - `GroundSpoofG` → `Ground Spoof A`
 - `InventoryA` → `Inventory A`
 - `SprintA` → `Sprint A`
-- `SprintB` → `Sprint A`
+- `SprintB` → `Sprint B`
 - `CrasherA` → `Crash A`
 - `BadPacketI` → `Bad Packets A`
 - `BadPacketA` → `Bad Packets A`
@@ -368,7 +370,7 @@
 
 ## Summary
 
-- Windfall has **58 checks**
+- Windfall has **60 checks**
 - Found **8 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
