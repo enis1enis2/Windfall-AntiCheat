@@ -321,6 +321,23 @@
         ]
       },
       {
+        "name": "interact f",
+        "raw_name": "InteractF",
+        "category": "packet",
+        "stable_key": "windfall.packet.interact f",
+        "file_path": "src/main/java/me/arrow/checks/impl/misc/interact/InteractF.java",
+        "constants": {},
+        "methods": [
+          "handle",
+          "handle",
+          "handleDigging",
+          "handlePlacement",
+          "checkBlockReach",
+          "distanceToBlock",
+          "getBaseReach"
+        ]
+      },
+      {
         "name": "movement",
         "raw_name": "Movement",
         "category": "movement",
