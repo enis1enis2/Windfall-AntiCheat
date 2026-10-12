@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-10-11 02:45:02 UTC
+**Generated:** 2026-10-12 03:08:26 UTC
 
 ---
 
@@ -290,6 +290,11 @@
 
 **Missing from Windfall (5 checks):**
 
+- `packet` **Suspicion** → `windfall.packet.suspicion`
+  - Source: `src/main/java/me/arrow/checks/impl/suspicion/Suspicion.java`
+  - `WINDOW_SIZE = 30`
+  - `EVAL_INTERVAL = 10`
+  - `NUM_FEATURES = 15`
 - `combat` **AimH2** → `windfall.combat.aim h2`
   - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/AimH2.java`
 - `combat` **LinearRegression** → `windfall.combat.linear regression`
@@ -297,10 +302,6 @@
   - `n = x.length`
   - `xbar = sumx / n`
   - `ybar = sumy / n`
-- `combat` **Vector3dm** → `windfall.combat.vector3dm`
-  - Source: `src/main/java/me/arrow/checks/impl/combat/aimassist/aimassistUtil/Vector3dm.java`
-  - `serialVersionUID = -2657651106777219169L`
-  - `epsilon = 1.0E-6`
 - `packet` **InteractF** → `windfall.packet.interact f`
   - Source: `src/main/java/me/arrow/checks/impl/misc/interact/InteractF.java`
 - `movement` **Movement** → `windfall.movement.movement`
@@ -323,8 +324,6 @@
 - `VelocityB` → `Velocity A`
 - `ReachA` → `Reach A`
 - `AimG` → `Aim A`
-- `AimJ` → `Aim A`
-- `AimL` → `Aim A`
 - `AimH` → `Aim A`
 - `AimC` → `Aim A`
 - `AimA` → `Aim A`

@@ -254,6 +254,25 @@
   "Arrow": {
     "new_checks": [
       {
+        "name": "suspicion",
+        "raw_name": "Suspicion",
+        "category": "packet",
+        "stable_key": "windfall.packet.suspicion",
+        "file_path": "src/main/java/me/arrow/checks/impl/suspicion/Suspicion.java",
+        "constants": {
+          "WINDOW_SIZE": "30",
+          "EVAL_INTERVAL": "10",
+          "NUM_FEATURES": "15",
+          "CONFIDENCE_THRESHOLD": "0.95",
+          "windowIndex": "0",
+          "tickCounter": "0"
+        },
+        "methods": [
+          "handle",
+          "handle"
+        ]
+      },
+      {
         "name": "aim h2",
         "raw_name": "AimH2",
         "category": "combat",
@@ -287,37 +306,6 @@
           "slopeStdErr",
           "predict",
           "predict"
-        ]
-      },
-      {
-        "name": "vector3dm",
-        "raw_name": "Vector3dm",
-        "category": "combat",
-        "stable_key": "windfall.combat.vector3dm",
-        "file_path": "src/main/java/me/arrow/checks/impl/combat/aimassist/aimassistUtil/Vector3dm.java",
-        "constants": {
-          "serialVersionUID": "-2657651106777219169L",
-          "epsilon": "1.0E-6"
-        },
-        "methods": [
-          "length",
-          "lengthSquared",
-          "distance",
-          "distance",
-          "distanceSquared",
-          "distanceSquared",
-          "distance",
-          "distanceSquared",
-          "dot",
-          "isZero",
-          "isInAABB",
-          "isInSphere",
-          "isNormalized",
-          "getBlockX",
-          "getBlockY",
-          "getBlockZ",
-          "equals",
-          "hashCode"
         ]
       },
       {
@@ -366,8 +354,6 @@
       "VelocityB": "Velocity A",
       "ReachA": "Reach A",
       "AimG": "Aim A",
-      "AimJ": "Aim A",
-      "AimL": "Aim A",
       "AimH": "Aim A",
       "AimC": "Aim A",
       "AimA": "Aim A",
