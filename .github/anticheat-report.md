@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-10-14 02:34:38 UTC
+**Generated:** 2026-10-15 02:14:53 UTC
 
 ---
 
@@ -332,6 +332,8 @@
 - `AimD` → `Aim A`
 - `AimE` → `Aim A`
 - `KillauraA` → `Kill Aura A`
+- `ExploitA` → `Exploit A`
+- `ExploitB` → `Exploit A`
 - `InteractC` → `Self Interact A`
 - `InteractD` → `Reach A`
 - `InteractA` → `Self Interact A`
