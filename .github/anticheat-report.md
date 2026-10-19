@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-10-18 01:59:33 UTC
+**Generated:** 2026-10-19 02:16:27 UTC
 
 ---
 
@@ -288,7 +288,7 @@
 
 ### Arrow
 
-**Missing from Windfall (5 checks):**
+**Missing from Windfall (4 checks):**
 
 - `packet` **Suspicion** → `windfall.packet.suspicion`
   - Source: `src/main/java/me/arrow/checks/impl/suspicion/Suspicion.java`
@@ -302,8 +302,6 @@
   - `n = x.length`
   - `xbar = sumx / n`
   - `ybar = sumy / n`
-- `packet` **InteractF** → `windfall.packet.interact f`
-  - Source: `src/main/java/me/arrow/checks/impl/misc/interact/InteractF.java`
 - `movement` **Movement** → `windfall.movement.movement`
   - Source: `src/main/java/me/arrow/checks/impl/simulation/Movement.java`
 
@@ -335,7 +333,9 @@
 - `ExploitA` → `Exploit A`
 - `ExploitB` → `Exploit A`
 - `InteractC` → `Self Interact A`
+- `FastBreakA` → `Fast Break A`
 - `InteractD` → `Reach A`
+- `FastBreakB` → `Fast Break A`
 - `InteractA` → `Self Interact A`
 - `VehicleA` → `Vehicle A`
 - `VehicleB` → `Vehicle A`
@@ -374,7 +374,7 @@
 ## Summary
 
 - Windfall has **60 checks**
-- Found **9 new checks** across competitors that Windfall doesn't have
+- Found **8 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 
