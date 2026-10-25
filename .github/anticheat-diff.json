@@ -245,12 +245,6 @@
       "BFlyA": "Fly A"
     }
   },
-  "CloudAC": {
-    "new_checks": [],
-    "existing_matches": {
-      "CheckAbilties": "Exploit A"
-    }
-  },
   "Arrow": {
     "new_checks": [
       {
