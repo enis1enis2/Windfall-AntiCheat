@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-10-27 02:47:48 UTC
+**Generated:** 2026-10-28 02:55:43 UTC
 
 ---
 
@@ -186,7 +186,7 @@
 
 ### TruthfulAC
 
-**Missing from Windfall (3 checks):**
+**Missing from Windfall (24 checks):**
 
 - `combat` **LagA** → `windfall.combat.lag a`
   - Source: `src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagA.java`
@@ -203,6 +203,69 @@
   - `MIN_REACH_TO_TRIGGER = 3.1D`
   - `WINDOW_MS = 8000`
   - `MIN_DESYNC_HITS = 3`
+- `movement` **ScaffoldRotation** → `windfall.movement.scaffold rotation`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldRotation.java`
+  - `EXPANSION = 0.10D`
+  - `FLAG_BUFFER = 6.0D`
+  - `targetX = clicked.getX() + face.getModX()`
+- `movement` **ScaffoldMotion** → `windfall.movement.scaffold motion`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldMotion.java`
+  - `HISTORY_TICKS = 24`
+  - `WINDOW_TICKS = 16`
+  - `FLAG_BUFFER = 4.0D`
+- `movement` **ScaffoldReach** → `windfall.movement.scaffold reach`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldReach.java`
+  - `JITTER = 0.25D`
+  - `FLAG_BUFFER = 4.0D`
+  - `faceX = clicked.getX() + 0.5D + face.getModX() * 0.5D`
+- `movement` **ScaffoldFace** → `windfall.movement.scaffold face`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldFace.java`
+  - `FLAG_BUFFER = 5.0D`
+  - `REPEAT_TICKS = 20`
+  - `clickedId = data.getWorldCache().getBlockId(clicked.getX(), clicked.getY(), clicked.getZ())`
+- `packet` **BadPacket5** → `windfall.packet.bad packet5`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacket5.java`
+- `packet` **BadPacketT** → `windfall.packet.bad packet t`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketT.java`
+  - `WINDOW_MS = 10_000L`
+  - `SERVER_WINDOW_MS = 15_000L`
+  - `GRACE = 3`
+- `packet` **BadPacketY** → `windfall.packet.bad packet y`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketY.java`
+- `packet` **BadPacketM** → `windfall.packet.bad packet m`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketM.java`
+  - `POST_WINDOW_MS = 55L`
+- `packet` **BadPacketP** → `windfall.packet.bad packet p`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketP.java`
+  - `POST_WINDOW_MS = 80L`
+- `packet` **BadPacketV** → `windfall.packet.bad packet v`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketV.java`
+- `packet` **BadPacketL** → `windfall.packet.bad packet l`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketL.java`
+- `packet` **BadPacketR** → `windfall.packet.bad packet r`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketR.java`
+  - `POST_WINDOW_MS = 55L`
+- `packet` **BadPacketZ** → `windfall.packet.bad packet z`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketZ.java`
+- `packet` **BadPacketB** → `windfall.packet.bad packet b`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketB.java`
+  - `MAX_FLYING_STREAK = 20`
+- `packet` **BadPacketF** → `windfall.packet.bad packet f`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketF.java`
+- `packet` **BadPacket6** → `windfall.packet.bad packet6`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacket6.java`
+- `packet` **BadPacketU** → `windfall.packet.bad packet u`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketU.java`
+- `packet` **BadPacketN** → `windfall.packet.bad packet n`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketN.java`
+  - `POST_WINDOW_MS = 55L`
+- `packet` **BadPacketO** → `windfall.packet.bad packet o`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketO.java`
+- `packet` **BadPacket8** → `windfall.packet.bad packet8`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacket8.java`
+  - `MAX_DIG_DIST = 6.0D`
+- `packet` **BadPacketQ** → `windfall.packet.bad packet q`
+  - Source: `src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketQ.java`
 
 **Matched with existing Windfall checks:**
 
@@ -222,22 +285,15 @@
 - `KillAuraG` → `Kill Aura A`
 - `KillAuraC` → `Kill Aura A`
 - `KillAuraD` → `Kill Aura A`
+- `AimA` → `Aim A`
+- `AimC` → `Aim A`
+- `AimB` → `Aim A`
 - `RaycastA` → `Reach A`
 - `FastBreakA` → `Fast Break A`
 - `PhaseA` → `Phase A`
-- `ScaffoldE` → `Scaffold A`
-- `ScaffoldH` → `Scaffold A`
-- `ScaffoldB` → `Scaffold A`
-- `ScaffoldSupport` → `Scaffold Support`
-- `ScaffoldA` → `Scaffold A`
-- `ScaffoldG` → `Scaffold A`
-- `ScaffoldD` → `Scaffold A`
-- `ScaffoldF` → `Scaffold A`
-- `ScaffoldC` → `Scaffold A`
 - `BadPacketH` → `Bad Packets A`
 - `BadPacketD` → `Bad Packets A`
 - `BadPacketJ` → `Bad Packets A`
-- `BadPacketC` → `Bad Packets A`
 - `BadPacketG` → `Bad Packets A`
 - `BadPacketA` → `Bad Packets A`
 - `BadPacketE` → `Bad Packets A`
@@ -268,12 +324,7 @@
 - `GroundSpoofG` → `Ground Spoof A`
 - `GroundSpoofB` → `Ground Spoof A`
 - `GroundSpoofE` → `Ground Spoof A`
-- `SimulationC` → `Simulation A`
-- `SimulationB` → `Simulation A`
-- `SimulationD` → `Simulation A`
-- `SimulationF` → `Simulation A`
-- `SimulationA` → `Simulation A`
-- `SimulationE` → `Simulation A`
+- `Simulation` → `Simulation A`
 - `BReachA` → `Reach A`
 - `BSpeedA` → `Speed A`
 - `BFlyA` → `Fly A`
@@ -366,7 +417,7 @@
 ## Summary
 
 - Windfall has **60 checks**
-- Found **8 new checks** across competitors that Windfall doesn't have
+- Found **29 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 

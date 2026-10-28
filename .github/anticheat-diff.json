@@ -129,7 +129,7 @@
         },
         "methods": [
           "handlePacketPlayerReceive",
-          "onRelMove",
+          "handleRelMove",
           "rayMin",
           "rayEntryDistance",
           "onQuit"
@@ -169,6 +169,349 @@
           "rayHitDistance",
           "onQuit"
         ]
+      },
+      {
+        "name": "scaffold rotation",
+        "raw_name": "ScaffoldRotation",
+        "category": "movement",
+        "stable_key": "windfall.movement.scaffold rotation",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldRotation.java",
+        "constants": {
+          "EXPANSION": "0.10D",
+          "FLAG_BUFFER": "6.0D",
+          "targetX": "clicked.getX() + face.getModX()",
+          "targetY": "clicked.getY() + face.getModY()",
+          "targetZ": "clicked.getZ() + face.getModZ()",
+          "minX": "x - EXPANSION",
+          "minY": "y - EXPANSION",
+          "minZ": "z - EXPANSION",
+          "maxX": "x + 1.0D + EXPANSION",
+          "maxY": "y + 1.0D + EXPANSION",
+          "maxZ": "z + 1.0D + EXPANSION",
+          "eyeX": "data.getX()",
+          "eyeY": "data.getY() + data.getEyeHeightScaled()",
+          "eyeZ": "data.getZ()",
+          "backX": "eyeX - data.getDeltaX()",
+          "backY": "eyeY - data.getDeltaY()",
+          "backZ": "eyeZ - data.getDeltaZ()",
+          "yawRad": "Math.toRadians(yaw)",
+          "pitchRad": "Math.toRadians(pitch)",
+          "cosPitch": "Math.cos(pitchRad)",
+          "inv": "1.0D / dz",
+          "tmp": "t1",
+          "name": "BlockPropertyRegistry.getName(globalId)"
+        },
+        "methods": [
+          "handleRelMove",
+          "looksAtCell",
+          "rayFromRotation",
+          "intersectsBox",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "scaffold motion",
+        "raw_name": "ScaffoldMotion",
+        "category": "movement",
+        "stable_key": "windfall.movement.scaffold motion",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldMotion.java",
+        "constants": {
+          "HISTORY_TICKS": "24",
+          "WINDOW_TICKS": "16",
+          "FLAG_BUFFER": "4.0D",
+          "targetX": "replaceable ? clicked.getX() : clicked.getX() + face.getModX()",
+          "targetY": "replaceable ? clicked.getY() : clicked.getY() + face.getModY()",
+          "targetZ": "replaceable ? clicked.getZ() : clicked.getZ() + face.getModZ()",
+          "feetX": "(int) Math.floor(data.getX())",
+          "feetZ": "(int) Math.floor(data.getZ())",
+          "feetY": "(int) Math.floor(data.getY())",
+          "tick": "data.getTicksTracked()",
+          "y": "data.getY()",
+          "threshold": "2.0D * (Math.max(0.42D, data.getJumpStrength()) / 0.42D) + 0.5D",
+          "dt": "tick - sample.tick",
+          "g": "y - sample.y",
+          "name": "BlockPropertyRegistry.getName(globalId)"
+        },
+        "methods": [
+          "handleRelMove",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "scaffold reach",
+        "raw_name": "ScaffoldReach",
+        "category": "movement",
+        "stable_key": "windfall.movement.scaffold reach",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldReach.java",
+        "constants": {
+          "JITTER": "0.25D",
+          "FLAG_BUFFER": "4.0D",
+          "faceX": "clicked.getX() + 0.5D + face.getModX() * 0.5D",
+          "faceY": "clicked.getY() + 0.5D + face.getModY() * 0.5D",
+          "faceZ": "clicked.getZ() + 0.5D + face.getModZ() * 0.5D",
+          "eyeX": "data.getX()",
+          "eyeY": "data.getY() + data.getEyeHeightScaled()",
+          "eyeZ": "data.getZ()",
+          "dx": "faceX - eyeX",
+          "dy": "faceY - eyeY",
+          "dz": "faceZ - eyeZ",
+          "bdx": "faceX - (eyeX - data.getDeltaX())",
+          "bdy": "faceY - (eyeY - data.getDeltaY())",
+          "bdz": "faceZ - (eyeZ - data.getDeltaZ())",
+          "backDist": "Math.sqrt(bdx * bdx + bdy * bdy + bdz * bdz)",
+          "max": "Truthful.getInstance().getVersionManager().getAdapter()\n                .getBlockInteractionRange(player) + JITTER"
+        },
+        "methods": [
+          "handleRelMove",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "scaffold face",
+        "raw_name": "ScaffoldFace",
+        "category": "movement",
+        "stable_key": "windfall.movement.scaffold face",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldFace.java",
+        "constants": {
+          "FLAG_BUFFER": "5.0D",
+          "REPEAT_TICKS": "20",
+          "clickedId": "data.getWorldCache().getBlockId(clicked.getX(), clicked.getY(), clicked.getZ())",
+          "clickedName": "BlockPropertyRegistry.getName(clickedId)",
+          "targetX": "clicked.getX() + face.getModX()",
+          "targetY": "clicked.getY() + face.getModY()",
+          "targetZ": "clicked.getZ() + face.getModZ()",
+          "targetId": "data.getWorldCache().getBlockId(targetX, targetY, targetZ)",
+          "tick": "data.getTicksTracked()",
+          "cellKey": "packCell(targetX, targetY, targetZ)"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet5",
+        "raw_name": "BadPacket5",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet5",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacket5.java",
+        "constants": {},
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet t",
+        "raw_name": "BadPacketT",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet t",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketT.java",
+        "constants": {
+          "WINDOW_MS": "10_000L",
+          "SERVER_WINDOW_MS": "15_000L",
+          "GRACE": "3",
+          "FLOOR": "5"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet y",
+        "raw_name": "BadPacketY",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet y",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketY.java",
+        "constants": {},
+        "methods": [
+          "handleRelMove",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet m",
+        "raw_name": "BadPacketM",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet m",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketM.java",
+        "constants": {
+          "POST_WINDOW_MS": "55L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet p",
+        "raw_name": "BadPacketP",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet p",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketP.java",
+        "constants": {
+          "POST_WINDOW_MS": "80L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet v",
+        "raw_name": "BadPacketV",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet v",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketV.java",
+        "constants": {},
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet l",
+        "raw_name": "BadPacketL",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet l",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketL.java",
+        "constants": {},
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet r",
+        "raw_name": "BadPacketR",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet r",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketR.java",
+        "constants": {
+          "POST_WINDOW_MS": "55L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet z",
+        "raw_name": "BadPacketZ",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet z",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketZ.java",
+        "constants": {},
+        "methods": [
+          "rejectsPackets",
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet b",
+        "raw_name": "BadPacketB",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet b",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketB.java",
+        "constants": {
+          "MAX_FLYING_STREAK": "20"
+        },
+        "methods": [
+          "handleRelMove",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet f",
+        "raw_name": "BadPacketF",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet f",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketF.java",
+        "constants": {},
+        "methods": [
+          "handleRelMove",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet6",
+        "raw_name": "BadPacket6",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet6",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacket6.java",
+        "constants": {},
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet u",
+        "raw_name": "BadPacketU",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet u",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketU.java",
+        "constants": {},
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet n",
+        "raw_name": "BadPacketN",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet n",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketN.java",
+        "constants": {
+          "POST_WINDOW_MS": "55L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet o",
+        "raw_name": "BadPacketO",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet o",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketO.java",
+        "constants": {},
+        "methods": [
+          "rejectsPackets",
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet8",
+        "raw_name": "BadPacket8",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet8",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacket8.java",
+        "constants": {
+          "MAX_DIG_DIST": "6.0D"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet q",
+        "raw_name": "BadPacketQ",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet q",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketQ.java",
+        "constants": {},
+        "methods": [
+          "rejectsPackets",
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
       }
     ],
     "existing_matches": {
@@ -188,22 +531,15 @@
       "KillAuraG": "Kill Aura A",
       "KillAuraC": "Kill Aura A",
       "KillAuraD": "Kill Aura A",
+      "AimA": "Aim A",
+      "AimC": "Aim A",
+      "AimB": "Aim A",
       "RaycastA": "Reach A",
       "FastBreakA": "Fast Break A",
       "PhaseA": "Phase A",
-      "ScaffoldE": "Scaffold A",
-      "ScaffoldH": "Scaffold A",
-      "ScaffoldB": "Scaffold A",
-      "ScaffoldSupport": "Scaffold Support",
-      "ScaffoldA": "Scaffold A",
-      "ScaffoldG": "Scaffold A",
-      "ScaffoldD": "Scaffold A",
-      "ScaffoldF": "Scaffold A",
-      "ScaffoldC": "Scaffold A",
       "BadPacketH": "Bad Packets A",
       "BadPacketD": "Bad Packets A",
       "BadPacketJ": "Bad Packets A",
-      "BadPacketC": "Bad Packets A",
       "BadPacketG": "Bad Packets A",
       "BadPacketA": "Bad Packets A",
       "BadPacketE": "Bad Packets A",
@@ -234,12 +570,7 @@
       "GroundSpoofG": "Ground Spoof A",
       "GroundSpoofB": "Ground Spoof A",
       "GroundSpoofE": "Ground Spoof A",
-      "SimulationC": "Simulation A",
-      "SimulationB": "Simulation A",
-      "SimulationD": "Simulation A",
-      "SimulationF": "Simulation A",
-      "SimulationA": "Simulation A",
-      "SimulationE": "Simulation A",
+      "Simulation": "Simulation A",
       "BReachA": "Reach A",
       "BSpeedA": "Speed A",
       "BFlyA": "Fly A"
