@@ -14,162 +14,107 @@
       }
     ],
     "existing_matches": {
-      "AirLiquidPlace": "Air Liquid Place",
-      "InvalidPlaceCursor": "Invalid Place Cursor",
-      "DuplicateRotPlace": "Rotation Place",
-      "PositionPlace": "Position Place",
-      "MultiPlace": "Multi Place",
-      "FarPlace": "Far Place A",
-      "FabricatedPlace": "Invalid Place A",
-      "RotationPlace": "Rotation Place",
-      "MultiActionsB": "Multi Interact A",
-      "MultiActionsD": "Multi Interact A",
-      "MultiActionsA": "Multi Interact A",
-      "MultiActionsG": "Multi Interact A",
-      "MultiActionsE": "Multi Interact A",
-      "MultiActionsC": "Multi Interact A",
-      "MultiActionsF": "Multi Interact A",
-      "AimDuplicateLook": "Aim A",
-      "AimModulo360": "Aim A",
-      "PositionBreakA": "Position Break",
-      "FastBreak": "Fast Break A",
-      "NoSwingBreak": "No Swing A",
-      "RotationBreak": "Rotation Break A",
+      "NoFall": "NoFall A",
       "InvalidBreak": "Invalid Break A",
-      "WrongBreak": "Wrong Break",
+      "RotationBreak": "Rotation Break A",
       "FarBreak": "Far Break A",
+      "NoSwingBreak": "No Swing A",
+      "FastBreak": "Fast Break A",
       "PositionBreakB": "Position Break",
       "AirLiquidBreak": "Air Liquid Break",
       "MultiBreak": "Multi Break",
-      "MultiInteractB": "Multi Interact A",
-      "InvalidInteractCursor": "Interact Cursor",
-      "SelfInteract": "Self Interact A",
-      "MultiInteractA": "Multi Interact A",
-      "Reach": "Reach A",
-      "ExploitA": "Exploit A",
-      "ExploitB": "Exploit A",
-      "Baritone": "Baritone A",
-      "SprintA": "Sprint A",
-      "SprintG": "Sprint B",
-      "SprintD": "Sprint B",
-      "SprintC": "Sprint B",
-      "SprintF": "Sprint B",
-      "SprintE": "Sprint B",
-      "SprintB": "Sprint B",
-      "NoSlow": "NoSlow A",
-      "ClientBrand": "Client Brand A",
-      "Post": "No Swing A",
-      "PacketOrderP": "Packet Order A",
-      "PacketOrderG": "Packet Order A",
-      "PacketOrderH": "Packet Order A",
-      "PacketOrderF": "Packet Order A",
-      "PacketOrderE": "Packet Order A",
-      "PacketOrderB": "Packet Order A",
-      "PacketOrderN": "Packet Order A",
-      "PacketOrderL": "Packet Order A",
-      "PacketOrderO": "Packet Order A",
-      "PacketOrderJ": "Packet Order A",
-      "PacketOrderK": "Packet Order A",
-      "PacketOrderI": "Packet Order A",
-      "PacketOrderM": "Packet Order A",
-      "PacketOrderC": "Packet Order A",
-      "PacketOrderA": "Packet Order A",
-      "PacketOrderD": "Packet Order A",
-      "VehicleE": "Vehicle A",
-      "VehicleF": "Vehicle A",
-      "VehicleA": "Vehicle A",
-      "VehicleB": "Vehicle A",
-      "VehicleD": "Vehicle A",
+      "PositionBreakA": "Position Break",
+      "WrongBreak": "Wrong Break",
+      "MultiActionsE": "Multi Interact A",
+      "MultiActionsG": "Multi Interact A",
+      "MultiActionsB": "Multi Interact A",
+      "MultiActionsC": "Multi Interact A",
+      "MultiActionsD": "Multi Interact A",
+      "MultiActionsA": "Multi Interact A",
+      "MultiActionsF": "Multi Interact A",
       "ChatC": "Chat A",
       "ChatA": "Chat A",
-      "ChatB": "Chat A",
       "ChatD": "Chat A",
+      "ChatB": "Chat A",
+      "InvalidPlaceCursor": "Invalid Place Cursor",
+      "MultiPlace": "Multi Place",
+      "PositionPlace": "Position Place",
+      "FarPlace": "Far Place A",
+      "AirLiquidPlace": "Air Liquid Place",
+      "FabricatedPlace": "Invalid Place Cursor",
+      "DuplicateRotPlace": "Rotation Place",
+      "RotationPlace": "Rotation Place",
+      "Reach": "Reach A",
+      "SelfInteract": "Self Interact A",
+      "InvalidInteractCursor": "Interact Cursor",
+      "MultiInteractA": "Multi Interact A",
+      "MultiInteractB": "Multi Interact A",
+      "ElytraD": "Elytra A",
+      "ElytraH": "Elytra A",
+      "ElytraE": "Elytra A",
+      "ElytraI": "Elytra A",
+      "ElytraG": "Elytra A",
+      "ElytraC": "Elytra A",
+      "ElytraF": "Elytra A",
+      "ElytraA": "Elytra A",
+      "ElytraB": "Elytra A",
+      "NoSlow": "NoSlow A",
+      "CrashA": "Crash A",
+      "CrashH": "Crash A",
+      "CrashE": "Crash A",
+      "CrashD": "Crash A",
+      "CrashF": "Crash A",
+      "CrashC": "Crash A",
+      "CrashI": "Crash A",
+      "CrashG": "Crash A",
+      "CrashB": "Crash A",
+      "AimDuplicateLook": "Aim A",
+      "AimModulo360": "Aim A",
+      "ExploitB": "Exploit A",
+      "ExploitA": "Exploit A",
+      "GroundSpoof": "Ground Spoof A",
+      "Phase": "Phase A",
+      "PacketOrderE": "Packet Order A",
+      "PacketOrderI": "Packet Order A",
+      "PacketOrderL": "Packet Order A",
+      "PacketOrderP": "Packet Order A",
+      "PacketOrderJ": "Packet Order A",
+      "PacketOrderD": "Packet Order A",
+      "PacketOrderB": "Packet Order A",
+      "PacketOrderN": "Packet Order A",
+      "PacketOrderK": "Packet Order A",
+      "PacketOrderF": "Packet Order A",
+      "PacketOrderG": "Packet Order A",
+      "PacketOrderA": "Packet Order A",
+      "PacketOrderC": "Packet Order A",
+      "PacketOrderO": "Packet Order A",
+      "PacketOrderM": "Packet Order A",
+      "PacketOrderH": "Packet Order A",
+      "Post": "No Swing A",
+      "ClientBrand": "Client Brand A",
+      "VehicleA": "Vehicle A",
+      "VehicleF": "Vehicle A",
+      "VehicleE": "Vehicle A",
+      "VehicleD": "Vehicle A",
+      "VehicleB": "Vehicle A",
+      "FlightA": "Fly A",
+      "SprintD": "Sprint B",
+      "SprintC": "Sprint B",
+      "SprintG": "Sprint B",
+      "SprintA": "Sprint A",
+      "SprintB": "Sprint B",
+      "SprintE": "Sprint B",
+      "SprintF": "Sprint B",
+      "TimerLimit": "Timer A",
       "Timer": "Timer A",
+      "NegativeTimer": "Timer A",
       "VehicleTimer": "Timer A",
       "TickTimer": "Timer A",
-      "NegativeTimer": "Timer A",
-      "TimerLimit": "Timer A",
-      "ElytraF": "Elytra A",
-      "ElytraC": "Elytra A",
-      "ElytraG": "Elytra A",
-      "ElytraD": "Elytra A",
-      "ElytraE": "Elytra A",
-      "ElytraH": "Elytra A",
-      "ElytraI": "Elytra A",
-      "ElytraB": "Elytra A",
-      "ElytraA": "Elytra A",
-      "FlightA": "Fly A",
-      "NoFall": "NoFall A",
-      "Phase": "Phase A",
-      "GroundSpoof": "Ground Spoof A",
-      "CrashD": "Crash A",
-      "CrashH": "Crash A",
-      "CrashB": "Crash A",
-      "CrashG": "Crash A",
-      "CrashA": "Crash A",
-      "CrashE": "Crash A",
-      "CrashI": "Crash A",
-      "CrashC": "Crash A",
-      "CrashF": "Crash A"
+      "Baritone": "Baritone A"
     }
   },
   "TruthfulAC": {
     "new_checks": [
-      {
-        "name": "lag a",
-        "raw_name": "LagA",
-        "category": "combat",
-        "stable_key": "windfall.combat.lag a",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagA.java",
-        "constants": {
-          "MAX_ATTACK_AGE_TICKS": "40",
-          "BACKTRACK_TOLERANCE": "0.45D",
-          "HARD_CEILING": "7.5D",
-          "RAY_MAX_DIST": "6.5D"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "handleRelMove",
-          "rayMin",
-          "rayEntryDistance",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "lag c",
-        "raw_name": "LagC",
-        "category": "combat",
-        "stable_key": "windfall.combat.lag c",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagC.java",
-        "constants": {
-          "MIN_SAMPLES": "20",
-          "MIN_CORRELATION": "0.85D",
-          "PING_BIN_COUNT": "4",
-          "MIN_PING_SPREAD_MS": "60L"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "evaluate",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "lag b",
-        "raw_name": "LagB",
-        "category": "combat",
-        "stable_key": "windfall.combat.lag b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagB.java",
-        "constants": {
-          "MIN_REACH_TO_TRIGGER": "3.1D",
-          "WINDOW_MS": "8000",
-          "MIN_DESYNC_HITS": "3"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "rayHitDistance",
-          "onQuit"
-        ]
-      },
       {
         "name": "scaffold rotation",
         "raw_name": "ScaffoldRotation",
@@ -210,34 +155,6 @@
         ]
       },
       {
-        "name": "scaffold motion",
-        "raw_name": "ScaffoldMotion",
-        "category": "movement",
-        "stable_key": "windfall.movement.scaffold motion",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldMotion.java",
-        "constants": {
-          "HISTORY_TICKS": "24",
-          "WINDOW_TICKS": "16",
-          "FLAG_BUFFER": "4.0D",
-          "targetX": "replaceable ? clicked.getX() : clicked.getX() + face.getModX()",
-          "targetY": "replaceable ? clicked.getY() : clicked.getY() + face.getModY()",
-          "targetZ": "replaceable ? clicked.getZ() : clicked.getZ() + face.getModZ()",
-          "feetX": "(int) Math.floor(data.getX())",
-          "feetZ": "(int) Math.floor(data.getZ())",
-          "feetY": "(int) Math.floor(data.getY())",
-          "tick": "data.getTicksTracked()",
-          "y": "data.getY()",
-          "threshold": "2.0D * (Math.max(0.42D, data.getJumpStrength()) / 0.42D) + 0.5D",
-          "dt": "tick - sample.tick",
-          "g": "y - sample.y",
-          "name": "BlockPropertyRegistry.getName(globalId)"
-        },
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
         "name": "scaffold reach",
         "raw_name": "ScaffoldReach",
         "category": "movement",
@@ -260,6 +177,34 @@
           "bdz": "faceZ - (eyeZ - data.getDeltaZ())",
           "backDist": "Math.sqrt(bdx * bdx + bdy * bdy + bdz * bdz)",
           "max": "Truthful.getInstance().getVersionManager().getAdapter()\n                .getBlockInteractionRange(player) + JITTER"
+        },
+        "methods": [
+          "handleRelMove",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "scaffold motion",
+        "raw_name": "ScaffoldMotion",
+        "category": "movement",
+        "stable_key": "windfall.movement.scaffold motion",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/world/scaffold/ScaffoldMotion.java",
+        "constants": {
+          "HISTORY_TICKS": "24",
+          "WINDOW_TICKS": "16",
+          "FLAG_BUFFER": "4.0D",
+          "targetX": "replaceable ? clicked.getX() : clicked.getX() + face.getModX()",
+          "targetY": "replaceable ? clicked.getY() : clicked.getY() + face.getModY()",
+          "targetZ": "replaceable ? clicked.getZ() : clicked.getZ() + face.getModZ()",
+          "feetX": "(int) Math.floor(data.getX())",
+          "feetZ": "(int) Math.floor(data.getZ())",
+          "feetY": "(int) Math.floor(data.getY())",
+          "tick": "data.getTicksTracked()",
+          "y": "data.getY()",
+          "threshold": "2.0D * (Math.max(0.42D, data.getJumpStrength()) / 0.42D) + 0.5D",
+          "dt": "tick - sample.tick",
+          "g": "y - sample.y",
+          "name": "BlockPropertyRegistry.getName(globalId)"
         },
         "methods": [
           "handleRelMove",
@@ -290,11 +235,103 @@
         ]
       },
       {
+        "name": "lag a",
+        "raw_name": "LagA",
+        "category": "combat",
+        "stable_key": "windfall.combat.lag a",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagA.java",
+        "constants": {
+          "MAX_ATTACK_AGE_TICKS": "40",
+          "BACKTRACK_TOLERANCE": "0.45D",
+          "HARD_CEILING": "7.5D",
+          "RAY_MAX_DIST": "6.5D"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "handleRelMove",
+          "rayMin",
+          "rayEntryDistance",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "lag b",
+        "raw_name": "LagB",
+        "category": "combat",
+        "stable_key": "windfall.combat.lag b",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagB.java",
+        "constants": {
+          "MIN_REACH_TO_TRIGGER": "3.1D",
+          "WINDOW_MS": "8000",
+          "MIN_DESYNC_HITS": "3"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "rayHitDistance",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "lag c",
+        "raw_name": "LagC",
+        "category": "combat",
+        "stable_key": "windfall.combat.lag c",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/combat/lag/LagC.java",
+        "constants": {
+          "MIN_SAMPLES": "20",
+          "MIN_CORRELATION": "0.85D",
+          "PING_BIN_COUNT": "4",
+          "MIN_PING_SPREAD_MS": "60L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "evaluate",
+          "onQuit"
+        ]
+      },
+      {
         "name": "bad packet5",
         "raw_name": "BadPacket5",
         "category": "packet",
         "stable_key": "windfall.packet.bad packet5",
         "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacket5.java",
+        "constants": {},
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet f",
+        "raw_name": "BadPacketF",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet f",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketF.java",
+        "constants": {},
+        "methods": [
+          "handleRelMove",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet o",
+        "raw_name": "BadPacketO",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet o",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketO.java",
+        "constants": {},
+        "methods": [
+          "rejectsPackets",
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet u",
+        "raw_name": "BadPacketU",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet u",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketU.java",
         "constants": {},
         "methods": [
           "handlePacketPlayerReceive",
@@ -319,166 +356,11 @@
         ]
       },
       {
-        "name": "bad packet y",
-        "raw_name": "BadPacketY",
+        "name": "bad packet q",
+        "raw_name": "BadPacketQ",
         "category": "packet",
-        "stable_key": "windfall.packet.bad packet y",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketY.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet m",
-        "raw_name": "BadPacketM",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet m",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketM.java",
-        "constants": {
-          "POST_WINDOW_MS": "55L"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet p",
-        "raw_name": "BadPacketP",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet p",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketP.java",
-        "constants": {
-          "POST_WINDOW_MS": "80L"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet v",
-        "raw_name": "BadPacketV",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet v",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketV.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet l",
-        "raw_name": "BadPacketL",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet l",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketL.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet r",
-        "raw_name": "BadPacketR",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet r",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketR.java",
-        "constants": {
-          "POST_WINDOW_MS": "55L"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet z",
-        "raw_name": "BadPacketZ",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet z",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketZ.java",
-        "constants": {},
-        "methods": [
-          "rejectsPackets",
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet b",
-        "raw_name": "BadPacketB",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet b",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketB.java",
-        "constants": {
-          "MAX_FLYING_STREAK": "20"
-        },
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet f",
-        "raw_name": "BadPacketF",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet f",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketF.java",
-        "constants": {},
-        "methods": [
-          "handleRelMove",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet6",
-        "raw_name": "BadPacket6",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet6",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacket6.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet u",
-        "raw_name": "BadPacketU",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet u",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketU.java",
-        "constants": {},
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet n",
-        "raw_name": "BadPacketN",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet n",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketN.java",
-        "constants": {
-          "POST_WINDOW_MS": "55L"
-        },
-        "methods": [
-          "handlePacketPlayerReceive",
-          "onQuit"
-        ]
-      },
-      {
-        "name": "bad packet o",
-        "raw_name": "BadPacketO",
-        "category": "packet",
-        "stable_key": "windfall.packet.bad packet o",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketO.java",
+        "stable_key": "windfall.packet.bad packet q",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketQ.java",
         "constants": {},
         "methods": [
           "rejectsPackets",
@@ -501,11 +383,129 @@
         ]
       },
       {
-        "name": "bad packet q",
-        "raw_name": "BadPacketQ",
+        "name": "bad packet r",
+        "raw_name": "BadPacketR",
         "category": "packet",
-        "stable_key": "windfall.packet.bad packet q",
-        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketQ.java",
+        "stable_key": "windfall.packet.bad packet r",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketR.java",
+        "constants": {
+          "POST_WINDOW_MS": "55L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet6",
+        "raw_name": "BadPacket6",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet6",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacket6.java",
+        "constants": {},
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet n",
+        "raw_name": "BadPacketN",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet n",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketN.java",
+        "constants": {
+          "POST_WINDOW_MS": "55L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet v",
+        "raw_name": "BadPacketV",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet v",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketV.java",
+        "constants": {},
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet y",
+        "raw_name": "BadPacketY",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet y",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketY.java",
+        "constants": {},
+        "methods": [
+          "handleRelMove",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet l",
+        "raw_name": "BadPacketL",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet l",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketL.java",
+        "constants": {},
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet m",
+        "raw_name": "BadPacketM",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet m",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketM.java",
+        "constants": {
+          "POST_WINDOW_MS": "55L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet b",
+        "raw_name": "BadPacketB",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet b",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketB.java",
+        "constants": {
+          "MAX_FLYING_STREAK": "20"
+        },
+        "methods": [
+          "handleRelMove",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet p",
+        "raw_name": "BadPacketP",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet p",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketP.java",
+        "constants": {
+          "POST_WINDOW_MS": "80L"
+        },
+        "methods": [
+          "handlePacketPlayerReceive",
+          "onQuit"
+        ]
+      },
+      {
+        "name": "bad packet z",
+        "raw_name": "BadPacketZ",
+        "category": "packet",
+        "stable_key": "windfall.packet.bad packet z",
+        "file_path": "src/main/java/ret/tawny/truthful/checks/impl/packet/badpacket/BadPacketZ.java",
         "constants": {},
         "methods": [
           "rejectsPackets",
@@ -515,69 +515,81 @@
       }
     ],
     "existing_matches": {
-      "HitboxA": "Hitboxes A",
-      "CrystalAuraA": "Kill Aura A",
-      "ReachA": "Reach A",
-      "AutoClickerB": "Autoclicker A",
-      "AutoClickerD": "Autoclicker A",
-      "AutoClickerC": "Autoclicker A",
-      "AutoClickerA": "Autoclicker A",
-      "AutoClickerE": "Autoclicker A",
-      "AnchorAuraA": "Kill Aura A",
-      "KillAuraH": "Kill Aura A",
-      "KillAuraB": "Kill Aura A",
-      "KillAuraE": "Kill Aura A",
-      "KillAuraF": "Kill Aura A",
-      "KillAuraG": "Kill Aura A",
-      "KillAuraC": "Kill Aura A",
-      "KillAuraD": "Kill Aura A",
-      "AimA": "Aim A",
-      "AimC": "Aim A",
-      "AimB": "Aim A",
-      "RaycastA": "Reach A",
       "FastBreakA": "Fast Break A",
       "PhaseA": "Phase A",
-      "BadPacketH": "Bad Packets A",
-      "BadPacketD": "Bad Packets A",
-      "BadPacketJ": "Bad Packets A",
-      "BadPacketG": "Bad Packets A",
-      "BadPacketA": "Bad Packets A",
-      "BadPacketE": "Bad Packets A",
+      "RaycastA": "Reach A",
+      "ReachA": "Reach A",
+      "KillAuraG": "Kill Aura A",
+      "KillAuraC": "Kill Aura A",
+      "KillAuraE": "Kill Aura A",
+      "KillAuraH": "Kill Aura A",
+      "KillAuraF": "Kill Aura A",
+      "KillAuraB": "Kill Aura A",
+      "KillAuraD": "Kill Aura A",
+      "HitboxA": "Hitboxes A",
+      "AutoClickerC": "Autoclicker A",
+      "AutoClickerA": "Autoclicker A",
+      "AutoClickerD": "Autoclicker A",
+      "AutoClickerE": "Autoclicker A",
+      "AutoClickerB": "Autoclicker A",
+      "AnchorAuraA": "Kill Aura A",
+      "AimB": "Aim A",
+      "AimA": "Aim A",
+      "AimC": "Aim A",
+      "CrystalAuraA": "Kill Aura A",
       "BadPacketI": "Bad Packets A",
+      "BadPacketG": "Bad Packets A",
+      "BadPacketD": "Bad Packets A",
+      "BadPacketE": "Bad Packets A",
+      "BadPacketA": "Bad Packets A",
       "BadPacketK": "Bad Packets A",
+      "BadPacketJ": "Bad Packets A",
+      "BadPacketH": "Bad Packets A",
+      "CrasherA": "Crash A",
+      "PacketOrderE": "Packet Order A",
+      "PacketOrderD": "Packet Order A",
+      "PacketOrderB": "Packet Order A",
+      "PacketOrderA": "Packet Order A",
+      "PacketOrderC": "Packet Order A",
+      "InvalidA": "Invalid Place Cursor",
       "SprintA": "Sprint A",
       "SprintB": "Sprint B",
-      "PacketOrderE": "Packet Order A",
-      "PacketOrderB": "Packet Order A",
-      "PacketOrderC": "Packet Order A",
-      "PacketOrderA": "Packet Order A",
-      "PacketOrderD": "Packet Order A",
-      "CrasherA": "Crash A",
       "TimerA": "Timer A",
-      "InvalidA": "Invalid Place A",
       "MovementCheckSupport": "Phase A",
-      "VelocityC": "Velocity A",
-      "VelocityD": "Velocity A",
       "VelocityB": "Velocity A",
+      "VelocityD": "Velocity A",
+      "VelocityC": "Velocity A",
       "VelocityA": "Velocity A",
-      "BaritoneC": "Baritone A",
-      "BaritoneA": "Baritone A",
-      "BaritoneB": "Baritone A",
-      "InventoryA": "Inventory A",
-      "GroundSpoofD": "Ground Spoof A",
-      "GroundSpoofF": "Ground Spoof A",
-      "GroundSpoofC": "Ground Spoof A",
-      "GroundSpoofG": "Ground Spoof A",
       "GroundSpoofB": "Ground Spoof A",
+      "GroundSpoofD": "Ground Spoof A",
+      "GroundSpoofG": "Ground Spoof A",
+      "GroundSpoofC": "Ground Spoof A",
+      "GroundSpoofF": "Ground Spoof A",
       "GroundSpoofE": "Ground Spoof A",
       "Simulation": "Simulation A",
-      "BReachA": "Reach A",
+      "InventoryA": "Inventory A",
+      "BaritoneB": "Baritone A",
+      "BaritoneC": "Baritone A",
+      "BaritoneA": "Baritone A",
       "BSpeedA": "Speed A",
+      "BReachA": "Reach A",
       "BFlyA": "Fly A"
     }
   },
   "Arrow": {
     "new_checks": [
+      {
+        "name": "movement",
+        "raw_name": "Movement",
+        "category": "movement",
+        "stable_key": "windfall.movement.movement",
+        "file_path": "src/main/java/me/arrow/checks/impl/simulation/Movement.java",
+        "constants": {},
+        "methods": [
+          "handle",
+          "handle"
+        ]
+      },
       {
         "name": "aim h2",
         "raw_name": "AimH2",
@@ -632,82 +644,70 @@
           "handle",
           "handle"
         ]
-      },
-      {
-        "name": "movement",
-        "raw_name": "Movement",
-        "category": "movement",
-        "stable_key": "windfall.movement.movement",
-        "file_path": "src/main/java/me/arrow/checks/impl/simulation/Movement.java",
-        "constants": {},
-        "methods": [
-          "handle",
-          "handle"
-        ]
       }
     ],
     "existing_matches": {
-      "HitboxA": "Hitboxes A",
-      "ReachA": "Reach A",
+      "BackTrackA": "Backtrack A",
+      "BackTrackB": "Backtrack A",
       "VelocityB": "Velocity A",
       "VelocityA": "Velocity A",
+      "ReachA": "Reach A",
+      "KillauraA": "Kill Aura A",
+      "HitboxA": "Hitboxes A",
+      "AutoClickerH": "Autoclicker A",
       "AutoClickerF": "Autoclicker A",
-      "MacroB": "Macro A",
       "MacroA": "Macro A",
+      "AutoClickerC": "Autoclicker A",
+      "MacroB": "Macro A",
+      "AutoClickerD": "Autoclicker A",
       "AutoClickerB": "Autoclicker A",
       "AutoClickerG": "Autoclicker A",
-      "AutoClickerD": "Autoclicker A",
-      "AutoClickerC": "Autoclicker A",
-      "AutoClickerH": "Autoclicker A",
-      "KillauraA": "Kill Aura A",
-      "AimG": "Aim A",
       "AimH": "Aim A",
-      "AimD": "Aim A",
+      "AimE": "Aim A",
+      "AimB": "Aim A",
       "AimA": "Aim A",
       "AimF": "Aim A",
-      "AimE": "Aim A",
+      "AimG": "Aim A",
       "AimC": "Aim A",
-      "AimB": "Aim A",
-      "BackTrackB": "Backtrack A",
-      "BackTrackA": "Backtrack A",
-      "IllegalMoveB": "Phase A",
+      "AimD": "Aim A",
       "IllegalMoveC": "Illegal Move",
-      "MotionD": "Motion A",
-      "MotionE": "Motion A",
-      "MotionB": "Motion A",
-      "MotionA": "Motion A",
+      "IllegalMoveB": "Phase A",
+      "SpeedA": "Speed A",
       "OmniSprintA": "Sprint A",
       "SpeedB": "Speed A",
-      "SpeedA": "Speed A",
-      "GroundB": "Ground Spoof A",
       "GroundA": "Ground Spoof A",
+      "GroundB": "Ground Spoof A",
       "GroundC": "Ground Spoof A",
-      "FlyB": "Fly A",
+      "MotionD": "Motion A",
+      "MotionA": "Motion A",
+      "MotionB": "Motion A",
+      "MotionE": "Motion A",
       "FlyA": "Fly A",
+      "FlyB": "Fly A",
       "GravityD": "Gravity",
+      "GravityC": "Gravity",
+      "GravityA": "Gravity",
+      "ElytraA": "Elytra A",
       "GravityB": "Gravity",
       "ElytraB": "Elytra A",
-      "GravityA": "Gravity",
-      "GravityC": "Gravity",
-      "ElytraA": "Elytra A",
-      "InteractC": "Self Interact A",
-      "FastBreakB": "Fast Break A",
+      "ScaffoldB": "Scaffold A",
+      "ScaffoldD": "Scaffold A",
+      "ScaffoldA": "Scaffold A",
+      "ScaffoldC": "Scaffold A",
       "FastBreakA": "Fast Break A",
-      "InteractA": "Self Interact A",
       "InteractD": "Reach A",
+      "InteractA": "Multi Interact A",
+      "InteractC": "Multi Interact A",
+      "FastBreakB": "Fast Break A",
       "InventoryA": "Inventory A",
+      "ExploitB": "Exploit A",
+      "ExploitA": "Exploit A",
       "VehicleC": "Vehicle A",
       "VehicleA": "Vehicle A",
       "VehicleB": "Vehicle A",
-      "TimerA": "Timer A",
       "TimerB": "Timer A",
-      "TimerC": "Timer A",
-      "ExploitA": "Exploit A",
-      "ExploitB": "Exploit A",
-      "ScaffoldB": "Scaffold A",
-      "ScaffoldA": "Scaffold A",
-      "ScaffoldD": "Scaffold A",
-      "ScaffoldC": "Scaffold A"
+      "TimerA": "Timer A",
+      "TimerC": "Timer A"
     }
   }
 }
