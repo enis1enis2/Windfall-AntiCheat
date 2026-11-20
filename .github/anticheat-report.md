@@ -1,6 +1,6 @@
 # Windfall Anti-Cheat Monitor Report
 
-**Generated:** 2026-11-19 04:55:43 UTC
+**Generated:** 2026-11-20 04:45:55 UTC
 
 ---
 
@@ -331,8 +331,11 @@
 
 ### Arrow
 
-**Missing from Windfall (5 checks):**
+**Missing from Windfall (6 checks):**
 
+- `packet` **VehicleSupport** → `windfall.packet.vehicle support`
+  - Source: `src/main/java/me/arrow/checks/impl/misc/vehicle/VehicleSupport.java`
+  - `sinceIceTicks = 1000`
 - `movement` **FastBreakTracker** → `windfall.movement.fast break tracker`
   - Source: `src/main/java/me/arrow/checks/impl/misc/interact/FastBreakTracker.java`
   - `packetTime = System.nanoTime()`
@@ -421,7 +424,7 @@
 ## Summary
 
 - Windfall has **60 checks**
-- Found **30 new checks** across competitors that Windfall doesn't have
+- Found **31 new checks** across competitors that Windfall doesn't have
 
 ## Recommendations
 
